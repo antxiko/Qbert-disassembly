@@ -4685,3 +4685,821 @@ C 0x761D vuelta
 C 0x7621 lejos: nada
 C 0x7622 el objeto, para la rutina
 C 0x7624 B - 1: del 18 (0) al 4 (14)
+
+C 0x7646 el modo
+C 0x7649 el duelo?
+C 0x764B no: nada
+C 0x764F la espera
+C 0x7650 cero?
+C 0x7651 si: a mirar
+C 0x7653 un cuadro menos
+C 0x7654 vuelta
+C 0x7655 el primero...
+C 0x7659 ...y el segundo
+C 0x765C juntos?
+C 0x765F no: nada
+C 0x7660 la partida no se ha acabado por esto
+C 0x7661 guardado
+C 0x7666 el primero...
+C 0x7669 ...quieto?
+C 0x766C no: bit 0
+C 0x766E el segundo...
+C 0x7671 ...quieto?
+C 0x7674 no: bit 1
+C 0x7676 los que estan en el aire
+C 0x7677 el que salta y como
+C 0x767D los dos: nada
+C 0x767E ninguno
+C 0x7683 el primero en el aire: empuja al segundo (1)
+C 0x7685 el segundo en el aire: empuja al primero (0)
+C 0x7687 a quien se empuja
+C 0x768A y sale rebotado
+C 0x768D ninguno
+C 0x768F el segundo?
+C 0x7696 el primero
+C 0x7699 su estado
+C 0x769A 1 (izquierda)?
+C 0x769D no: bit 0
+C 0x769F el byte 3...
+C 0x76A0 ...el paso del arco
+C 0x76A1 pasada la mitad (0x32)...
+C 0x76A5 ...bit 1
+C 0x76A7 guardado
+C 0x76AB vuelta
+C 0x76AC diez cuadros...
+C 0x76AE ...sin volver a mirar
+C 0x76B4 abajo-derecha...
+C 0x76B6 ...si el primero va a la derecha
+C 0x76B9 si no, abajo-izquierda
+C 0x76BB B a salvo
+C 0x76BC el primero sale
+C 0x76BF B
+C 0x76C0 al reves...
+C 0x76C7 ...para el segundo
+C 0x76C9 y sale
+C 0x76CC la Y...
+C 0x76CD ...menos la otra
+C 0x76D0 en positivo
+C 0x76D2 10 o mas...
+C 0x76D4 ...lejos
+C 0x76D5 la X
+C 0x76D7 ...menos la otra
+C 0x76DA en positivo
+C 0x76DC menos de 8: acarreo
+C 0x76DE vuelta
+C 0x76DF HL = el objeto
+C 0x76E0 fuera, y 100 puntos
+C 0x76E3 de quien es
+C 0x76E6 su cuenta
+C 0x76EC la del segundo
+C 0x76ED 128
+C 0x76EF vuelta
+C 0x76F0 HL = el enemigo
+C 0x76F1 de quien es
+C 0x76F4 su invencibilidad
+C 0x76FA la del segundo
+C 0x76FC invencible?
+C 0x76FD no
+C 0x76FF al estado del enemigo
+C 0x7703 cayendo muerto...
+C 0x7708 ...nada mas
+C 0x7709 muere el enemigo
+C 0x770C el sonido 7
+C 0x7711 de quien es
+C 0x7715 su proteccion
+C 0x771A la del segundo
+C 0x771C recien entrado?
+C 0x771D si: nada
+C 0x771E el modo
+C 0x7721 el duelo?
+C 0x7723 no
+C 0x7725 si: solo cae
+C 0x7728 cae
+C 0x772B y fuera de juego
+C 0x772F vuelta
+C 0x7733 el primero?
+C 0x7739 el segundo
+C 0x773C su primer sprite
+C 0x773F siete bytes mas: el estado del segundo sprite
+C 0x7744 el mismo lado
+C 0x774A el grito
+C 0x774D el cuadro...
+C 0x7750 ...par o impar...
+C 0x7752 ...12 o 13
+C 0x7754 en B
+C 0x7755 el estado
+C 0x7756 el byte 3...
+C 0x7757 ...el arco de caer
+C 0x7759 vuelta
+C 0x775A HL = la bola
+C 0x775B fuera, y 100 puntos
+C 0x775E 128 cuentas...
+C 0x7760 ...congelado
+C 0x7766 escribe en la ROM (ver 0x7763)
+C 0x7769 el sonido 0x0D
+C 0x776E HL = el objeto
+C 0x776F fuera, y 100 puntos
+C 0x7772 de quien es
+C 0x7776 su velocidad
+C 0x777B la del segundo
+C 0x777E uno mas
+C 0x777F en el segundo sprite
+C 0x7784 uno mas
+C 0x7785 el sonido 0x0A
+C 0x778A HL = el objeto
+C 0x778B fuera, y 100 puntos
+C 0x778E de quien es
+C 0x7792 su velocidad
+C 0x7797 la del segundo
+C 0x779A la velocidad
+C 0x779B cero?
+C 0x779C si: nada
+C 0x779D uno menos
+C 0x779E en el segundo sprite
+C 0x77A3 uno menos
+C 0x77A4 el sonido 0x0B
+C 0x77A9 HL = la bola
+C 0x77AA fuera, y 100 puntos
+C 0x77AD de quien es
+C 0x77B1 su poder
+C 0x77B6 el del segundo
+C 0x77B9 puesto
+C 0x77BB el sonido 0x0A
+C 0x77C0 HL = la bola
+C 0x77C1 fuera, y 100 puntos
+C 0x77C4 el sonido 0x0C
+C 0x77C9 y todos huyen
+C 0x77CE C
+C 0x77CF 8 bytes mas alla
+C 0x77D4 catorce
+C 0x77D6 vuelta
+C 0x77D7 HL = el objeto
+C 0x77D8 al byte 4
+C 0x77D9 fuera de la pantalla
+C 0x77DB al byte 2
+C 0x77DD quieto
+C 0x77DF 100 puntos
+C 0x77E5 la Y del objeto 5
+C 0x77E8 trece
+C 0x77EA estado 0
+C 0x77EC la Y
+C 0x77ED la X
+C 0x77F0 fuera: quieto
+C 0x77F4 por encima de 0x30...
+C 0x77F9 ...8
+C 0x77FA por encima de 0x60...
+C 0x77FF ...10
+C 0x7801 la X a la derecha de 0x80...
+C 0x7805 ...uno mas
+C 0x7808 guardado
+C 0x780B al byte 2
+C 0x780E el estado
+C 0x780F el objeto siguiente, byte 4
+C 0x7814 trece
+C 0x7816 vuelta
+C 0x7817 99 en BCD
+C 0x781A el tiempo
+C 0x781D vuelta
+C 0x781E el reloj
+C 0x7824 del paso 6 en adelante...
+C 0x7826 ...no se pinta
+C 0x7827 se pinta
+C 0x7829 el tiempo
+C 0x7832 un segundo menos
+C 0x7836 cero?
+C 0x7837 no: vuelta
+C 0x7838 a salvo
+C 0x7839 TIME-00
+C 0x783C a la VRAM
+C 0x7841 suena
+C 0x7844 una pausa
+C 0x7847 HL
+C 0x784B el duelo?
+C 0x784D si: gana el que mas cubos tenga
+C 0x7851 con uno, A=0: Q*bert fuera de juego
+C 0x7854 vuelta
+C 0x7855 el tiempo
+C 0x7858 las unidades...
+C 0x7859 ...menos una...
+C 0x785B ...en BCD
+C 0x785C guardado
+C 0x785D sin pasarse de cero
+C 0x785F cero
+C 0x7862 guardado
+C 0x7865 DE = tiempo
+C 0x786A 16 - tiempo
+C 0x786C HL = tiempo
+C 0x786D mas de 10 (0x10 en BCD): nada
+C 0x786E cobrando el tiempo...
+C 0x7872 ...no hay aviso
+C 0x7875 suena
+C 0x7878 E = el tiempo
+C 0x7879 fila 2, columna 23
+C 0x787C T
+C 0x787F I
+C 0x7882 M
+C 0x7885 E
+C 0x7888 -
+C 0x788A la cifra alta...
+C 0x7891 ...su casilla
+C 0x7894 guardada
+C 0x7895 la baja...
+C 0x7898 ...su casilla
+C 0x789B guardada
+C 0x789C vuelta
+C 0x789F la espera
+C 0x78A2 un cuadro menos
+C 0x78A3 hasta cero
+C 0x78A6 25 filas
+C 0x78A9 cada 3 cuadros
+C 0x78AB y al paso 2
+C 0x78B0 la espera
+C 0x78B3 un cuadro menos
+C 0x78B4 hasta cero
+C 0x78B5 otros 3
+C 0x78B7 las filas que faltan
+C 0x78BA una menos
+C 0x78BB ninguna: se empieza
+C 0x78BF la fila...
+C 0x78C0 ...0x17 - filas...
+C 0x78C4 32...
+C 0x78C8 ...por la fila
+C 0x78CE + 0x3800
+C 0x78CF a salvo
+C 0x78D0 + 0xB500: la misma fila en la copia
+C 0x78D4 en DE
+C 0x78D5 HL: la VRAM
+C 0x78D6 32 bytes
+C 0x78D9 LDIRVM
+C 0x78DF BONUS arriba
+C 0x78E5 la musica 0x1A
+C 0x78EA y al paso 3
+C 0x78EF los sprites
+C 0x78F2 un cuarto de la pantalla
+C 0x78FB los cubos que giran
+C 0x7903 la pantalla entera
+C 0x7906 la espera
+C 0x7909 un cuadro menos
+C 0x790A hasta cero
+C 0x790B 16 cuadros
+C 0x7910 la cuenta
+C 0x7913 ninguno mas?
+C 0x7914 si: se acabo
+C 0x7917 la cuenta...
+C 0x7918 ...por 100
+C 0x791A en puntos
+C 0x791D HL
+C 0x791F uno mas...
+C 0x7921 ...en BCD
+C 0x7922 guardado
+C 0x7923 vuelta
+C 0x7925 los 27?
+C 0x7927 no
+C 0x792C en pantalla
+C 0x792F 5.000 puntos
+C 0x7935 la musica 0x32
+C 0x793A y sigue
+C 0x7941 (0xE334)=1: sin avisos del tiempo
+C 0x7946 y al paso 5
+C 0x7960 la musica...
+C 0x7963 ...aun suena
+C 0x7965 un cuadro
+C 0x7967 y al paso 6
+C 0x796C un cuarto
+C 0x796F un segundo
+C 0x7972 quedan: vuelta
+C 0x7974 sin cobrar...
+C 0x7977 1...
+C 0x7979 ...fase acabada...
+C 0x797C ...y una linea
+C 0x797F vuelta
+C 0x7983 la tabla de nombres...
+C 0x7986 ...entera...
+C 0x7989 ...de ladrillo
+C 0x798B FILVRM
+C 0x798E BONUS en medio
+C 0x7994 80 cuadros
+C 0x7996 y al paso 1
+C 0x79AE la fase
+C 0x79B3 menos una, en BCD
+C 0x79B4 las unidades
+C 0x79B6 2 (fases 3, 13...)
+C 0x79BA 5 (fases 6, 16...)
+C 0x79BE 9 (fases 10, 20...)
+C 0x79C0 las demas, nada
+C 0x79C1 el modo
+C 0x79C5 cambia el bit 0
+C 0x79C7 guardado
+C 0x79C8 al acarreo
+C 0x79C9 se ha apagado: vuelve y sigue
+C 0x79CB el tablero de 0xA7AD
+C 0x79D4 la escena 5: la partida
+C 0x79D6 vuelta
+C 0x79D7 el tiempo
+C 0x79DA las unidades y decenas
+C 0x79DB cero?
+C 0x79DC si: acabado
+C 0x79DE sin avisos...
+C 0x79E0 ...del tiempo
+C 0x79E3 un segundo menos
+C 0x79E6 en pantalla
+C 0x79E9 10 puntos
+C 0x79EF un efecto sonando?
+C 0x79F3 si no, el 0x15
+C 0x79F8 NZ
+C 0x79FA si A era 0, 1: NZ
+C 0x79FB vuelta
+C 0x79FC el sonido 0x16
+C 0x7A01 a la VRAM
+C 0x7A07 sonando?
+C 0x7A08 si: se espera (la interrupcion lo acaba)
+C 0x7A0A vuelta
+C 0x7A0B el tablero de bonificacion
+C 0x7A0E a 0xEC00
+C 0x7A11 81 bytes
+C 0x7A14 copiados
+C 0x7A16 vuelta
+C 0x7A17 un segundo cada 16 cuadros
+C 0x7A1A y en pantalla
+C 0x7A1D el tiempo
+C 0x7A20 cada 16...
+C 0x7A26 uno menos
+C 0x7A29 cero?
+C 0x7A2B no: vuelta
+C 0x7A2E la cuenta de la puntuacion
+C 0x7A31 HL a salvo
+C 0x7A32 al paso siguiente
+C 0x7A35 HL
+C 0x7A36 vuelta
+C 0x7A37 la diagonal
+C 0x7A3B ninguna...
+C 0x7A3C ...nada
+C 0x7A3D una
+C 0x7A40 donde esta Q*bert
+C 0x7A43 ese cubo gira
+C 0x7A46 vuelta
+C 0x7A47 donde esta Q*bert
+C 0x7A4D acabado?
+C 0x7A4F no: nada
+C 0x7A50 donde esta
+C 0x7A54 una columna a la derecha
+C 0x7A57 fuera?
+C 0x7A59 no
+C 0x7A5D la fila siguiente...
+C 0x7A63 no hay mas filas: se acabo
+C 0x7A68 hueco?
+C 0x7A69 si: el siguiente
+C 0x7A6C la Y
+C 0x7A6E el segundo sprite
+C 0x7A74 vuelta
+C 0x7A75 el primer sprite
+C 0x7A78 E = Y
+C 0x7A7A D = X
+C 0x7A7B vuelta
+C 0x7A7C fila 3, columna 3 de la copia
+C 0x7A7F la casilla
+C 0x7A80 la esquina de un cubo acabado?
+C 0x7A82 si
+C 0x7A84 la siguiente
+C 0x7A85 la columna...
+C 0x7A88 ...el resto de entre 32
+C 0x7A8C antes de la 30...
+C 0x7A8E ...sigue
+C 0x7A90 a la columna 3 de la fila siguiente
+C 0x7A94 a salvo
+C 0x7A98 la ultima?
+C 0x7A9A HL
+C 0x7A9B no: sigue
+C 0x7A9D no queda ninguno
+C 0x7A9F vuelta
+C 0x7AA3 a salvo
+C 0x7AA4 la decena...
+C 0x7AAA cero?
+C 0x7AAB si: en blanco
+C 0x7AAD su casilla
+C 0x7AAF la decena
+C 0x7AB2 la unidad...
+C 0x7AB4 ...su casilla
+C 0x7AB6 guardada
+C 0x7AB8 0
+C 0x7ABB 0
+C 0x7ABD A=0: habia
+C 0x7ABE vuelta
+C 0x7AC2 13 patrones
+C 0x7AC5 104 bytes
+C 0x7AC8 en los tres tercios
+C 0x7ACE su RLE
+C 0x7AD1 en los tres tercios
+C 0x7AD7 la fila 0
+C 0x7ADD la 23
+C 0x7AE3 la columna 0
+C 0x7AE9 la 31
+C 0x7AEF sus pinchos
+C 0x7AF8 los de abajo
+C 0x7B01 los de la izquierda
+C 0x7B0A los de la derecha
+C 0x7B10 30 casillas de una en una
+C 0x7B15 20 casillas de 32 en 32
+C 0x7B18 el pincho
+C 0x7B19 en la copia
+C 0x7B1A el siguiente
+C 0x7B1B el paso
+C 0x7B1F B
+C 0x7B21 vuelta
+C 0x7B22 32 ladrillos
+C 0x7B25 de uno en uno
+C 0x7B29 22 ladrillos
+C 0x7B2C de 32 en 32
+C 0x7B2E el ladrillo
+C 0x7B2F el paso
+C 0x7B33 B
+C 0x7B35 vuelta
+C 0x7B36 la fila 0 de la VRAM
+C 0x7B39 32 casillas
+C 0x7B3C de ladrillo
+C 0x7B3E FILVRM
+
+C 0x7CF8 quien gano esta partida
+C 0x7CF9 nadie aun...
+C 0x7CFA ...nada
+C 0x7CFC 0 o 1...
+C 0x7CFD ...0xFC o 0xFD
+C 0x7CFF el corazon
+C 0x7DB8 la cara...
+C 0x7DBB ...por dos...
+C 0x7DBC ...+ ojos abiertos o cerrados
+C 0x7DBD la tabla
+C 0x7DC0 por dos: palabras
+C 0x7DC4 el guion...
+C 0x7DC6 ...de esa cara
+C 0x7DC7 en pantalla
+C 0x7E86 cuenta atras...
+C 0x7E88 ...hasta...
+C 0x7E89 ...cero
+C 0x7E8B B vueltas
+C 0x7E8D vuelta
+C 0x7F1A la musica del menu, 0x1D
+C 0x7F1F el marco limpio
+C 0x7F22 el Q*bert del menu
+C 0x7F25 su pausa
+C 0x7F28 LEVEL 1 a LEVEL 5
+C 0x7F71 el sonido del cursor
+C 0x7F74 el nivel
+C 0x7F75 el primero?
+C 0x7F76 si: al ultimo
+C 0x7F78 uno menos
+C 0x7F79 vuelta
+C 0x7F7D el sonido del cursor
+C 0x7F80 el nivel
+C 0x7F81 el ultimo?
+C 0x7F83 si: al primero
+C 0x7F85 uno mas
+C 0x7F86 vuelta
+C 0x7FA7 el nivel
+C 0x7FAB 64 por nivel
+C 0x7FB1 + 0x38AA
+C 0x7FB5 vuelta
+C 0x80B3 los graficos
+C 0x80B6 los sprites
+C 0x80B9 el primero en X 0x50
+C 0x80BF su cuerpo
+C 0x80C5 y el segundo
+C 0x80CD en X 0xA0
+C 0x80D3 su cuerpo
+C 0x80D9 los sprites a la VRAM
+C 0x80DC vuelta
+C 0x80E9 la cuenta
+C 0x80EC un cuadro menos
+C 0x80ED sin acabar: nada
+C 0x80EE otros 14
+C 0x80F0 la postura
+C 0x80F2 la otra
+C 0x80F4 guardada
+C 0x80F7 postura A
+C 0x80FD sin el sprite 3
+C 0x8102 a la VRAM
+C 0x8113 la cuenta
+C 0x8116 recien reiniciada?
+C 0x8119 no: nada
+C 0x811A la postura
+C 0x811F postura A del segundo
+C 0x8125 sin el sprite 2
+C 0x812A a la VRAM
+C 0x8242 B a salvo
+C 0x8243 el sonido 0x35
+C 0x8248 una pausa
+C 0x824B B
+C 0x824C vuelta
+C 0x8266 diez cuadros...
+C 0x8268 ...sin choques
+C 0x826B cual sale
+C 0x826E el primero
+C 0x8272 el segundo
+C 0x8285 su estado
+C 0x8286 entrando o cayendo...
+C 0x8288 ...nada
+C 0x8289 el lado...
+C 0x828C ...12 o 13...
+C 0x828F ...cae muerto
+C 0x8290 el byte 3
+C 0x8291 el arco de caer
+C 0x8294 al byte 6
+C 0x8297 el patron
+C 0x8299 el segundo sprite
+C 0x829E igual
+C 0x82A1 el arco
+C 0x82A7 el patron, 16 mas alla
+C 0x82AB vuelta
+C 0x82F6 los del primero
+C 0x82F9 bit 6
+C 0x82FB contados
+C 0x82FF los del segundo
+C 0x8300 a salvo
+C 0x8301 bit 5
+C 0x8303 contados
+C 0x8306 los del primero
+C 0x8307 contra los del segundo
+C 0x8308 empate
+C 0x8309 el primero...
+C 0x830B ...si tiene mas
+C 0x830C el segundo
+C 0x830D vuelta
+C 0x8320 de quien se trata
+C 0x8325 las vidas del primero
+C 0x832A las del segundo
+C 0x8330 de quien se trata
+C 0x8333 el estado del primero
+C 0x8338 el del segundo
+C 0x833B vuelta
+C 0x8345 A a salvo
+C 0x8346 el de turno
+C 0x8349 el otro
+C 0x834B guardado
+C 0x834E A
+C 0x834F vuelta
+C 0x8350 las partidas apuntadas
+C 0x8353 3 o 5
+C 0x8356 3
+C 0x835B 5
+C 0x836A el tile 0xFC
+C 0x836D los dos corazones
+C 0x8370 16 bytes
+C 0x8373 en los tres tercios
+C 0x8376 su color
+C 0x837C en los tres tercios
+C 0x83EE a la VRAM
+C 0x83F1 la pantalla de la recreativa
+C 0x83F4 la musica...
+C 0x83F8 ...aun suena
+C 0x83F9 el bicho se anima
+C 0x83FC su Y...
+C 0x8401 ...tres mas
+C 0x8403 hasta 0x75
+C 0x8408 el sonido 1
+C 0x840B el primer paso del guion...
+C 0x8410 ...tres antes de 0x85F9
+C 0x8416 y al paso 3
+C 0x8419 el bicho se anima
+C 0x841C a la VRAM
+C 0x841F el segundo canal...
+C 0x8423 ...callado: la pantalla quieta
+C 0x8425 la pantalla de la recreativa
+C 0x8428 el sprite 4
+C 0x842B por su guion
+C 0x842E acabado?
+C 0x8433 no
+C 0x8434 la musica...
+C 0x8438 ...aun suena
+C 0x8439 el sonido 2
+C 0x843E el sprite 7
+C 0x8444 Q*bert cambia de postura
+C 0x844A a la VRAM
+C 0x844D y los sprites
+C 0x8450 96 cuadros
+C 0x8452 y al paso 4
+C 0x84B5 la espera
+C 0x84B8 un cuadro menos
+C 0x84B9 hasta cero
+C 0x84BA borra un trozo
+C 0x84C0 pinta otro
+C 0x84C6 el rotulo en la fila 9
+C 0x84CC y lo de encima
+C 0x84D2 el sprite 2
+C 0x84D8 los sprites
+C 0x84DD el sonido 0x23
+C 0x84E0 8 cuadros
+C 0x84E2 y al paso 7
+C 0x84E5 a la VRAM
+C 0x84E8 la cuenta
+C 0x84EB una menos
+C 0x84EC cero: se acabo
+C 0x84EE la fila
+C 0x84EF 32...
+C 0x84F2 ...por la fila
+C 0x84F5 desde 0xEE05
+C 0x84F9 dos filas...
+C 0x84FC ...a cero
+C 0x84FF 8 filas mas arriba
+C 0x8503 a salvo
+C 0x8504 el trozo de la maquina
+C 0x850A HL
+C 0x850B y el rotulo encima
+C 0x8528 los sprites
+C 0x852B el de 0xE228...
+C 0x852E ...por su guion
+C 0x8531 acabado?
+C 0x8536 no
+C 0x8539 el color del sprite 10
+C 0x853C los sprites
+C 0x853F el titulo ya esta pintado
+C 0x8544 y al paso 9
+C 0x8547 la recreativa del titulo
+C 0x854D sprite 0 en (0x8F, 0x50)
+C 0x8553 sprite 1 en (0x9F, 0x58)
+C 0x8559 sprite 2 en (0x6F, 0x88)
+C 0x855F sprite 9 en (0x7F, 0x80)
+C 0x8565 sprite 10 en (0x29, 0x65)
+C 0x856B vuelta
+C 0x856C DE = HL...
+C 0x856E ...+ 1
+C 0x856F el cero
+C 0x8571 32 bytes
+C 0x8574 corrido
+C 0x8576 vuelta
+C 0x8577 cada 16 cuadros
+C 0x857D el dibujo...
+C 0x8581 ...el siguiente...
+C 0x8582 ...de 0 a 2
+C 0x8588 por dos
+C 0x8589 la tabla
+C 0x858F el guion...
+C 0x8592 ...en la copia
+C 0x8595 vuelta
+C 0x8596 la cuenta
+C 0x859A 0x80: acabado
+C 0x859E el puntero
+C 0x85A1 sin acabar la terna: se suma
+C 0x85A3 la terna siguiente
+C 0x85A8 guardada
+C 0x85AB sus cuadros...
+C 0x85AC ...a la cuenta
+C 0x85AF vuelta
+C 0x85B0 la Y
+C 0x85B2 + la de la terna
+C 0x85B3 guardada
+C 0x85B4 la X
+C 0x85B7 + la de la terna
+C 0x85B8 guardada
+C 0x85BB dentro: ya esta
+C 0x85BC fuera: se esconde
+C 0x85C1 y su segundo sprite
+C 0x85C4 cada 16 cuadros...
+C 0x85CB su patron
+C 0x85CF el ultimo?
+C 0x85D3 al primero
+C 0x85DA Y y X...
+C 0x85DD ...al segundo sprite
+C 0x85E5 el patron...
+C 0x85E6 ...cuatro mas
+C 0x85E9 al sprite 5
+C 0x85ED Y y X...
+C 0x85F0 ...copiadas
+C 0x85F2 el patron...
+C 0x85F3 ...cuatro mas
+C 0x871E HL = el guion
+C 0x871F la direccion...
+C 0x8722 HL = destino
+C 0x8723 detras
+C 0x8724 la casilla
+C 0x8725 la siguiente
+C 0x8727 0xFF...
+C 0x8728 ...fin
+C 0x8729 0xFE...
+C 0x872A ...otra direccion
+C 0x872C AND C
+C 0x872D en la copia
+C 0x872E al lado
+C 0x872F y otra
+C 0x89A8 el recuadro de ladrillo
+C 0x89AE los sprites
+C 0x89B1 el sprite 0 en (0x8B, 0x48)
+C 0x89B7 el 1 en (0x8B, 0xA8)
+C 0x89BD el parpadeo, ya
+C 0x89C3 a la VRAM
+C 0x89C6 la espera
+C 0x89CB sin espera: al juego
+C 0x89CD un cuadro menos
+C 0x89D2 cual de las dos
+C 0x89D4 0x26...
+C 0x89D8 ...o 0x4A
+C 0x8A36 la musica...
+C 0x8A3A ...aun suena
+C 0x8A40 las manos
+C 0x8A46 los sprites
+C 0x8A49 los dos Q*bert...
+C 0x8A54 y los demas sprites
+C 0x8A70 la mano del segundo
+C 0x8A73 a la izquierda
+C 0x8A76 la del primero
+C 0x8A79 a la derecha
+C 0x8A7E a la VRAM
+C 0x8A81 los sprites
+C 0x8A84 128 cuadros
+C 0x8A86 y al paso 8
+C 0x8AB5 el ganador...
+C 0x8AB9 fuera las manos
+C 0x8ABF el recuadro
+C 0x8AC5 las caras
+C 0x8ACD sin espera
+C 0x8ACF y al paso 9
+C 0x8AE1 las caras parpadean
+C 0x8AE4 a la VRAM
+C 0x8AE7 los sprites
+C 0x8AEA la musica...
+C 0x8AEE ...aun suena
+C 0x8AEF la partida no acabo por caidas
+C 0x8AF7 no: sigue la partida
+C 0x8AF9 el ganador (1 o 2)...
+C 0x8AFD ...en el B que espera 0x82B5
+C 0x8B00 se apunta la partida
+C 0x8B0C en negro
+C 0x8B0F la fuente
+C 0x8B12 los graficos de la fase
+C 0x8B15 el tablero
+C 0x8B18 el marco
+C 0x8B1B a la VRAM
+C 0x8B1E sale rebotado
+C 0x8B21 la musica de la fase
+C 0x8B26 paso 0: a jugar
+C 0x8B2A vuelta
+C 0x8B2B papel
+C 0x8B2D abajo?
+C 0x8B31 tijera
+C 0x8B32 izquierda?
+C 0x8B36 piedra
+C 0x8B37 arriba?
+C 0x8B39 nada: la que habia
+C 0x8B3C por dos
+C 0x8B3D la tabla de manos
+C 0x8B43 el guion...
+C 0x8B46 ...en la copia
+C 0x8B65 el ganador...
+C 0x8B68 ...desde cero...
+C 0x8B69 ...por dos...
+C 0x8B6A ...+ ojos
+C 0x8B6B a salvo
+C 0x8B6C la cara del ganador
+C 0x8B70 la del perdedor, cuatro mas alla
+C 0x8B72 la tabla
+C 0x8B75 por dos
+C 0x8B79 el guion...
+C 0x8B7C ...en la copia
+C 0x8B8F la cuenta
+C 0x8B92 un cuadro menos
+C 0x8B94 otros 24
+C 0x8B96 a la vista o no
+C 0x8B9D escondidas
+C 0x8BA3 sin los sprites 2 y 3
+C 0x8BAB vuelta
+C 0x8BAC a la vista
+C 0x8BB2 el sprite 2
+C 0x8BB8 el 3
+C 0x8BBE vuelta
+C 0x8C41 cero
+C 0x8C43 la siguiente
+C 0x8C44 18
+C 0x8C46 la fila siguiente
+C 0x8C4B una menos
+C 0x8C4C cuatro
+C 0x8C4E vuelta
+C 0x8C86 los sprites
+C 0x8C8C el tile 0x43
+C 0x8C8F nueve tiles
+C 0x8C92 en los tres tercios
+C 0x8C95 su color
+C 0x8C9B en los tres tercios
+C 0x8C9E el tercer tercio
+C 0x8D07 la casilla
+C 0x8D09 al lado
+C 0x8D0A la siguiente
+C 0x8D0B tres
+C 0x8D0D la fila siguiente
+C 0x8D12 una menos
+C 0x8D13 tres
+C 0x8D15 vuelta
+C 0x8D28 en BCD
+C 0x8D2C la decena...
+C 0x8D32 ...su casilla
+C 0x8D35 la unidad...
+C 0x8D38 ...su casilla
+C 0x8D3C vuelta
+C 0x9069 fuera de la pantalla...
+C 0x906B ...sus dos sprites
+C 0x9071 el estado y la racha...
+C 0x9077 ...cinco bytes...
+C 0x907A ...a cero
+C 0x9093 los de reserva
+C 0x9094 B = lo que se apunta
+C 0x9095 el puesto de la racha
+C 0x9099 el siguiente...
+C 0x909A ...de 0 a 2

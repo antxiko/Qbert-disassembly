@@ -5669,474 +5669,474 @@ DATA_que_hace_cada_objeto:
 ; EL CHOQUE DE LOS DOS Q*BERT DEL DUELO. Si uno esta en el aire y el otro no, el de tierra sale rebotado; si estan los dos quietos, los dos. Diez cuadros sin volver a mirar.
 ; ----------------------------------------------------------------------
 choque_entre_los_dos:
-	ld a,(0e002h)		;7646
-	bit 5,a		;7649
-	ret z			;764b
+	ld a,(0e002h)		;7646   ; el modo
+	bit 5,a		;7649   ; el duelo?
+	ret z			;764b   ; no: nada
 	ld hl,0e344h		;764c   ; la espera entre choques
-	ld a,(hl)			;764f
-	or a			;7650
-	jr z,L_7655		;7651
-	dec (hl)			;7653
-	ret			;7654
+	ld a,(hl)			;764f   ; la espera
+	or a			;7650   ; cero?
+	jr z,L_7655		;7651   ; si: a mirar
+	dec (hl)			;7653   ; un cuadro menos
+	ret			;7654   ; vuelta
 L_7655:
-	ld de,(0e204h)		;7655
-	ld hl,0e214h		;7659
-	call estan_cerca		;765c
-	ret nc			;765f
-	xor a			;7660
-	ld (0e342h),a		;7661
+	ld de,(0e204h)		;7655   ; el primero...
+	ld hl,0e214h		;7659   ; ...y el segundo
+	call estan_cerca		;765c   ; juntos?
+	ret nc			;765f   ; no: nada
+	xor a			;7660   ; la partida no se ha acabado por esto
+	ld (0e342h),a		;7661   ; guardado
 	ld b,000h		;7664   ; B: bit 0, el primero esta en el aire; bit 1, el segundo
-	ld a,(0e202h)		;7666
-	or a			;7669
+	ld a,(0e202h)		;7666   ; el primero...
+	or a			;7669   ; ...quieto?
 	jr z,L_766E		;766a
-	set 0,b		;766c
+	set 0,b		;766c   ; no: bit 0
 L_766E:
-	ld a,(0e212h)		;766e
-	or a			;7671
+	ld a,(0e212h)		;766e   ; el segundo...
+	or a			;7671   ; ...quieto?
 	jr z,L_7676		;7672
-	set 1,b		;7674
+	set 1,b		;7674   ; no: bit 1
 L_7676:
-	ld a,b			;7676
-	call como_viene_el_que_salta		;7677
+	ld a,b			;7676   ; los que estan en el aire
+	call como_viene_el_que_salta		;7677   ; el que salta y como
 	ld a,b			;767a
 	cp 003h		;767b   ; los dos en el aire: nada
-	ret z			;767d
-	or a			;767e
+	ret z			;767d   ; los dos: nada
+	or a			;767e   ; ninguno
 	jr z,se_empujan_los_dos		;767f   ; los dos quietos
 	cp 002h		;7681   ; el que esta en el aire empuja al otro
-	jr nz,L_7687		;7683
-	ld a,000h		;7685
+	jr nz,L_7687		;7683   ; el primero en el aire: empuja al segundo (1)
+	ld a,000h		;7685   ; el segundo en el aire: empuja al primero (0)
 L_7687:
-	ld (0e332h),a		;7687
-	jp rebota		;768a
+	ld (0e332h),a		;7687   ; a quien se empuja
+	jp rebota		;768a   ; y sale rebotado
 como_viene_el_que_salta:		; (0xE338): bit 0, va hacia la derecha; bit 1, esta en la segunda mitad del arco
-	ld c,000h		;768d
-	cp 002h		;768f
+	ld c,000h		;768d   ; ninguno
+	cp 002h		;768f   ; el segundo?
 	ld hl,0e212h		;7691
 	jr z,L_7699		;7694
-	ld hl,0e202h		;7696
+	ld hl,0e202h		;7696   ; el primero
 L_7699:
-	ld a,(hl)			;7699
-	dec a			;769a
+	ld a,(hl)			;7699   ; su estado
+	dec a			;769a   ; 1 (izquierda)?
 	jr z,L_769F		;769b
-	set 0,c		;769d
+	set 0,c		;769d   ; no: bit 0
 L_769F:
-	inc hl			;769f
-	ld a,(hl)			;76a0
-	cp 032h		;76a1
+	inc hl			;769f   ; el byte 3...
+	ld a,(hl)			;76a0   ; ...el paso del arco
+	cp 032h		;76a1   ; pasada la mitad (0x32)...
 	jr c,L_76A7		;76a3
-	set 1,c		;76a5
+	set 1,c		;76a5   ; ...bit 1
 L_76A7:
-	ld a,c			;76a7
+	ld a,c			;76a7   ; guardado
 	ld (0e338h),a		;76a8
-	ret			;76ab
+	ret			;76ab   ; vuelta
 se_empujan_los_dos:
-	ld a,00ah		;76ac
-	ld (0e344h),a		;76ae
+	ld a,00ah		;76ac   ; diez cuadros...
+	ld (0e344h),a		;76ae   ; ...sin volver a mirar
 	ld a,(0e202h)		;76b1   ; hacia arriba o hacia abajo segun hacia donde miraba cada uno
-	ld b,002h		;76b4
-	dec a			;76b6
+	ld b,002h		;76b4   ; abajo-derecha...
+	dec a			;76b6   ; ...si el primero va a la derecha
 	jr nz,L_76BB		;76b7
-	ld b,004h		;76b9
+	ld b,004h		;76b9   ; si no, abajo-izquierda
 L_76BB:
-	push bc			;76bb
-	call salta_el_primero		;76bc
-	pop bc			;76bf
-	ld a,b			;76c0
+	push bc			;76bb   ; B a salvo
+	call salta_el_primero		;76bc   ; el primero sale
+	pop bc			;76bf   ; B
+	ld a,b			;76c0   ; al reves...
 	ld b,002h		;76c1
 	cp 002h		;76c3
 	jr nz,L_76C9		;76c5
-	ld b,004h		;76c7
+	ld b,004h		;76c7   ; ...para el segundo
 L_76C9:
-	jp salta_el_segundo		;76c9
+	jp salta_el_segundo		;76c9   ; y sale
 estan_cerca:		; Acarreo si |E - (HL)| < 10 y |D - (HL+1)| < 8
-	ld a,e			;76cc
-	sub (hl)			;76cd
+	ld a,e			;76cc   ; la Y...
+	sub (hl)			;76cd   ; ...menos la otra
 	jr nc,L_76D2		;76ce
-	neg		;76d0
+	neg		;76d0   ; en positivo
 L_76D2:
-	cp 00ah		;76d2
-	ret nc			;76d4
-	inc hl			;76d5
+	cp 00ah		;76d2   ; 10 o mas...
+	ret nc			;76d4   ; ...lejos
+	inc hl			;76d5   ; la X
 	ld a,d			;76d6
-	sub (hl)			;76d7
+	sub (hl)			;76d7   ; ...menos la otra
 	jr nc,L_76DC		;76d8
-	neg		;76da
+	neg		;76da   ; en positivo
 L_76DC:
-	cp 008h		;76dc
-	ret			;76de
+	cp 008h		;76dc   ; menos de 8: acarreo
+	ret			;76de   ; vuelta
 coge_la_invencibilidad:		; 128 cuentas de cuatro cuadros intocable (0xE345 o 0xE346), y 100 puntos
-	pop hl			;76df
-	call retira_con_cien_puntos		;76e0
-	ld a,(0e332h)		;76e3
-	ld hl,0e345h		;76e6
+	pop hl			;76df   ; HL = el objeto
+	call retira_con_cien_puntos		;76e0   ; fuera, y 100 puntos
+	ld a,(0e332h)		;76e3   ; de quien es
+	ld hl,0e345h		;76e6   ; su cuenta
 	or a			;76e9
 	jr z,L_76ED		;76ea
-	inc hl			;76ec
+	inc hl			;76ec   ; la del segundo
 L_76ED:
-	ld (hl),080h		;76ed
-	ret			;76ef
+	ld (hl),080h		;76ed   ; 128
+	ret			;76ef   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LOS OCHO QUE MATAN. Si Q*bert es invencible, el bicho cae muerto; si acaba de entrar, no pasa nada; y si no, cae Q*bert.
 ; ----------------------------------------------------------------------
 choca_con_un_enemigo:
-	pop hl			;76f0
-	ld a,(0e332h)		;76f1
-	ld de,0e345h		;76f4
+	pop hl			;76f0   ; HL = el enemigo
+	ld a,(0e332h)		;76f1   ; de quien es
+	ld de,0e345h		;76f4   ; su invencibilidad
 	or a			;76f7
 	jr z,L_76FB		;76f8
-	inc de			;76fa
+	inc de			;76fa   ; la del segundo
 L_76FB:
 	ld a,(de)			;76fb   ; invencible
-	or a			;76fc
-	jr z,mira_la_proteccion		;76fd
-	dec hl			;76ff
+	or a			;76fc   ; invencible?
+	jr z,mira_la_proteccion		;76fd   ; no
+	dec hl			;76ff   ; al estado del enemigo
 	dec hl			;7700
 	dec hl			;7701
 	ld a,(hl)			;7702   ; el bicho, si no esta ya cayendo muerto, cae
-	cp 00ch		;7703
+	cp 00ch		;7703   ; cayendo muerto...
 	ret z			;7705
 	cp 00dh		;7706
-	ret z			;7708
-	call cae_muerto_hl		;7709
-	ld a,007h		;770c
+	ret z			;7708   ; ...nada mas
+	call cae_muerto_hl		;7709   ; muere el enemigo
+	ld a,007h		;770c   ; el sonido 7
 	jp toca_sonido		;770e
 mira_la_proteccion:
-	ld a,(0e332h)		;7711
+	ld a,(0e332h)		;7711   ; de quien es
 	or a			;7714
-	ld hl,0e336h		;7715
+	ld hl,0e336h		;7715   ; su proteccion
 	jr z,L_771B		;7718
-	inc hl			;771a
+	inc hl			;771a   ; la del segundo
 L_771B:
 	ld a,(hl)			;771b   ; recien entrado: intocable
-	or a			;771c
-	ret nz			;771d
-	ld a,(0e002h)		;771e
-	bit 5,a		;7721
-	jr z,L_7728		;7723
-	jp cae_qbert		;7725
+	or a			;771c   ; recien entrado?
+	ret nz			;771d   ; si: nada
+	ld a,(0e002h)		;771e   ; el modo
+	bit 5,a		;7721   ; el duelo?
+	jr z,L_7728		;7723   ; no
+	jp cae_qbert		;7725   ; si: solo cae
 L_7728:
-	call cae_qbert		;7728
-	xor a			;772b
+	call cae_qbert		;7728   ; cae
+	xor a			;772b   ; y fuera de juego
 	ld (0e113h),a		;772c
-	ret			;772f
+	ret			;772f   ; vuelta
 cae_qbert:
 	ld a,(0e332h)		;7730   ; el que choca, sus dos sprites
-	or a			;7733
+	or a			;7733   ; el primero?
 	ld hl,0e202h		;7734
 	jr z,L_773C		;7737
-	ld hl,0e212h		;7739
+	ld hl,0e212h		;7739   ; el segundo
 L_773C:
-	call cae_muerto_hl		;773c
-	ld a,007h		;773f
+	call cae_muerto_hl		;773c   ; su primer sprite
+	ld a,007h		;773f   ; siete bytes mas: el estado del segundo sprite
 	call suma_a_a_hl		;7741
-	ld a,b			;7744
+	ld a,b			;7744   ; el mismo lado
 	call pon_estado_y_arco_de_caer		;7745
 	ld a,013h		;7748   ; el sonido 0x13
-	jp toca_sonido		;774a
+	jp toca_sonido		;774a   ; el grito
 cae_muerto_hl:		; Estado 12 o 13 (hacia un lado u otro segun el cuadro) y el arco de caer, 0x64
-	ld a,(0e003h)		;774d
-	and 001h		;7750
-	add a,00ch		;7752
-	ld b,a			;7754
+	ld a,(0e003h)		;774d   ; el cuadro...
+	and 001h		;7750   ; ...par o impar...
+	add a,00ch		;7752   ; ...12 o 13
+	ld b,a			;7754   ; en B
 pon_estado_y_arco_de_caer:
-	ld (hl),a			;7755
-	inc hl			;7756
-	ld (hl),064h		;7757
-	ret			;7759
+	ld (hl),a			;7755   ; el estado
+	inc hl			;7756   ; el byte 3...
+	ld (hl),064h		;7757   ; ...el arco de caer
+	ret			;7759   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LA BOLA VERDE: 128 cuentas de cuatro cuadros con todo quieto menos los Q*bert, y el sonido 0x0D.
 ; ----------------------------------------------------------------------
 coge_la_bola_verde:
-	pop hl			;775a
-	call retira_con_cien_puntos		;775b
-	ld a,080h		;775e
-	ld (0e321h),a		;7760
+	pop hl			;775a   ; HL = la bola
+	call retira_con_cien_puntos		;775b   ; fuera, y 100 puntos
+	ld a,080h		;775e   ; 128 cuentas...
+	ld (0e321h),a		;7760   ; ...congelado
 	ld hl,000bch		;7763   ; HL=0x00BC: 0x6E2F escribe en 0x00BC y 0x00BA, que son la ROM de la BIOS, y no pasa nada. Tiene toda la pinta de que iba a 0xE2BC, el objeto 23 (SUPOSICION: el `ld hl` perdio el 0xE2)
-	call retira_y_repinta_la_fila		;7766
-	ld a,00dh		;7769
+	call retira_y_repinta_la_fila		;7766   ; escribe en la ROM (ver 0x7763)
+	ld a,00dh		;7769   ; el sonido 0x0D
 	jp toca_sonido		;776b
 coge_la_de_acelerar:		; Un paso mas del arco por cuadro, en los dos sprites
-	pop hl			;776e
-	call retira_con_cien_puntos		;776f
-	ld a,(0e332h)		;7772
+	pop hl			;776e   ; HL = el objeto
+	call retira_con_cien_puntos		;776f   ; fuera, y 100 puntos
+	ld a,(0e332h)		;7772   ; de quien es
 	or a			;7775
-	ld hl,0e201h		;7776
+	ld hl,0e201h		;7776   ; su velocidad
 	jr z,L_777E		;7779
-	ld hl,0e211h		;777b
+	ld hl,0e211h		;777b   ; la del segundo
 L_777E:
-	inc (hl)			;777e
-	ld a,008h		;777f
+	inc (hl)			;777e   ; uno mas
+	ld a,008h		;777f   ; en el segundo sprite
 	call suma_a_a_hl		;7781
-	inc (hl)			;7784
-	ld a,00ah		;7785
+	inc (hl)			;7784   ; uno mas
+	ld a,00ah		;7785   ; el sonido 0x0A
 	jp toca_sonido		;7787
 coge_la_de_frenar:		; Un paso menos, sin bajar de uno
-	pop hl			;778a
-	call retira_con_cien_puntos		;778b
-	ld a,(0e332h)		;778e
+	pop hl			;778a   ; HL = el objeto
+	call retira_con_cien_puntos		;778b   ; fuera, y 100 puntos
+	ld a,(0e332h)		;778e   ; de quien es
 	or a			;7791
-	ld hl,0e201h		;7792
+	ld hl,0e201h		;7792   ; su velocidad
 	jr z,L_779A		;7795
-	ld hl,0e211h		;7797
+	ld hl,0e211h		;7797   ; la del segundo
 L_779A:
-	ld a,(hl)			;779a
-	or a			;779b
-	ret z			;779c
-	dec (hl)			;779d
-	ld a,008h		;779e
+	ld a,(hl)			;779a   ; la velocidad
+	or a			;779b   ; cero?
+	ret z			;779c   ; si: nada
+	dec (hl)			;779d   ; uno menos
+	ld a,008h		;779e   ; en el segundo sprite
 	call suma_a_a_hl		;77a0
-	dec (hl)			;77a3
-	ld a,00bh		;77a4
+	dec (hl)			;77a3   ; uno menos
+	ld a,00bh		;77a4   ; el sonido 0x0B
 	jp toca_sonido		;77a6
 coge_la_bola_roja:		; El salto largo (disparo mientras se salta) y Q*bert en blanco
-	pop hl			;77a9
-	call retira_con_cien_puntos		;77aa
-	ld a,(0e332h)		;77ad
+	pop hl			;77a9   ; HL = la bola
+	call retira_con_cien_puntos		;77aa   ; fuera, y 100 puntos
+	ld a,(0e332h)		;77ad   ; de quien es
 	or a			;77b0
-	ld hl,0e322h		;77b1
+	ld hl,0e322h		;77b1   ; su poder
 	jr z,L_77B9		;77b4
-	ld hl,0e331h		;77b6
+	ld hl,0e331h		;77b6   ; el del segundo
 L_77B9:
-	ld (hl),001h		;77b9
-	ld a,00ah		;77bb
+	ld (hl),001h		;77b9   ; puesto
+	ld a,00ah		;77bb   ; el sonido 0x0A
 	jp toca_sonido		;77bd
 coge_la_bola_gris:		; Todos los bichos huyen
-	pop hl			;77c0
-	call retira_con_cien_puntos		;77c1
-	ld a,00ch		;77c4
+	pop hl			;77c0   ; HL = la bola
+	call retira_con_cien_puntos		;77c1   ; fuera, y 100 puntos
+	ld a,00ch		;77c4   ; el sonido 0x0C
 	call toca_sonido		;77c6
-	jp huyen_todos		;77c9
+	jp huyen_todos		;77c9   ; y todos huyen
 pon_c_en_catorce_objetos:
 	ld b,00eh		;77cc   ; CODIGO HUERFANO: C en el mismo byte de catorce objetos seguidos, de 8 en 8. Nadie lo llama
 L_77CE:
-	ld (hl),c			;77ce
-	ld a,008h		;77cf
+	ld (hl),c			;77ce   ; C
+	ld a,008h		;77cf   ; 8 bytes mas alla
 	call suma_a_a_hl		;77d1
-	djnz L_77CE		;77d4
-	ret			;77d6
+	djnz L_77CE		;77d4   ; catorce
+	ret			;77d6   ; vuelta
 coge_el_que_gira_cubos:		; 100 puntos y fuera
-	pop hl			;77d7
+	pop hl			;77d7   ; HL = el objeto
 retira_con_cien_puntos:		; El objeto fuera de la pantalla y quieto, y 100 puntos
-	dec hl			;77d8
-	ld (hl),0e0h		;77d9
-	dec hl			;77db
+	dec hl			;77d8   ; al byte 4
+	ld (hl),0e0h		;77d9   ; fuera de la pantalla
+	dec hl			;77db   ; al byte 2
 	dec hl			;77dc
-	ld (hl),000h		;77dd
-	ld de,00100h		;77df
+	ld (hl),000h		;77dd   ; quieto
+	ld de,00100h		;77df   ; 100 puntos
 	jp suma_puntos		;77e2
 
 ; ----------------------------------------------------------------------
 ; TODOS HUYEN: los trece del objeto 5 al 17 que esten en pantalla pasan a los estados 6-11, mas deprisa cuanto mas abajo esten (Y 0x30 y 0x60 de corte) y hacia el lado donde esten (X 0x80).
 ; ----------------------------------------------------------------------
 huyen_todos:
-	ld hl,0e22ch		;77e5
-	ld b,00dh		;77e8
+	ld hl,0e22ch		;77e5   ; la Y del objeto 5
+	ld b,00dh		;77e8   ; trece
 L_77EA:
-	ld c,000h		;77ea
-	ld a,(hl)			;77ec
-	inc hl			;77ed
+	ld c,000h		;77ea   ; estado 0
+	ld a,(hl)			;77ec   ; la Y
+	inc hl			;77ed   ; la X
 	cp 0e0h		;77ee   ; fuera de la pantalla: quieto
-	jr z,L_7806		;77f0
+	jr z,L_7806		;77f0   ; fuera: quieto
 	ld c,006h		;77f2   ; arriba: 6, cada 8 cuadros
-	cp 030h		;77f4
+	cp 030h		;77f4   ; por encima de 0x30...
 	jr c,L_7800		;77f6
 	inc c			;77f8   ; en medio: 8, cada 4
-	inc c			;77f9
-	cp 060h		;77fa
+	inc c			;77f9   ; ...8
+	cp 060h		;77fa   ; por encima de 0x60...
 	jr c,L_7800		;77fc
 	inc c			;77fe   ; abajo: 10, cada 2
-	inc c			;77ff
+	inc c			;77ff   ; ...10
 L_7800:
 	ld a,(hl)			;7800   ; en la mitad de la derecha, uno mas
-	cp 080h		;7801
+	cp 080h		;7801   ; la X a la derecha de 0x80...
 	jr c,L_7806		;7803
-	inc c			;7805
+	inc c			;7805   ; ...uno mas
 L_7806:
 	ld a,001h		;7806   ; mientras huyen no hay choques
-	ld (0e329h),a		;7808
-	dec hl			;780b
+	ld (0e329h),a		;7808   ; guardado
+	dec hl			;780b   ; al byte 2
 	dec hl			;780c
 	dec hl			;780d
-	ld (hl),c			;780e
-	ld a,00ah		;780f
+	ld (hl),c			;780e   ; el estado
+	ld a,00ah		;780f   ; el objeto siguiente, byte 4
 	call suma_a_a_hl		;7811
-	djnz L_77EA		;7814
-	ret			;7816
+	djnz L_77EA		;7814   ; trece
+	ret			;7816   ; vuelta
 tiempo_a_99:
-	ld hl,00099h		;7817
-	ld (0ec51h),hl		;781a
-	ret			;781d
+	ld hl,00099h		;7817   ; 99 en BCD
+	ld (0ec51h),hl		;781a   ; el tiempo
+	ret			;781d   ; vuelta
 corre_el_tiempo:
-	call un_segundo_menos		;781e
+	call un_segundo_menos		;781e   ; el reloj
 	ld a,(0e001h)		;7821   ; y lo pinta, salvo en el piedra-papel-tijera
-	cp 006h		;7824
-	ret nc			;7826
-	jr pinta_el_tiempo		;7827
+	cp 006h		;7824   ; del paso 6 en adelante...
+	ret nc			;7826   ; ...no se pinta
+	jr pinta_el_tiempo		;7827   ; se pinta
 un_segundo_menos:
-	ld hl,(0ec51h)		;7829
+	ld hl,(0ec51h)		;7829   ; el tiempo
 	ld a,(0e003h)		;782c   ; cada 64 cuadros
 	and 03fh		;782f
 	ret nz			;7831
-	call resta_uno_al_tiempo		;7832
+	call resta_uno_al_tiempo		;7832   ; un segundo menos
 	ld a,h			;7835   ; a cero: se acabo el tiempo
-	or l			;7836
-	ret nz			;7837
-	push hl			;7838
-	call pinta_el_tiempo		;7839
-	call vuelca_la_pantalla		;783c
+	or l			;7836   ; cero?
+	ret nz			;7837   ; no: vuelta
+	push hl			;7838   ; a salvo
+	call pinta_el_tiempo		;7839   ; TIME-00
+	call vuelca_la_pantalla		;783c   ; a la VRAM
 	ld a,035h		;783f   ; el sonido 0x35
-	call toca_sonido		;7841
-	call espera_un_rato		;7844
-	pop hl			;7847
+	call toca_sonido		;7841   ; suena
+	call espera_un_rato		;7844   ; una pausa
+	pop hl			;7847   ; HL
 	ld a,(0e002h)		;7848   ; en el duelo, gana el que tenga mas cubos
-	bit 5,a		;784b
-	jp nz,se_acabo_el_tiempo_del_duelo		;784d
+	bit 5,a		;784b   ; el duelo?
+	jp nz,se_acabo_el_tiempo_del_duelo		;784d   ; si: gana el que mas cubos tenga
 	xor a			;7850   ; con uno, Q*bert fuera: 0x4291 vera el tiempo a cero
-	ld (0e113h),a		;7851
-	ret			;7854
+	ld (0e113h),a		;7851   ; con uno, A=0: Q*bert fuera de juego
+	ret			;7854   ; vuelta
 resta_uno_al_tiempo:
-	ld hl,(0ec51h)		;7855
-	ld a,l			;7858
-	sub 001h		;7859
-	daa			;785b
-	ld l,a			;785c
-	jr nc,L_7862		;785d
-	ld hl,00000h		;785f
+	ld hl,(0ec51h)		;7855   ; el tiempo
+	ld a,l			;7858   ; las unidades...
+	sub 001h		;7859   ; ...menos una...
+	daa			;785b   ; ...en BCD
+	ld l,a			;785c   ; guardado
+	jr nc,L_7862		;785d   ; sin pasarse de cero
+	ld hl,00000h		;785f   ; cero
 L_7862:
-	ld (0ec51h),hl		;7862
-	ex de,hl			;7865
+	ld (0ec51h),hl		;7862   ; guardado
+	ex de,hl			;7865   ; DE = tiempo
 	ld hl,00010h		;7866   ; por debajo de 10...
 	or a			;7869
-	sbc hl,de		;786a
-	ex de,hl			;786c
-	ret c			;786d
-	ld a,(0e334h)		;786e
+	sbc hl,de		;786a   ; 16 - tiempo
+	ex de,hl			;786c   ; HL = tiempo
+	ret c			;786d   ; mas de 10 (0x10 en BCD): nada
+	ld a,(0e334h)		;786e   ; cobrando el tiempo...
 	or a			;7871
-	ret nz			;7872
+	ret nz			;7872   ; ...no hay aviso
 	ld a,010h		;7873   ; ...el aviso, 0x10
-	jp toca_sonido		;7875
+	jp toca_sonido		;7875   ; suena
 pinta_el_tiempo:		; TIME-nn en la fila 2, columna 23 de la copia de la tabla de nombres
-	ex de,hl			;7878
-	ld hl,0ed57h		;7879
-	ld (hl),034h		;787c
+	ex de,hl			;7878   ; E = el tiempo
+	ld hl,0ed57h		;7879   ; fila 2, columna 23
+	ld (hl),034h		;787c   ; T
 	inc hl			;787e
-	ld (hl),029h		;787f
+	ld (hl),029h		;787f   ; I
 	inc hl			;7881
-	ld (hl),02dh		;7882
+	ld (hl),02dh		;7882   ; M
 	inc hl			;7884
-	ld (hl),025h		;7885
+	ld (hl),025h		;7885   ; E
 	inc hl			;7887
-	ld (hl),020h		;7888
-	ld a,e			;788a
+	ld (hl),020h		;7888   ; -
+	ld a,e			;788a   ; la cifra alta...
 	and 0f0h		;788b
 	rrca			;788d
 	rrca			;788e
 	rrca			;788f
 	rrca			;7890
-	add a,010h		;7891
+	add a,010h		;7891   ; ...su casilla
 	inc hl			;7893
-	ld (hl),a			;7894
-	ld a,e			;7895
+	ld (hl),a			;7894   ; guardada
+	ld a,e			;7895   ; la baja...
 	and 00fh		;7896
-	add a,010h		;7898
+	add a,010h		;7898   ; ...su casilla
 	inc hl			;789a
-	ld (hl),a			;789b
-	ret			;789c
+	ld (hl),a			;789b   ; guardada
+	ret			;789c   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LA FASE DE BONIFICACION. Q*bert se queda en cada cubo y los saltos giran el cubo en vez de moverle; al acabarlo pasa al siguiente. Al final, cada cubo acabado se cuenta en pantalla con sus puntos (100, 200, 300...), y con los 27 sale PERFECT 5000 POINT.
 ; ----------------------------------------------------------------------
 paso_de_la_bonificacion:
 	djnz L_78AE		;789d   ; paso 1: espera
-	ld hl,0e004h		;789f
-	dec (hl)			;78a2
-	ret nz			;78a3
+	ld hl,0e004h		;789f   ; la espera
+	dec (hl)			;78a2   ; un cuadro menos
+	ret nz			;78a3   ; hasta cero
 	ld a,019h		;78a4   ; 25 filas por destapar, cada tres cuadros
-	ld (0e324h),a		;78a6
-	ld a,003h		;78a9
-	jp espera_a_y_sigue		;78ab
+	ld (0e324h),a		;78a6   ; 25 filas
+	ld a,003h		;78a9   ; cada 3 cuadros
+	jp espera_a_y_sigue		;78ab   ; y al paso 2
 L_78AE:
 	djnz L_78ED		;78ae   ; paso 2: se destapa la pantalla de arriba abajo
-	ld hl,0e004h		;78b0
-	dec (hl)			;78b3
-	ret nz			;78b4
-	ld (hl),003h		;78b5
-	ld hl,0e324h		;78b7
-	dec (hl)			;78ba
-	jp z,empieza_la_bonificacion		;78bb
+	ld hl,0e004h		;78b0   ; la espera
+	dec (hl)			;78b3   ; un cuadro menos
+	ret nz			;78b4   ; hasta cero
+	ld (hl),003h		;78b5   ; otros 3
+	ld hl,0e324h		;78b7   ; las filas que faltan
+	dec (hl)			;78ba   ; una menos
+	jp z,empieza_la_bonificacion		;78bb   ; ninguna: se empieza
 	ld a,(hl)			;78be   ; la fila que toca
-	dec a			;78bf
-	sub 017h		;78c0
+	dec a			;78bf   ; la fila...
+	sub 017h		;78c0   ; ...0x17 - filas...
 	neg		;78c2
-	ld hl,00020h		;78c4
+	ld hl,00020h		;78c4   ; 32...
 	ld b,a			;78c7
-	call multiplica_hl		;78c8
+	call multiplica_hl		;78c8   ; ...por la fila
 	ld de,03800h		;78cb   ; desde la copia de la tabla de nombres
-	add hl,de			;78ce
-	push hl			;78cf
-	ld de,0b500h		;78d0
+	add hl,de			;78ce   ; + 0x3800
+	push hl			;78cf   ; a salvo
+	ld de,0b500h		;78d0   ; + 0xB500: la misma fila en la copia
 	add hl,de			;78d3
-	ex de,hl			;78d4
-	pop hl			;78d5
-	ld bc,00020h		;78d6
-	jp copia_a_vram		;78d9
+	ex de,hl			;78d4   ; en DE
+	pop hl			;78d5   ; HL: la VRAM
+	ld bc,00020h		;78d6   ; 32 bytes
+	jp copia_a_vram		;78d9   ; LDIRVM
 empieza_la_bonificacion:
 	call pinta_el_marcador		;78dc   ; el marcador, BONUS arriba y su musica, 0x1A
-	ld de,079a3h		;78df
+	ld de,079a3h		;78df   ; BONUS arriba
 	call pinta_guion		;78e2
-	ld a,01ah		;78e5
+	ld a,01ah		;78e5   ; la musica 0x1A
 	call toca_sonido		;78e7
-	jp espera_a_y_sigue		;78ea
+	jp espera_a_y_sigue		;78ea   ; y al paso 3
 L_78ED:
 	djnz L_7901		;78ed   ; paso 3: el juego
-	call pon_los_sprites		;78ef
-	call vuelca_un_cuarto_de_la_pantalla		;78f2
+	call pon_los_sprites		;78ef   ; los sprites
+	call vuelca_un_cuarto_de_la_pantalla		;78f2   ; un cuarto de la pantalla
 	call tiempo_de_la_bonificacion		;78f5   ; el tiempo, de 16 en 16 cuadros
 	call gira_el_cubo_de_qbert		;78f8   ; los giros del cubo de Q*bert
-	call cubos_que_giran		;78fb
+	call cubos_que_giran		;78fb   ; los cubos que giran
 	jp pasa_al_siguiente_cubo		;78fe   ; y al acabarlo, el siguiente
 L_7901:
 	djnz $+93		;7901   ; paso 4: la cuenta
-	call vuelca_la_pantalla		;7903
-	ld hl,0e004h		;7906
-	dec (hl)			;7909
-	ret nz			;790a
-	ld (hl),010h		;790b
+	call vuelca_la_pantalla		;7903   ; la pantalla entera
+	ld hl,0e004h		;7906   ; la espera
+	dec (hl)			;7909   ; un cuadro menos
+	ret nz			;790a   ; hasta cero
+	ld (hl),010h		;790b   ; 16 cuadros
 	call cuenta_un_cubo		;790d   ; busca el siguiente cubo acabado y le pone su numero
-	ld hl,0e325h		;7910
-	or a			;7913
-	jr nz,acaba_la_cuenta		;7914
+	ld hl,0e325h		;7910   ; la cuenta
+	or a			;7913   ; ninguno mas?
+	jr nz,acaba_la_cuenta		;7914   ; si: se acabo
 	push hl			;7916   ; el numero por cien, en puntos
-	ld d,(hl)			;7917
-	ld e,000h		;7918
-	call suma_puntos		;791a
-	pop hl			;791d
+	ld d,(hl)			;7917   ; la cuenta...
+	ld e,000h		;7918   ; ...por 100
+	call suma_puntos		;791a   ; en puntos
+	pop hl			;791d   ; HL
 	ld a,(hl)			;791e   ; y uno mas
-	add a,001h		;791f
-	daa			;7921
-	ld (hl),a			;7922
-	ret			;7923
+	add a,001h		;791f   ; uno mas...
+	daa			;7921   ; ...en BCD
+	ld (hl),a			;7922   ; guardado
+	ret			;7923   ; vuelta
 acaba_la_cuenta:
 	ld a,(hl)			;7924   ; 28: los 27 cubos
-	cp 028h		;7925
-	jr nz,L_793C		;7927
+	cp 028h		;7925   ; los 27?
+	jr nz,L_793C		;7927   ; no
 	ld de,07949h		;7929   ; PERFECT 5000 POINT
-	call pinta_guion		;792c
-	ld de,05000h		;792f
+	call pinta_guion		;792c   ; en pantalla
+	ld de,05000h		;792f   ; 5.000 puntos
 	call suma_puntos		;7932
-	ld a,032h		;7935
+	ld a,032h		;7935   ; la musica 0x32
 	call toca_sonido		;7937
-	jr L_7941		;793a
+	jr L_7941		;793a   ; y sigue
 L_793C:
 	ld a,059h		;793c   ; si no, silencio
 	call toca_sonido		;793e
 L_7941:
-	ld a,001h		;7941
+	ld a,001h		;7941   ; (0xE334)=1: sin avisos del tiempo
 	ld (0e334h),a		;7943
-	jp espera_a_y_sigue		;7946
+	jp espera_a_y_sigue		;7946   ; y al paso 5
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulo_perfect: Guion de 0x4685: "PERFECT 5000 POINT" en 0x3AC7
@@ -6151,32 +6151,32 @@ DATA_rotulo_perfect:
 
 L_795E:
 	djnz L_796A		;795e   ; paso 5: la musica
-	ld a,(0e012h)		;7960
-	or a			;7963
+	ld a,(0e012h)		;7960   ; la musica...
+	or a			;7963   ; ...aun suena
 	ret nz			;7964
-	ld a,001h		;7965
-	jp espera_a_y_sigue		;7967
+	ld a,001h		;7965   ; un cuadro
+	jp espera_a_y_sigue		;7967   ; y al paso 6
 L_796A:
 	djnz L_7980		;796a   ; paso 6: cobra el tiempo que sobra
-	call vuelca_un_cuarto_de_la_pantalla		;796c
-	call cobra_el_tiempo		;796f
-	ret nz			;7972
+	call vuelca_un_cuarto_de_la_pantalla		;796c   ; un cuarto
+	call cobra_el_tiempo		;796f   ; un segundo
+	ret nz			;7972   ; quedan: vuelta
 	xor a			;7973   ; fase acabada
-	ld (0e334h),a		;7974
-	ld a,001h		;7977
-	ld (0e00dh),a		;7979
-	ld (0e320h),a		;797c
-	ret			;797f
+	ld (0e334h),a		;7974   ; sin cobrar...
+	ld a,001h		;7977   ; 1...
+	ld (0e00dh),a		;7979   ; ...fase acabada...
+	ld (0e320h),a		;797c   ; ...y una linea
+	ret			;797f   ; vuelta
 L_7980:
 	call esconde_los_sprites		;7980   ; paso 0: la pantalla entera de ladrillo y BONUS en medio
-	ld hl,03800h		;7983
-	ld bc,00300h		;7986
-	ld a,0ebh		;7989
-	call 00056h		;798b   ; BIOS FILVRM - Fills VRAM with value
-	ld de,07999h		;798e
+	ld hl,03800h		;7983   ; la tabla de nombres...
+	ld bc,00300h		;7986   ; ...entera...
+	ld a,0ebh		;7989   ; ...de ladrillo
+	call 00056h		;798b   ; BIOS FILVRM - Fills VRAM with value | FILVRM
+	ld de,07999h		;798e   ; BONUS en medio
 	call pinta_guion		;7991
-	ld a,050h		;7994
-	jp espera_a_y_sigue		;7996
+	ld a,050h		;7994   ; 80 cuadros
+	jp espera_a_y_sigue		;7996   ; y al paso 1
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulos_bonus: Guiones de 0x4685: " BONUS " en 0x396C y "BONUS" con
@@ -6196,244 +6196,244 @@ DATA_rotulos_bonus:
 ; TOCA BONIFICACION? Detras de las fases 3, 6 y 10 de cada decena (13, 16, 20...), el bit 0 de 0xE002 se enciende, se carga el tablero de 0xA7AD y la escena 5 corre la bonificacion. Al volver aqui se apaga y sigue la fase normal.
 ; ----------------------------------------------------------------------
 mira_la_bonificacion:
-	ld a,(0e111h)		;79ae
+	ld a,(0e111h)		;79ae   ; la fase
 	sub 001h		;79b1   ; las unidades de la fase que se acaba, menos una
-	daa			;79b3
-	and 00fh		;79b4
-	cp 002h		;79b6
+	daa			;79b3   ; menos una, en BCD
+	and 00fh		;79b4   ; las unidades
+	cp 002h		;79b6   ; 2 (fases 3, 13...)
 	jr z,L_79C1		;79b8
-	cp 005h		;79ba
+	cp 005h		;79ba   ; 5 (fases 6, 16...)
 	jr z,L_79C1		;79bc
-	cp 009h		;79be
-	ret nz			;79c0
+	cp 009h		;79be   ; 9 (fases 10, 20...)
+	ret nz			;79c0   ; las demas, nada
 L_79C1:
-	ld hl,0e002h		;79c1
+	ld hl,0e002h		;79c1   ; el modo
 	ld a,(hl)			;79c4   ; cambia el bit 0
-	xor 001h		;79c5
-	ld (hl),a			;79c7
-	rrca			;79c8
-	ret nc			;79c9
+	xor 001h		;79c5   ; cambia el bit 0
+	ld (hl),a			;79c7   ; guardado
+	rrca			;79c8   ; al acarreo
+	ret nc			;79c9   ; se ha apagado: vuelve y sigue
 	pop hl			;79ca   ; toca: esta llamada no vuelve a 0x43F4
-	call tablero_de_bonificacion		;79cb
+	call tablero_de_bonificacion		;79cb   ; el tablero de 0xA7AD
 	call monta_la_fase_con_el_tablero_puesto		;79ce   ; el tablero de bonificacion...
 	ld hl,0e000h		;79d1   ; ...y a la partida
-	ld (hl),005h		;79d4
-	ret			;79d6
+	ld (hl),005h		;79d4   ; la escena 5: la partida
+	ret			;79d6   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; COBRA EL TIEMPO: un segundo por llamada, 10 puntos cada uno y el sonido 0x15. NZ mientras quede; Z al acabar, con el sonido 0x16.
 ; ----------------------------------------------------------------------
 cobra_el_tiempo:
-	ld hl,(0ec51h)		;79d7
-	ld a,l			;79da
-	or a			;79db
-	jr z,acaba_de_cobrar		;79dc
-	ld a,001h		;79de
-	ld (0e334h),a		;79e0
-	call resta_uno_al_tiempo		;79e3
-	call pinta_el_tiempo		;79e6
-	ld de,00010h		;79e9
+	ld hl,(0ec51h)		;79d7   ; el tiempo
+	ld a,l			;79da   ; las unidades y decenas
+	or a			;79db   ; cero?
+	jr z,acaba_de_cobrar		;79dc   ; si: acabado
+	ld a,001h		;79de   ; sin avisos...
+	ld (0e334h),a		;79e0   ; ...del tiempo
+	call resta_uno_al_tiempo		;79e3   ; un segundo menos
+	call pinta_el_tiempo		;79e6   ; en pantalla
+	ld de,00010h		;79e9   ; 10 puntos
 	call suma_puntos		;79ec
-	ld a,(0e072h)		;79ef
+	ld a,(0e072h)		;79ef   ; un efecto sonando?
 	or a			;79f2
-	ld a,015h		;79f3
+	ld a,015h		;79f3   ; si no, el 0x15
 	call z,toca_sonido		;79f5
-	or a			;79f8
+	or a			;79f8   ; NZ
 	ret nz			;79f9
-	inc a			;79fa
-	ret			;79fb
+	inc a			;79fa   ; si A era 0, 1: NZ
+	ret			;79fb   ; vuelta
 acaba_de_cobrar:
-	ld a,016h		;79fc
+	ld a,016h		;79fc   ; el sonido 0x16
 	call toca_sonido		;79fe
-	call vuelca_la_pantalla		;7a01
+	call vuelca_la_pantalla		;7a01   ; a la VRAM
 espera_al_efecto:
 	ld a,(0e072h)		;7a04   ; hasta que calle el canal de efectos
-	or a			;7a07
-	jr nz,espera_al_efecto		;7a08
-	ret			;7a0a
+	or a			;7a07   ; sonando?
+	jr nz,espera_al_efecto		;7a08   ; si: se espera (la interrupcion lo acaba)
+	ret			;7a0a   ; vuelta
 tablero_de_bonificacion:		; Los 81 bytes de 0xA7AD a 0xEC00
-	ld hl,0a7adh		;7a0b
-	ld de,0ec00h		;7a0e
-	ld bc,00051h		;7a11
-	ldir		;7a14
-	ret			;7a16
+	ld hl,0a7adh		;7a0b   ; el tablero de bonificacion
+	ld de,0ec00h		;7a0e   ; a 0xEC00
+	ld bc,00051h		;7a11   ; 81 bytes
+	ldir		;7a14   ; copiados
+	ret			;7a16   ; vuelta
 tiempo_de_la_bonificacion:
-	call resta_cada_16_cuadros		;7a17
-	jp pinta_el_tiempo		;7a1a
+	call resta_cada_16_cuadros		;7a17   ; un segundo cada 16 cuadros
+	jp pinta_el_tiempo		;7a1a   ; y en pantalla
 resta_cada_16_cuadros:
-	ld hl,(0ec51h)		;7a1d
-	ld a,(0e003h)		;7a20
+	ld hl,(0ec51h)		;7a1d   ; el tiempo
+	ld a,(0e003h)		;7a20   ; cada 16...
 	and 00fh		;7a23
 	ret nz			;7a25
-	call resta_uno_al_tiempo		;7a26
-	ld a,h			;7a29
+	call resta_uno_al_tiempo		;7a26   ; uno menos
+	ld a,h			;7a29   ; cero?
 	or l			;7a2a
-	ret nz			;7a2b
+	ret nz			;7a2b   ; no: vuelta
 acaba_el_juego_de_la_bonificacion:
 	ld a,001h		;7a2c   ; la cuenta empieza en 1
-	ld (0e325h),a		;7a2e
-	ex de,hl			;7a31
-	call espera_a_y_sigue		;7a32
-	ex de,hl			;7a35
-	ret			;7a36
+	ld (0e325h),a		;7a2e   ; la cuenta de la puntuacion
+	ex de,hl			;7a31   ; HL a salvo
+	call espera_a_y_sigue		;7a32   ; al paso siguiente
+	ex de,hl			;7a35   ; HL
+	ret			;7a36   ; vuelta
 gira_el_cubo_de_qbert:		; La diagonal pulsada gira el cubo sobre el que esta Q*bert, sin moverle
-	call diagonal_del_primero		;7a37
+	call diagonal_del_primero		;7a37   ; la diagonal
 	ld a,b			;7a3a
-	or a			;7a3b
-	ret z			;7a3c
-	call bit_mas_bajo		;7a3d
-	call posicion_de_qbert		;7a40
-	call gira_el_cubo		;7a43
-	ret			;7a46
+	or a			;7a3b   ; ninguna...
+	ret z			;7a3c   ; ...nada
+	call bit_mas_bajo		;7a3d   ; una
+	call posicion_de_qbert		;7a40   ; donde esta Q*bert
+	call gira_el_cubo		;7a43   ; ese cubo gira
+	ret			;7a46   ; vuelta
 pasa_al_siguiente_cubo:
-	call posicion_de_qbert		;7a47
+	call posicion_de_qbert		;7a47   ; donde esta Q*bert
 	call casilla_debajo		;7a4a   ; el cubo de Q*bert: si no esta acabado, nada
-	and 040h		;7a4d
-	ret z			;7a4f
-	call posicion_de_qbert		;7a50
+	and 040h		;7a4d   ; acabado?
+	ret z			;7a4f   ; no: nada
+	call posicion_de_qbert		;7a50   ; donde esta
 busca_el_siguiente:
 	ld a,d			;7a53   ; tres columnas a la derecha...
-	add a,018h		;7a54
+	add a,018h		;7a54   ; una columna a la derecha
 	ld d,a			;7a56
-	cp 0f0h		;7a57
-	jr c,L_7A65		;7a59
+	cp 0f0h		;7a57   ; fuera?
+	jr c,L_7A65		;7a59   ; no
 	ld d,01ch		;7a5b   ; ...y al acabar la fila, la siguiente desde la primera columna
-	ld a,e			;7a5d
+	ld a,e			;7a5d   ; la fila siguiente...
 	add a,010h		;7a5e
 	ld e,a			;7a60
 	cp 09ch		;7a61   ; no quedan: se acaba el juego
-	jr nc,acaba_el_juego_de_la_bonificacion		;7a63
+	jr nc,acaba_el_juego_de_la_bonificacion		;7a63   ; no hay mas filas: se acabo
 L_7A65:
 	call casilla_debajo		;7a65   ; hasta dar con un cubo
-	inc a			;7a68
-	jr z,busca_el_siguiente		;7a69
+	inc a			;7a68   ; hueco?
+	jr z,busca_el_siguiente		;7a69   ; si: el siguiente
 	ld (hl),d			;7a6b   ; Q*bert alli, los dos sprites
-	dec hl			;7a6c
+	dec hl			;7a6c   ; la Y
 	ld (hl),e			;7a6d
-	ld hl,0e20ch		;7a6e
+	ld hl,0e20ch		;7a6e   ; el segundo sprite
 	ld (hl),e			;7a71
 	inc hl			;7a72
 	ld (hl),d			;7a73
-	ret			;7a74
+	ret			;7a74   ; vuelta
 posicion_de_qbert:		; E = su Y, D = su X
-	ld hl,0e204h		;7a75
-	ld e,(hl)			;7a78
+	ld hl,0e204h		;7a75   ; el primer sprite
+	ld e,(hl)			;7a78   ; E = Y
 	inc hl			;7a79
-	ld d,(hl)			;7a7a
-	ret			;7a7b
+	ld d,(hl)			;7a7a   ; D = X
+	ret			;7a7b   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; CUENTA UN CUBO: busca en la copia de la tabla de nombres el tile 0x88 (la esquina del cubo acabado) y pone encima el numero de la cuenta y dos ceros: los puntos que da. A=1 si no queda ninguno.
 ; ----------------------------------------------------------------------
 cuenta_un_cubo:
-	ld hl,0ed63h		;7a7c
+	ld hl,0ed63h		;7a7c   ; fila 3, columna 3 de la copia
 L_7A7F:
-	ld a,(hl)			;7a7f
-	cp 088h		;7a80
-	jr z,pone_los_puntos		;7a82
-	inc hl			;7a84
-	ld a,l			;7a85
+	ld a,(hl)			;7a7f   ; la casilla
+	cp 088h		;7a80   ; la esquina de un cubo acabado?
+	jr z,pone_los_puntos		;7a82   ; si
+	inc hl			;7a84   ; la siguiente
+	ld a,l			;7a85   ; la columna...
 	ld b,020h		;7a86
-	call divide		;7a88
+	call divide		;7a88   ; ...el resto de entre 32
 	ld a,b			;7a8b
-	cp 01eh		;7a8c
-	jr c,L_7A7F		;7a8e
-	ld de,00025h		;7a90
+	cp 01eh		;7a8c   ; antes de la 30...
+	jr c,L_7A7F		;7a8e   ; ...sigue
+	ld de,00025h		;7a90   ; a la columna 3 de la fila siguiente
 	add hl,de			;7a93   ; la fila siguiente
-	push hl			;7a94
+	push hl			;7a94   ; a salvo
 	ld de,0efa3h		;7a95   ; hasta la fila 21
-	sbc hl,de		;7a98
-	pop hl			;7a9a
-	jr nz,L_7A7F		;7a9b
-	ld a,001h		;7a9d
-	ret			;7a9f
+	sbc hl,de		;7a98   ; la ultima?
+	pop hl			;7a9a   ; HL
+	jr nz,L_7A7F		;7a9b   ; no: sigue
+	ld a,001h		;7a9d   ; no queda ninguno
+	ret			;7a9f   ; vuelta
 pone_los_puntos:
 	ld a,(0e325h)		;7aa0   ; la cuenta en BCD: la decena (en blanco si es cero)...
-	ld b,a			;7aa3
-	and 0f0h		;7aa4
+	ld b,a			;7aa3   ; a salvo
+	and 0f0h		;7aa4   ; la decena...
 	rrca			;7aa6
 	rrca			;7aa7
 	rrca			;7aa8
 	rrca			;7aa9
-	or a			;7aaa
-	jr z,L_7AAF		;7aab
-	add a,010h		;7aad
+	or a			;7aaa   ; cero?
+	jr z,L_7AAF		;7aab   ; si: en blanco
+	add a,010h		;7aad   ; su casilla
 L_7AAF:
-	ld (hl),a			;7aaf
+	ld (hl),a			;7aaf   ; la decena
 	inc hl			;7ab0
 	ld a,b			;7ab1   ; ...la unidad y 00
-	and 00fh		;7ab2
-	add a,010h		;7ab4
-	ld (hl),a			;7ab6
+	and 00fh		;7ab2   ; la unidad...
+	add a,010h		;7ab4   ; ...su casilla
+	ld (hl),a			;7ab6   ; guardada
 	inc hl			;7ab7
-	ld (hl),010h		;7ab8
+	ld (hl),010h		;7ab8   ; 0
 	inc hl			;7aba
-	ld (hl),010h		;7abb
-	xor a			;7abd
-	ret			;7abe
+	ld (hl),010h		;7abb   ; 0
+	xor a			;7abd   ; A=0: habia
+	ret			;7abe   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; EL MARCO: los 13 tiles de ladrillo y de pinchos (0xEB-0xF7) con su color, y en la copia de la tabla de nombres las filas de arriba y abajo y las columnas de los lados de ladrillo, con una fila y una columna de pinchos por dentro.
 ; ----------------------------------------------------------------------
 monta_el_marco:
 	ld hl,02758h		;7abf   ; los patrones de 0xEB a 0xF7
-	ld de,07ba5h		;7ac2
-	ld bc,00068h		;7ac5
-	call copia_a_los_tres_bancos		;7ac8
+	ld de,07ba5h		;7ac2   ; 13 patrones
+	ld bc,00068h		;7ac5   ; 104 bytes
+	call copia_a_los_tres_bancos		;7ac8   ; en los tres tercios
 	ld hl,00758h		;7acb   ; y sus colores
-	ld de,07c0dh		;7ace
-	call guion_rle_en_tres_bancos		;7ad1
+	ld de,07c0dh		;7ace   ; su RLE
+	call guion_rle_en_tres_bancos		;7ad1   ; en los tres tercios
 	ld hl,0ed00h		;7ad4   ; la fila 0 y la 23 (0xEFE0), de ladrillo
-	call fila_de_ladrillo		;7ad7
+	call fila_de_ladrillo		;7ad7   ; la fila 0
 	ld hl,0efe0h		;7ada
-	call fila_de_ladrillo		;7add
+	call fila_de_ladrillo		;7add   ; la 23
 	ld hl,0ed20h		;7ae0   ; la columna 0 y la 31, de la fila 1 a la 22
-	call columna_de_ladrillo		;7ae3
+	call columna_de_ladrillo		;7ae3   ; la columna 0
 	ld hl,0ed3fh		;7ae6
-	call columna_de_ladrillo		;7ae9
+	call columna_de_ladrillo		;7ae9   ; la 31
 	ld hl,0ed21h		;7aec   ; la fila 1 de pinchos
-	ld de,07b41h		;7aef
+	ld de,07b41h		;7aef   ; sus pinchos
 	call fila_de_pinchos		;7af2
 	ld hl,0efc1h		;7af5   ; y la 22
-	ld de,07b5fh		;7af8
+	ld de,07b5fh		;7af8   ; los de abajo
 	call fila_de_pinchos		;7afb
 	ld hl,0ed41h		;7afe   ; la columna 1
-	ld de,07b7dh		;7b01
+	ld de,07b7dh		;7b01   ; los de la izquierda
 	call columna_de_pinchos		;7b04
 	ld hl,0ed5eh		;7b07   ; y la 30
-	ld de,07b91h		;7b0a
+	ld de,07b91h		;7b0a   ; los de la derecha
 	jp columna_de_pinchos		;7b0d
 fila_de_pinchos:
-	ld bc,01e01h		;7b10
+	ld bc,01e01h		;7b10   ; 30 casillas de una en una
 	jr copia_los_pinchos		;7b13
 columna_de_pinchos:
-	ld bc,01420h		;7b15
+	ld bc,01420h		;7b15   ; 20 casillas de 32 en 32
 copia_los_pinchos:
-	ld a,(de)			;7b18
-	ld (hl),a			;7b19
-	inc de			;7b1a
-	ld a,c			;7b1b
+	ld a,(de)			;7b18   ; el pincho
+	ld (hl),a			;7b19   ; en la copia
+	inc de			;7b1a   ; el siguiente
+	ld a,c			;7b1b   ; el paso
 	call suma_a_a_hl		;7b1c
-	djnz copia_los_pinchos		;7b1f
-	ret			;7b21
+	djnz copia_los_pinchos		;7b1f   ; B
+	ret			;7b21   ; vuelta
 fila_de_ladrillo:
-	ld bc,020ebh		;7b22
-	ld d,001h		;7b25
+	ld bc,020ebh		;7b22   ; 32 ladrillos
+	ld d,001h		;7b25   ; de uno en uno
 	jr pon_el_ladrillo		;7b27
 columna_de_ladrillo:
-	ld bc,016ebh		;7b29
-	ld d,020h		;7b2c
+	ld bc,016ebh		;7b29   ; 22 ladrillos
+	ld d,020h		;7b2c   ; de 32 en 32
 pon_el_ladrillo:
-	ld (hl),c			;7b2e
-	ld a,d			;7b2f
+	ld (hl),c			;7b2e   ; el ladrillo
+	ld a,d			;7b2f   ; el paso
 	call suma_a_a_hl		;7b30
-	djnz pon_el_ladrillo		;7b33
-	ret			;7b35
+	djnz pon_el_ladrillo		;7b33   ; B
+	ret			;7b35   ; vuelta
 fila_0_de_ladrillo:		; Directamente en la VRAM
-	ld hl,03800h		;7b36
-	ld bc,00020h		;7b39
-	ld a,0ebh		;7b3c
-	jp 00056h		;7b3e   ; BIOS FILVRM - Fills VRAM with value
+	ld hl,03800h		;7b36   ; la fila 0 de la VRAM
+	ld bc,00020h		;7b39   ; 32 casillas
+	ld a,0ebh		;7b3c   ; de ladrillo
+	jp 00056h		;7b3e   ; BIOS FILVRM - Fills VRAM with value | FILVRM
 
 ; ----------------------------------------------------------------------
 ; DATOS pinchos_del_marco: Los tiles de las cuatro tiras de pinchos: 30 de la
@@ -6600,12 +6600,12 @@ L_7CF0:
 	ld hl,0edebh		;7cf3
 	ld b,005h		;7cf6
 L_7CF8:
-	ld a,(de)			;7cf8
-	or a			;7cf9
-	jr z,L_7D00		;7cfa
-	dec a			;7cfc
-	add a,0fch		;7cfd
-	ld (hl),a			;7cff
+	ld a,(de)			;7cf8   ; quien gano esta partida
+	or a			;7cf9   ; nadie aun...
+	jr z,L_7D00		;7cfa   ; ...nada
+	dec a			;7cfc   ; 0 o 1...
+	add a,0fch		;7cfd   ; ...0xFC o 0xFD
+	ld (hl),a			;7cff   ; el corazon
 L_7D00:
 	ld a,040h		;7d00
 	call suma_a_a_hl		;7d02
@@ -6688,16 +6688,16 @@ pinta_la_cara:		; Una de las cuatro de 0x7DCA: dos caras (segun 0xE324) con los 
 	jr z,L_7DB8		;7db5
 	inc b			;7db7
 L_7DB8:
-	ld a,(0e324h)		;7db8
-	add a,a			;7dbb
-	add a,b			;7dbc
-	ld hl,07dcah		;7dbd
-	add a,a			;7dc0
+	ld a,(0e324h)		;7db8   ; la cara...
+	add a,a			;7dbb   ; ...por dos...
+	add a,b			;7dbc   ; ...+ ojos abiertos o cerrados
+	ld hl,07dcah		;7dbd   ; la tabla
+	add a,a			;7dc0   ; por dos: palabras
 	call suma_a_a_hl		;7dc1
-	ld e,(hl)			;7dc4
+	ld e,(hl)			;7dc4   ; el guion...
 	inc hl			;7dc5
-	ld d,(hl)			;7dc6
-	jp pinta_guion		;7dc7
+	ld d,(hl)			;7dc6   ; ...de esa cara
+	jp pinta_guion		;7dc7   ; en pantalla
 
 ; ----------------------------------------------------------------------
 ; DATOS caras_punteros: Las cuatro caras: 0x7DD2 y 0x7DF6 (la normal, dos
@@ -6755,12 +6755,12 @@ espera_un_rato:		; Dos vueltas de 65.536: una pausa de reloj, con las interrupci
 L_7E83:
 	ld hl,00000h		;7e83
 L_7E86:
-	dec hl			;7e86
+	dec hl			;7e86   ; cuenta atras...
 	ld a,h			;7e87
-	or l			;7e88
-	jr nz,L_7E86		;7e89
-	djnz L_7E83		;7e8b
-	ret			;7e8d
+	or l			;7e88   ; ...hasta...
+	jr nz,L_7E86		;7e89   ; ...cero
+	djnz L_7E83		;7e8b   ; B vueltas
+	ret			;7e8d   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulos_del_marcador: Guiones: "GAME OVER" en 0x38C8 y "CONTINUE--F5"
@@ -6799,12 +6799,12 @@ DATA_rotulos_del_marcador:
 ; EL MENU DE UN JUGADOR: LEVEL 1 a LEVEL 5, el Q*bert del menu y su musica, 0x1D.
 ; ----------------------------------------------------------------------
 menu_de_un_jugador:
-	ld a,01dh		;7f1a
+	ld a,01dh		;7f1a   ; la musica del menu, 0x1D
 	call toca_sonido		;7f1c
-	call limpia_el_marco		;7f1f
-	call dibujos_del_menu		;7f22
-	call pausa_de_la_animacion		;7f25
-	ld de,07fcch		;7f28
+	call limpia_el_marco		;7f1f   ; el marco limpio
+	call dibujos_del_menu		;7f22   ; el Q*bert del menu
+	call pausa_de_la_animacion		;7f25   ; su pausa
+	ld de,07fcch		;7f28   ; LEVEL 1 a LEVEL 5
 	jp pinta_guion		;7f2b
 
 ; ----------------------------------------------------------------------
@@ -6848,22 +6848,22 @@ mueve_la_mano:
 	jr c,baja_la_mano		;7f6e
 	ret			;7f70
 sube_la_mano:
-	call sonido_del_cursor		;7f71
-	ld a,(hl)			;7f74
-	or a			;7f75
-	jr z,L_7F7A		;7f76
-	dec (hl)			;7f78
-	ret			;7f79
+	call sonido_del_cursor		;7f71   ; el sonido del cursor
+	ld a,(hl)			;7f74   ; el nivel
+	or a			;7f75   ; el primero?
+	jr z,L_7F7A		;7f76   ; si: al ultimo
+	dec (hl)			;7f78   ; uno menos
+	ret			;7f79   ; vuelta
 L_7F7A:
 	ld (hl),004h		;7f7a   ; de la 1 a la 5
 	ret			;7f7c
 baja_la_mano:
-	call sonido_del_cursor		;7f7d
-	ld a,(hl)			;7f80
-	cp 004h		;7f81
-	jr z,L_7F87		;7f83
-	inc (hl)			;7f85
-	ret			;7f86
+	call sonido_del_cursor		;7f7d   ; el sonido del cursor
+	ld a,(hl)			;7f80   ; el nivel
+	cp 004h		;7f81   ; el ultimo?
+	jr z,L_7F87		;7f83   ; si: al primero
+	inc (hl)			;7f85   ; uno mas
+	ret			;7f86   ; vuelta
 L_7F87:
 	ld (hl),000h		;7f87   ; de la 5 a la 1
 	ret			;7f89
@@ -6884,13 +6884,13 @@ pinta_la_mano_del_nivel:
 	call 0004dh		;7fa3   ; BIOS WRTVRM - Writes data in VRAM
 	ret			;7fa6
 linea_del_nivel:		; HL = 0x38AA + 64 * nivel: dos filas por opcion
-	ld a,(0e103h)		;7fa7
+	ld a,(0e103h)		;7fa7   ; el nivel
 	ld b,a			;7faa
-	ld hl,00040h		;7fab
+	ld hl,00040h		;7fab   ; 64 por nivel
 	call multiplica_hl		;7fae
-	ld de,038aah		;7fb1
+	ld de,038aah		;7fb1   ; + 0x38AA
 	add hl,de			;7fb4
-	ret			;7fb5
+	ret			;7fb5   ; vuelta
 borra_las_manos:
 	ld hl,038aah		;7fb6
 borra_b_manos:
@@ -7014,43 +7014,43 @@ DATA_menu_del_duelo:
 
 
 dibujos_del_menu_del_duelo:		; Los dos Q*bert del menu: el primero en X 0x50 y el segundo en X 0xA0
-	call graficos_del_menu		;80b3
-	call sprites_del_menu		;80b6
-	ld hl,0508bh		;80b9
+	call graficos_del_menu		;80b3   ; los graficos
+	call sprites_del_menu		;80b6   ; los sprites
+	ld hl,0508bh		;80b9   ; el primero en X 0x50
 	ld (0ec80h),hl		;80bc
-	ld de,08184h		;80bf
+	ld de,08184h		;80bf   ; su cuerpo
 	call pinta_guion		;80c2
-	jr L_80CD		;80c5
+	jr L_80CD		;80c5   ; y el segundo
 dibujos_del_menu:		; El de un jugador: uno solo, en X 0xA0
 	call graficos_del_menu		;80c7
 	call sprites_del_menu		;80ca
 L_80CD:
-	ld hl,0a08bh		;80cd
+	ld hl,0a08bh		;80cd   ; en X 0xA0
 	ld (0ec84h),hl		;80d0
-	ld de,08164h		;80d3
+	ld de,08164h		;80d3   ; su cuerpo
 	call pinta_guion		;80d6
-	call vuelca_17_bytes_de_sprites		;80d9
-	ret			;80dc
+	call vuelca_17_bytes_de_sprites		;80d9   ; los sprites a la VRAM
+	ret			;80dc   ; vuelta
 graficos_del_menu:		; Dos RLE: patrones y colores del Q*bert grande del menu (0xBE63) y sus sprites (0xBFA5)
 	ld de,0be63h		;80dd
 	call guion_rle		;80e0
 	ld de,0bfa5h		;80e3
 	jp guion_rle		;80e6
 anima_el_menu:		; Cada 14 cuadros el Q*bert cambia de postura: otro guion y un sprite que aparece y desaparece
-	ld hl,0e347h		;80e9
-	dec (hl)			;80ec
-	ret nz			;80ed
-	ld (hl),00eh		;80ee
-	inc hl			;80f0
+	ld hl,0e347h		;80e9   ; la cuenta
+	dec (hl)			;80ec   ; un cuadro menos
+	ret nz			;80ed   ; sin acabar: nada
+	ld (hl),00eh		;80ee   ; otros 14
+	inc hl			;80f0   ; la postura
 	ld a,(hl)			;80f1
-	xor 001h		;80f2
-	ld (hl),a			;80f4
+	xor 001h		;80f2   ; la otra
+	ld (hl),a			;80f4   ; guardada
 	jr z,postura_b		;80f5
-	ld de,081a4h		;80f7
+	ld de,081a4h		;80f7   ; postura A
 	call pinta_guion		;80fa
-	ld a,0e0h		;80fd
+	ld a,0e0h		;80fd   ; sin el sprite 3
 	ld (0ec8ch),a		;80ff
-	jr vuelca_los_sprites_del_menu		;8102
+	jr vuelca_los_sprites_del_menu		;8102   ; a la VRAM
 postura_b:
 	ld de,081aeh		;8104
 	call pinta_guion		;8107
@@ -7059,19 +7059,19 @@ postura_b:
 vuelca_los_sprites_del_menu:
 	jp vuelca_17_bytes_de_sprites		;8110
 anima_el_segundo_del_menu:
-	ld hl,0e347h		;8113
-	ld a,(hl)			;8116
+	ld hl,0e347h		;8113   ; la cuenta
+	ld a,(hl)			;8116   ; recien reiniciada?
 	cp 00eh		;8117
-	ret nz			;8119
-	inc hl			;811a
+	ret nz			;8119   ; no: nada
+	inc hl			;811a   ; la postura
 	ld a,(hl)			;811b
 	or a			;811c
 	jr z,postura_b_del_segundo		;811d
-	ld de,081b8h		;811f
+	ld de,081b8h		;811f   ; postura A del segundo
 	call pinta_guion		;8122
-	ld a,0e0h		;8125
+	ld a,0e0h		;8125   ; sin el sprite 2
 	ld (0ec88h),a		;8127
-	jr L_8138		;812a
+	jr L_8138		;812a   ; a la VRAM
 postura_b_del_segundo:
 	ld de,081c2h		;812c
 	call pinta_guion		;812f
@@ -7199,12 +7199,12 @@ otro_esta_quieto:
 	call sonido_y_pausa		;823d
 	jr gana_la_ronda		;8240
 sonido_y_pausa:		; El sonido 0x35 y la pausa de 0x7E81
-	push bc			;8242
-	ld a,035h		;8243
+	push bc			;8242   ; B a salvo
+	ld a,035h		;8243   ; el sonido 0x35
 	call toca_sonido		;8245
-	call espera_un_rato		;8248
-	pop bc			;824b
-	ret			;824c
+	call espera_un_rato		;8248   ; una pausa
+	pop bc			;824b   ; B
+	ret			;824c   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; EL REBOTE: B, la diagonal hacia la que sale despedido el Q*bert de (0xE332), segun (0xE338).
@@ -7228,12 +7228,12 @@ L_8261:
 	jr nz,L_8266		;8262
 	set 1,b		;8264
 L_8266:
-	ld a,00ah		;8266
-	ld (0e344h),a		;8268
-	ld a,(0e332h)		;826b
-	or a			;826e
+	ld a,00ah		;8266   ; diez cuadros...
+	ld (0e344h),a		;8268   ; ...sin choques
+	ld a,(0e332h)		;826b   ; cual sale
+	or a			;826e   ; el primero
 	jp z,salta_el_primero		;826f
-	jp salta_el_segundo		;8272
+	jp salta_el_segundo		;8272   ; el segundo
 vuelve_a_entrar:
 	ld a,(0e332h)		;8275   ; CODIGO HUERFANO: pone al Q*bert de (0xE332) arriba otra vez, con sus dos sprites. Nadie lo llama
 	or a			;8278
@@ -7243,35 +7243,35 @@ vuelve_a_entrar:
 	ld de,0e212h		;8280
 	ld h,0b0h		;8283
 L_8285:
-	ld a,(de)			;8285
-	cp 003h		;8286
-	ret nc			;8288
-	ld a,(0e338h)		;8289
-	add a,00ch		;828c
+	ld a,(de)			;8285   ; su estado
+	cp 003h		;8286   ; entrando o cayendo...
+	ret nc			;8288   ; ...nada
+	ld a,(0e338h)		;8289   ; el lado...
+	add a,00ch		;828c   ; ...12 o 13...
 	ld b,a			;828e
-	ld (de),a			;828f
-	inc de			;8290
-	ld a,064h		;8291
+	ld (de),a			;828f   ; ...cae muerto
+	inc de			;8290   ; el byte 3
+	ld a,064h		;8291   ; el arco de caer
 	ld (de),a			;8293
-	inc de			;8294
+	inc de			;8294   ; al byte 6
 	inc de			;8295
 	inc de			;8296
-	ld a,h			;8297
+	ld a,h			;8297   ; el patron
 	ld (de),a			;8298
-	ld a,004h		;8299
+	ld a,004h		;8299   ; el segundo sprite
 	call suma_a_a_de		;829b
-	ld a,b			;829e
+	ld a,b			;829e   ; igual
 	ld (de),a			;829f
 	inc de			;82a0
-	ld a,064h		;82a1
+	ld a,064h		;82a1   ; el arco
 	ld (de),a			;82a3
 	inc de			;82a4
 	inc de			;82a5
 	inc de			;82a6
-	ld a,h			;82a7
+	ld a,h			;82a7   ; el patron, 16 mas alla
 	add a,010h		;82a8
 	ld (de),a			;82aa
-	ret			;82ab
+	ret			;82ab   ; vuelta
 gana_la_ronda:
 	ld a,(0e333h)		;82ac
 	ld b,a			;82af
@@ -7316,21 +7316,21 @@ se_acabo_el_tiempo_del_duelo:
 	ld (0e342h),a		;82f0
 	jp resultado_de_la_partida		;82f3   ; a la pantalla del resultado
 cuenta_los_cubos_de_los_dos:		; (0xE349) los del primero y (0xE34A) los del segundo; B: 1 si gana el primero, 0 si el segundo, y Z si empatan
-	ld hl,0e349h		;82f6
-	ld c,040h		;82f9
-	call cuenta_los_cubos_de_c		;82fb
+	ld hl,0e349h		;82f6   ; los del primero
+	ld c,040h		;82f9   ; bit 6
+	call cuenta_los_cubos_de_c		;82fb   ; contados
 	ld a,(hl)			;82fe
-	inc hl			;82ff
-	push af			;8300
-	ld c,020h		;8301
-	call cuenta_los_cubos_de_c		;8303
-	pop af			;8306
-	cp (hl)			;8307
-	ret z			;8308
-	ld b,001h		;8309
-	ret nc			;830b
-	dec b			;830c
-	ret			;830d
+	inc hl			;82ff   ; los del segundo
+	push af			;8300   ; a salvo
+	ld c,020h		;8301   ; bit 5
+	call cuenta_los_cubos_de_c		;8303   ; contados
+	pop af			;8306   ; los del primero
+	cp (hl)			;8307   ; contra los del segundo
+	ret z			;8308   ; empate
+	ld b,001h		;8309   ; el primero...
+	ret nc			;830b   ; ...si tiene mas
+	dec b			;830c   ; el segundo
+	ret			;830d   ; vuelta
 cuenta_los_cubos_de_c:		; Las 79 casillas del tablero (sin los dos modelos) con los bits 6 y 5 iguales a C
 	ld (hl),000h		;830e
 	ld de,0ec02h		;8310
@@ -7346,42 +7346,42 @@ L_831C:
 	djnz L_8315		;831d
 	ret			;831f
 vidas_del_de_turno:		; HL = 0xE110 o 0xE120 segun (0xE333), y Z si no le quedan
-	ld a,(0e333h)		;8320
+	ld a,(0e333h)		;8320   ; de quien se trata
 	ld b,a			;8323
 	or a			;8324
-	ld hl,0e110h		;8325
+	ld hl,0e110h		;8325   ; las vidas del primero
 	jr z,L_832D		;8328
-	ld hl,0e120h		;832a
+	ld hl,0e120h		;832a   ; las del segundo
 L_832D:
 	ld a,(hl)			;832d
 	or a			;832e
 	ret			;832f
 objeto_del_de_turno:		; HL = 0xE202 o 0xE212
-	ld a,(0e333h)		;8330
-	ld hl,0e202h		;8333
+	ld a,(0e333h)		;8330   ; de quien se trata
+	ld hl,0e202h		;8333   ; el estado del primero
 	or a			;8336
 	ret z			;8337
-	ld hl,0e212h		;8338
-	ret			;833b
+	ld hl,0e212h		;8338   ; el del segundo
+	ret			;833b   ; vuelta
 cae_el_otro:
 	call cambia_de_turno		;833c   ; CODIGO HUERFANO: Z si el OTRO jugador esta cayendo (estado 4); el `call` de dentro cambia (0xE333) dos veces
 	call objeto_del_de_turno		;833f
 	ld a,(hl)			;8342
 	cp 004h		;8343
 cambia_de_turno:
-	push af			;8345
-	ld a,(0e333h)		;8346
-	xor 001h		;8349
-	ld (0e333h),a		;834b
-	pop af			;834e
-	ret			;834f
+	push af			;8345   ; A a salvo
+	ld a,(0e333h)		;8346   ; el de turno
+	xor 001h		;8349   ; el otro
+	ld (0e333h),a		;834b   ; guardado
+	pop af			;834e   ; A
+	ret			;834f   ; vuelta
 apunta_la_partida:		; En 0xE602 y siguientes, quien gano cada partida (1 o 2)
-	ld hl,0e602h		;8350
-	ld a,(0e104h)		;8353
-	ld c,003h		;8356
+	ld hl,0e602h		;8350   ; las partidas apuntadas
+	ld a,(0e104h)		;8353   ; 3 o 5
+	ld c,003h		;8356   ; 3
 	or a			;8358
 	jr z,L_835D		;8359
-	ld c,005h		;835b
+	ld c,005h		;835b   ; 5
 L_835D:
 	ld a,(0ecb8h)		;835d
 	sub c			;8360
@@ -7392,13 +7392,13 @@ L_8365:
 	ld (hl),b			;8368
 	ret			;8369
 monta_los_corazones:		; Los tiles 0xFC y 0xFD: un corazon magenta y otro cian, las marcas de partida ganada
-	ld hl,027e0h		;836a
-	ld de,08384h		;836d
-	ld bc,00010h		;8370
-	call copia_a_los_tres_bancos		;8373
-	ld hl,007e0h		;8376
+	ld hl,027e0h		;836a   ; el tile 0xFC
+	ld de,08384h		;836d   ; los dos corazones
+	ld bc,00010h		;8370   ; 16 bytes
+	call copia_a_los_tres_bancos		;8373   ; en los tres tercios
+	ld hl,007e0h		;8376   ; su color
 	ld de,0837fh		;8379
-	jp guion_rle_en_tres_bancos		;837c
+	jp guion_rle_en_tres_bancos		;837c   ; en los tres tercios
 
 ; ----------------------------------------------------------------------
 ; DATOS color_de_los_corazones: RLE de 0x4675: ocho 0xD0 (magenta) y ocho 0x70
@@ -7460,52 +7460,52 @@ presentacion_paso_1:		; La pantalla de la recreativa se anima mientras dura la e
 	ld (0e210h),hl		;83e8
 	jp espera_a_y_sigue		;83eb
 presentacion_paso_2:		; Cuando calla la musica, el sprite 4 baja hasta la Y 0x75
-	call vuelca_la_pantalla		;83ee
-	call anima_la_recreativa		;83f1
-	ld a,(0e012h)		;83f4
+	call vuelca_la_pantalla		;83ee   ; a la VRAM
+	call anima_la_recreativa		;83f1   ; la pantalla de la recreativa
+	ld a,(0e012h)		;83f4   ; la musica...
 	or a			;83f7
-	ret nz			;83f8
-	call anima_el_bicho_de_la_presentacion		;83f9
-	ld hl,0e210h		;83fc
+	ret nz			;83f8   ; ...aun suena
+	call anima_el_bicho_de_la_presentacion		;83f9   ; el bicho se anima
+	ld hl,0e210h		;83fc   ; su Y...
 	inc (hl)			;83ff
 	inc (hl)			;8400
-	inc (hl)			;8401
+	inc (hl)			;8401   ; ...tres mas
 	ld a,(hl)			;8402
-	cp 075h		;8403
+	cp 075h		;8403   ; hasta 0x75
 	ret c			;8405
 	ld a,001h		;8406   ; el sonido 1 y el primer guion de movimiento
-	call toca_sonido		;8408
-	ld a,001h		;840b
+	call toca_sonido		;8408   ; el sonido 1
+	ld a,001h		;840b   ; el primer paso del guion...
 	ld (0e33dh),a		;840d
-	ld hl,l85f6h		;8410
+	ld hl,l85f6h		;8410   ; ...tres antes de 0x85F9
 	ld (0e33eh),hl		;8413
-	jp espera_a_y_sigue		;8416
+	jp espera_a_y_sigue		;8416   ; y al paso 3
 presentacion_paso_3:		; El sprite 4 sigue el guion de 0x85F9; al acabar, el sonido 2 y Q*bert cambia de postura
-	call anima_el_bicho_de_la_presentacion		;8419
-	call vuelca_la_pantalla		;841c
-	ld a,(0e032h)		;841f
+	call anima_el_bicho_de_la_presentacion		;8419   ; el bicho se anima
+	call vuelca_la_pantalla		;841c   ; a la VRAM
+	ld a,(0e032h)		;841f   ; el segundo canal...
 	or a			;8422
-	jr z,L_8428		;8423
-	call anima_la_recreativa		;8425
+	jr z,L_8428		;8423   ; ...callado: la pantalla quieta
+	call anima_la_recreativa		;8425   ; la pantalla de la recreativa
 L_8428:
-	ld de,0e210h		;8428
-	call mueve_por_guion		;842b
-	ld a,(0e33dh)		;842e
+	ld de,0e210h		;8428   ; el sprite 4
+	call mueve_por_guion		;842b   ; por su guion
+	ld a,(0e33dh)		;842e   ; acabado?
 	cp 080h		;8431
-	ret nz			;8433
-	ld a,(0e012h)		;8434
+	ret nz			;8433   ; no
+	ld a,(0e012h)		;8434   ; la musica...
 	or a			;8437
-	ret nz			;8438
-	ld a,002h		;8439
+	ret nz			;8438   ; ...aun suena
+	ld a,002h		;8439   ; el sonido 2
 	call toca_sonido		;843b
-	ld hl,0809fh		;843e
+	ld hl,0809fh		;843e   ; el sprite 7
 	ld (0e21ch),hl		;8441
-	ld de,087c3h		;8444
+	ld de,087c3h		;8444   ; Q*bert cambia de postura
 	call guion_en_la_copia		;8447
-	call vuelca_la_pantalla		;844a
-	call vuelca_los_sprites_de_la_presentacion		;844d
-	ld a,060h		;8450
-	jp espera_a_y_sigue		;8452
+	call vuelca_la_pantalla		;844a   ; a la VRAM
+	call vuelca_los_sprites_de_la_presentacion		;844d   ; y los sprites
+	ld a,060h		;8450   ; 96 cuadros
+	jp espera_a_y_sigue		;8452   ; y al paso 4
 presentacion_paso_4:
 	ld hl,0e004h		;8455
 	dec (hl)			;8458
@@ -7553,43 +7553,43 @@ rotulo_en_su_sitio:
 	ld a,050h		;84b0
 	jp espera_a_y_sigue		;84b2
 presentacion_paso_6:
-	ld hl,0e004h		;84b5
-	dec (hl)			;84b8
-	ret nz			;84b9
-	ld de,086d6h		;84ba
+	ld hl,0e004h		;84b5   ; la espera
+	dec (hl)			;84b8   ; un cuadro menos
+	ret nz			;84b9   ; hasta cero
+	ld de,086d6h		;84ba   ; borra un trozo
 	call borra_guion_en_la_copia		;84bd
-	ld de,086f6h		;84c0
+	ld de,086f6h		;84c0   ; pinta otro
 	call guion_en_la_copia		;84c3
-	ld hl,0ee25h		;84c6
+	ld hl,0ee25h		;84c6   ; el rotulo en la fila 9
 	call pinta_el_rotulo_de_qbert		;84c9
-	ld de,086d0h		;84cc
+	ld de,086d0h		;84cc   ; y lo de encima
 	call guion_en_la_copia		;84cf
-	ld hl,0886fh		;84d2
+	ld hl,0886fh		;84d2   ; el sprite 2
 	ld (0e208h),hl		;84d5
-	call vuelca_los_sprites_de_la_presentacion		;84d8
+	call vuelca_los_sprites_de_la_presentacion		;84d8   ; los sprites
 	ld a,023h		;84db   ; el sonido 0x23
-	call toca_sonido		;84dd
-	ld a,008h		;84e0
-	jp espera_a_y_sigue		;84e2
+	call toca_sonido		;84dd   ; el sonido 0x23
+	ld a,008h		;84e0   ; 8 cuadros
+	jp espera_a_y_sigue		;84e2   ; y al paso 7
 presentacion_paso_7:		; El rotulo y lo de detras suben otra vez, ahora de dos en dos filas
-	call vuelca_la_pantalla		;84e5
-	ld hl,0e004h		;84e8
-	dec (hl)			;84eb
-	jr z,presentacion_paso_8_prepara		;84ec
-	ld b,(hl)			;84ee
-	ld hl,00020h		;84ef
-	call multiplica_hl		;84f2
-	ld de,0ee05h		;84f5
+	call vuelca_la_pantalla		;84e5   ; a la VRAM
+	ld hl,0e004h		;84e8   ; la cuenta
+	dec (hl)			;84eb   ; una menos
+	jr z,presentacion_paso_8_prepara		;84ec   ; cero: se acabo
+	ld b,(hl)			;84ee   ; la fila
+	ld hl,00020h		;84ef   ; 32...
+	call multiplica_hl		;84f2   ; ...por la fila
+	ld de,0ee05h		;84f5   ; desde 0xEE05
 	add hl,de			;84f8
-	call borra_una_fila		;84f9
-	call borra_una_fila		;84fc
-	ld de,0fee0h		;84ff
+	call borra_una_fila		;84f9   ; dos filas...
+	call borra_una_fila		;84fc   ; ...a cero
+	ld de,0fee0h		;84ff   ; 8 filas mas arriba
 	add hl,de			;8502
-	push hl			;8503
-	ld de,086f6h		;8504
+	push hl			;8503   ; a salvo
+	ld de,086f6h		;8504   ; el trozo de la maquina
 	call guion_en_la_copia		;8507
-	pop hl			;850a
-	jp pinta_el_rotulo_de_qbert		;850b
+	pop hl			;850a   ; HL
+	jp pinta_el_rotulo_de_qbert		;850b   ; y el rotulo encima
 presentacion_paso_8_prepara:
 	call sprites_del_titulo		;850e
 	call vuelca_la_pantalla		;8511
@@ -7601,121 +7601,121 @@ presentacion_paso_8_prepara:
 	ld (0e228h),hl		;8522
 	jp espera_a_y_sigue		;8525
 presentacion_paso_8:
-	call vuelca_los_sprites_de_la_presentacion		;8528
-	ld de,0e228h		;852b
-	call mueve_por_guion		;852e
-	ld a,(0e33dh)		;8531
+	call vuelca_los_sprites_de_la_presentacion		;8528   ; los sprites
+	ld de,0e228h		;852b   ; el de 0xE228...
+	call mueve_por_guion		;852e   ; ...por su guion
+	ld a,(0e33dh)		;8531   ; acabado?
 	cp 080h		;8534
-	ret nz			;8536
+	ret nz			;8536   ; no
 	ld a,008h		;8537   ; al acabar: el titulo ya esta pintado (0xE115) y al paso 9
-	ld (0e22bh),a		;8539
-	call vuelca_los_sprites_de_la_presentacion		;853c
-	ld a,001h		;853f
+	ld (0e22bh),a		;8539   ; el color del sprite 10
+	call vuelca_los_sprites_de_la_presentacion		;853c   ; los sprites
+	ld a,001h		;853f   ; el titulo ya esta pintado
 	ld (0e115h),a		;8541
-	jp espera_a_y_sigue		;8544
+	jp espera_a_y_sigue		;8544   ; y al paso 9
 sprites_del_titulo:		; Q*bert y la pantalla de la recreativa como quedan en el titulo
-	ld de,08849h		;8547
+	ld de,08849h		;8547   ; la recreativa del titulo
 	call guion_en_la_copia		;854a
-	ld hl,0508fh		;854d
+	ld hl,0508fh		;854d   ; sprite 0 en (0x8F, 0x50)
 	ld (0e200h),hl		;8550
-	ld hl,0589fh		;8553
+	ld hl,0589fh		;8553   ; sprite 1 en (0x9F, 0x58)
 	ld (0e204h),hl		;8556
-	ld hl,0886fh		;8559
+	ld hl,0886fh		;8559   ; sprite 2 en (0x6F, 0x88)
 	ld (0e208h),hl		;855c
-	ld hl,0807fh		;855f
+	ld hl,0807fh		;855f   ; sprite 9 en (0x7F, 0x80)
 	ld (0e224h),hl		;8562
-	ld hl,06529h		;8565
+	ld hl,06529h		;8565   ; sprite 10 en (0x29, 0x65)
 	ld (0e228h),hl		;8568
-	ret			;856b
+	ret			;856b   ; vuelta
 borra_una_fila:		; 32 bytes a cero desde HL
-	ld d,h			;856c
+	ld d,h			;856c   ; DE = HL...
 	ld e,l			;856d
-	inc de			;856e
-	ld (hl),000h		;856f
-	ld bc,00020h		;8571
-	ldir		;8574
-	ret			;8576
+	inc de			;856e   ; ...+ 1
+	ld (hl),000h		;856f   ; el cero
+	ld bc,00020h		;8571   ; 32 bytes
+	ldir		;8574   ; corrido
+	ret			;8576   ; vuelta
 anima_la_recreativa:		; Cada 16 cuadros, uno de los tres dibujos de la pantalla de la maquina (0x8631)
-	ld a,(0e003h)		;8577
+	ld a,(0e003h)		;8577   ; cada 16 cuadros
 	and 00fh		;857a
 	ret nz			;857c
-	ld hl,0e324h		;857d
+	ld hl,0e324h		;857d   ; el dibujo...
 	ld a,(hl)			;8580
-	inc (hl)			;8581
-	cp 002h		;8582
+	inc (hl)			;8581   ; ...el siguiente...
+	cp 002h		;8582   ; ...de 0 a 2
 	jr nz,L_8588		;8584
 	ld (hl),000h		;8586
 L_8588:
-	add a,a			;8588
-	ld hl,08631h		;8589
+	add a,a			;8588   ; por dos
+	ld hl,08631h		;8589   ; la tabla
 	call suma_a_a_hl		;858c
-	ld e,(hl)			;858f
+	ld e,(hl)			;858f   ; el guion...
 	inc hl			;8590
 	ld d,(hl)			;8591
-	call guion_en_la_copia		;8592
-	ret			;8595
+	call guion_en_la_copia		;8592   ; ...en la copia
+	ret			;8595   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; MUEVE POR GUION el sprite de DE: el guion (0xE33E) son ternas (cuadros, suma a Y, suma a X) y 0x80 lo acaba. (0xE33D) cuenta los cuadros de la terna y vale 0x80 al acabar.
 ; ----------------------------------------------------------------------
 mueve_por_guion:
-	ld hl,0e33dh		;8596
+	ld hl,0e33dh		;8596   ; la cuenta
 	ld a,(hl)			;8599
-	cp 080h		;859a
+	cp 080h		;859a   ; 0x80: acabado
 	ret z			;859c
 	dec (hl)			;859d   ; la terna siguiente
-	ld hl,(0e33eh)		;859e
-	jr nz,suma_la_terna		;85a1
-	ld a,003h		;85a3
+	ld hl,(0e33eh)		;859e   ; el puntero
+	jr nz,suma_la_terna		;85a1   ; sin acabar la terna: se suma
+	ld a,003h		;85a3   ; la terna siguiente
 	call suma_a_a_hl		;85a5
-	ld (0e33eh),hl		;85a8
-	ld a,(hl)			;85ab
-	ld (0e33dh),a		;85ac
-	ret			;85af
+	ld (0e33eh),hl		;85a8   ; guardada
+	ld a,(hl)			;85ab   ; sus cuadros...
+	ld (0e33dh),a		;85ac   ; ...a la cuenta
+	ret			;85af   ; vuelta
 suma_la_terna:
-	inc hl			;85b0
+	inc hl			;85b0   ; la Y
 	ld a,(de)			;85b1
-	add a,(hl)			;85b2
-	ld (de),a			;85b3
-	inc hl			;85b4
+	add a,(hl)			;85b2   ; + la de la terna
+	ld (de),a			;85b3   ; guardada
+	inc hl			;85b4   ; la X
 	inc de			;85b5
 	ld a,(de)			;85b6
-	add a,(hl)			;85b7
-	ld (de),a			;85b8
+	add a,(hl)			;85b7   ; + la de la terna
+	ld (de),a			;85b8   ; guardada
 	cp 0fch		;85b9   ; si se sale por abajo, desaparece
-	ret c			;85bb
-	ld a,0e0h		;85bc
+	ret c			;85bb   ; dentro: ya esta
+	ld a,0e0h		;85bc   ; fuera: se esconde
 	ld (0e210h),a		;85be
-	jp anima_el_bicho_de_la_presentacion		;85c1
+	jp anima_el_bicho_de_la_presentacion		;85c1   ; y su segundo sprite
 anima_el_bicho_de_la_presentacion:		; Cada 16 cuadros cambia de dibujo (0x10, 0x1C, 0x28, 0x34) y su segundo sprite le sigue
-	ld a,(0e003h)		;85c4
+	ld a,(0e003h)		;85c4   ; cada 16 cuadros...
 	and 00fh		;85c7
 	jr nz,L_85DA		;85c9
-	ld hl,0e212h		;85cb
+	ld hl,0e212h		;85cb   ; su patron
 	ld a,(hl)			;85ce
-	cp 034h		;85cf
+	cp 034h		;85cf   ; el ultimo?
 	jr nz,L_85D7		;85d1
-	ld (hl),010h		;85d3
+	ld (hl),010h		;85d3   ; al primero
 	jr L_85DA		;85d5
 L_85D7:
 	add a,00ch		;85d7
 	ld (hl),a			;85d9
 L_85DA:
-	ld hl,0e210h		;85da
-	ld de,0e214h		;85dd
+	ld hl,0e210h		;85da   ; Y y X...
+	ld de,0e214h		;85dd   ; ...al segundo sprite
 	ld bc,00002h		;85e0
 	ldir		;85e3
-	ld a,(hl)			;85e5
-	add a,004h		;85e6
+	ld a,(hl)			;85e5   ; el patron...
+	add a,004h		;85e6   ; ...cuatro mas
 	ld (de),a			;85e8
-	inc hl			;85e9
+	inc hl			;85e9   ; al sprite 5
 	inc hl			;85ea
 	inc de			;85eb
 	inc de			;85ec
-	ld bc,00002h		;85ed
-	ldir		;85f0
-	ld a,(hl)			;85f2
-	add a,004h		;85f3
+	ld bc,00002h		;85ed   ; Y y X...
+	ldir		;85f0   ; ...copiadas
+	ld a,(hl)			;85f2   ; el patron...
+	add a,004h		;85f3   ; ...cuatro mas
 	ld (de),a			;85f5
 L_85F6:
 	jp vuelca_los_sprites_de_la_presentacion		;85f6
@@ -7807,24 +7807,24 @@ DATA_guiones_de_la_presentacion:
 guion_en_la_copia:
 	ld c,0ffh		;871c
 guion_en_la_copia_direccion:
-	ex de,hl			;871e
-	ld e,(hl)			;871f
+	ex de,hl			;871e   ; HL = el guion
+	ld e,(hl)			;871f   ; la direccion...
 	inc hl			;8720
 	ld d,(hl)			;8721
-	ex de,hl			;8722
-	inc de			;8723
+	ex de,hl			;8722   ; HL = destino
+	inc de			;8723   ; detras
 casillas_en_la_copia:		; Sin direccion: desde HL, hasta el 0xFF
-	ld a,(de)			;8724
-	inc de			;8725
+	ld a,(de)			;8724   ; la casilla
+	inc de			;8725   ; la siguiente
 	ld b,a			;8726
-	inc b			;8727
-	ret z			;8728
-	inc b			;8729
-	jr z,guion_en_la_copia_direccion		;872a
-	and c			;872c
-	ld (hl),a			;872d
-	inc hl			;872e
-	jr casillas_en_la_copia		;872f
+	inc b			;8727   ; 0xFF...
+	ret z			;8728   ; ...fin
+	inc b			;8729   ; 0xFE...
+	jr z,guion_en_la_copia_direccion		;872a   ; ...otra direccion
+	and c			;872c   ; AND C
+	ld (hl),a			;872d   ; en la copia
+	inc hl			;872e   ; al lado
+	jr casillas_en_la_copia		;872f   ; y otra
 borra_guion_en_la_copia:
 	ld c,000h		;8731
 	jr guion_en_la_copia_direccion		;8733
@@ -7998,32 +7998,32 @@ mano_al_azar:		; A & 3, salvo el 3
 	ld (hl),a			;89a6
 	ret			;89a7
 prepara_el_piedra_papel_tijera:		; El recuadro de ladrillo, los sprites y los dos Q*bert
-	ld de,08c2ch		;89a8
+	ld de,08c2ch		;89a8   ; el recuadro de ladrillo
 	call guion_en_la_copia		;89ab
-	call sprites_del_duelo		;89ae
-	ld hl,0488bh		;89b1
+	call sprites_del_duelo		;89ae   ; los sprites
+	ld hl,0488bh		;89b1   ; el sprite 0 en (0x8B, 0x48)
 	ld (0ec80h),hl		;89b4
-	ld hl,0a88bh		;89b7
+	ld hl,0a88bh		;89b7   ; el 1 en (0x8B, 0xA8)
 	ld (0ec84h),hl		;89ba
-	ld hl,00001h		;89bd
+	ld hl,00001h		;89bd   ; el parpadeo, ya
 	ld (0e359h),hl		;89c0
-	jp vuelca_los_sprites_del_duelo		;89c3
+	jp vuelca_los_sprites_del_duelo		;89c3   ; a la VRAM
 
 ; ----------------------------------------------------------------------
 ; PASO 6: JAN-KEN. LET'S PLAY JAN-KEN y JAN-KEN! con las manos parpadeando mientras suena la musica; cada jugador elige con su mando: abajo papel, izquierda tijera, arriba piedra.
 ; ----------------------------------------------------------------------
 jan_ken:
-	ld hl,0e004h		;89c6
+	ld hl,0e004h		;89c6   ; la espera
 	ld a,(hl)			;89c9
 	or a			;89ca
-	jr z,L_89DE		;89cb
-	dec (hl)			;89cd
+	jr z,L_89DE		;89cb   ; sin espera: al juego
+	dec (hl)			;89cd   ; un cuadro menos
 	ret nz			;89ce
 	ld hl,0e358h		;89cf   ; dos musicas alternas: 0x26 y 0x4A
-	bit 0,(hl)		;89d2
-	ld a,026h		;89d4
+	bit 0,(hl)		;89d2   ; cual de las dos
+	ld a,026h		;89d4   ; 0x26...
 	jr z,L_89DA		;89d6
-	ld a,04ah		;89d8
+	ld a,04ah		;89d8   ; ...o 0x4A
 L_89DA:
 	inc (hl)			;89da
 	call toca_sonido		;89db
@@ -8061,19 +8061,19 @@ L_89DE:
 	ld a,040h		;8a31
 	jp espera_a_y_sigue		;8a33
 pon:		; Paso 7: las dos manos a la vista
-	ld a,(0e012h)		;8a36
+	ld a,(0e012h)		;8a36   ; la musica...
 	or a			;8a39
-	ret nz			;8a3a
+	ret nz			;8a3a   ; ...aun suena
 	ld a,03eh		;8a3b   ; el sonido 0x3E
 	call toca_sonido		;8a3d
-	ld de,08dc4h		;8a40
+	ld de,08dc4h		;8a40   ; las manos
 	call guion_en_la_copia		;8a43
-	call sprites_del_duelo		;8a46
-	ld hl,0488dh		;8a49
+	call sprites_del_duelo		;8a46   ; los sprites
+	ld hl,0488dh		;8a49   ; los dos Q*bert...
 	ld (0ec90h),hl		;8a4c
 	ld h,0a8h		;8a4f
 	ld (0ec94h),hl		;8a51
-	ld hl,0987fh		;8a54
+	ld hl,0987fh		;8a54   ; y los demas sprites
 	ld (0ec98h),hl		;8a57
 	ld hl,0688fh		;8a5a
 	ld (0ec9ch),hl		;8a5d
@@ -8083,15 +8083,15 @@ pon:		; Paso 7: las dos manos a la vista
 	ld (0eca4h),hl		;8a68
 	ld l,09fh		;8a6b
 	ld (0eca8h),hl		;8a6d
-	ld a,(0e340h)		;8a70
-	call pinta_una_mano		;8a73
-	ld a,(0e341h)		;8a76
-	add a,003h		;8a79
+	ld a,(0e340h)		;8a70   ; la mano del segundo
+	call pinta_una_mano		;8a73   ; a la izquierda
+	ld a,(0e341h)		;8a76   ; la del primero
+	add a,003h		;8a79   ; a la derecha
 	call pinta_una_mano		;8a7b
-	call vuelca_la_pantalla		;8a7e
-	call vuelca_los_sprites_del_duelo		;8a81
-	ld a,080h		;8a84
-	jp espera_a_y_sigue		;8a86
+	call vuelca_la_pantalla		;8a7e   ; a la VRAM
+	call vuelca_los_sprites_del_duelo		;8a81   ; los sprites
+	ld a,080h		;8a84   ; 128 cuadros
+	jp espera_a_y_sigue		;8a86   ; y al paso 8
 quien_gana:		; Paso 8: la mano A+1 (modulo 3) gana a la A: tijera a papel, piedra a tijera y papel a piedra
 	ld a,(0e012h)		;8a89
 	or a			;8a8c
@@ -8121,17 +8121,17 @@ gana_el_primero:
 	ld hl,0608fh		;8aaf
 	ld (0ecach),hl		;8ab2
 apunta_quien_gana:
-	ld a,c			;8ab5
+	ld a,c			;8ab5   ; el ganador...
 	ld (0e324h),a		;8ab6
-	ld de,08dc4h		;8ab9
+	ld de,08dc4h		;8ab9   ; fuera las manos
 	call borra_guion_en_la_copia		;8abc
-	ld de,08c2ch		;8abf
+	ld de,08c2ch		;8abf   ; el recuadro
 	call guion_en_la_copia		;8ac2
-	call pinta_el_resultado		;8ac5
+	call pinta_el_resultado		;8ac5   ; las caras
 	ld a,029h		;8ac8   ; el sonido 0x29
 	call toca_sonido		;8aca
-	ld a,000h		;8acd
-	jp espera_a_y_sigue		;8acf
+	ld a,000h		;8acd   ; sin espera
+	jp espera_a_y_sigue		;8acf   ; y al paso 9
 otra_vez_jan_ken:
 	ld de,08dc4h		;8ad2
 	call borra_guion_en_la_copia		;8ad5
@@ -8139,60 +8139,60 @@ otra_vez_jan_ken:
 	call prepara_el_piedra_papel_tijera		;8adb
 	jp manos_por_defecto		;8ade
 despues_del_jan_ken:		; Paso 9: la partida se la lleva el ganador
-	call parpadea_el_resultado		;8ae1
-	call vuelca_la_pantalla		;8ae4
-	call vuelca_los_sprites_del_duelo		;8ae7
-	ld a,(0e012h)		;8aea
+	call parpadea_el_resultado		;8ae1   ; las caras parpadean
+	call vuelca_la_pantalla		;8ae4   ; a la VRAM
+	call vuelca_los_sprites_del_duelo		;8ae7   ; los sprites
+	ld a,(0e012h)		;8aea   ; la musica...
 	or a			;8aed
-	ret nz			;8aee
-	xor a			;8aef
+	ret nz			;8aee   ; ...aun suena
+	xor a			;8aef   ; la partida no acabo por caidas
 	ld (0e32dh),a		;8af0
 	ld a,(0e342h)		;8af3   ; con la partida acabada, el ganador se apunta la partida
 	or a			;8af6
-	jr z,L_8B03		;8af7
-	ld a,(0e324h)		;8af9
+	jr z,L_8B03		;8af7   ; no: sigue la partida
+	ld a,(0e324h)		;8af9   ; el ganador (1 o 2)...
 	dec a			;8afc
-	xor 001h		;8afd
+	xor 001h		;8afd   ; ...en el B que espera 0x82B5
 	ld b,a			;8aff
-	jp gana_el_de_b		;8b00
+	jp gana_el_de_b		;8b00   ; se apunta la partida
 L_8B03:
 	ld a,(0e324h)		;8b03   ; si no, el de (0xE332) sale rebotado y se vuelve al tablero
 	dec a			;8b06
 	xor 001h		;8b07
 	ld (0e332h),a		;8b09
-	call borra_la_pantalla		;8b0c
-	call monta_la_fuente		;8b0f
-	call monta_los_graficos_de_la_fase		;8b12
-	call dibuja_el_tablero		;8b15
-	call monta_el_marco		;8b18
-	call vuelca_la_pantalla		;8b1b
-	call rebota		;8b1e
-	ld a,017h		;8b21
+	call borra_la_pantalla		;8b0c   ; en negro
+	call monta_la_fuente		;8b0f   ; la fuente
+	call monta_los_graficos_de_la_fase		;8b12   ; los graficos de la fase
+	call dibuja_el_tablero		;8b15   ; el tablero
+	call monta_el_marco		;8b18   ; el marco
+	call vuelca_la_pantalla		;8b1b   ; a la VRAM
+	call rebota		;8b1e   ; sale rebotado
+	ld a,017h		;8b21   ; la musica de la fase
 	call toca_sonido		;8b23
-	xor a			;8b26
+	xor a			;8b26   ; paso 0: a jugar
 	ld (0e001h),a		;8b27
-	ret			;8b2a
+	ret			;8b2a   ; vuelta
 mano_del_mando:		; Abajo, papel (0); izquierda, tijera (1); arriba, piedra (2). Sin pulsar, la que habia
-	ld b,000h		;8b2b
-	bit 1,a		;8b2d
+	ld b,000h		;8b2b   ; papel
+	bit 1,a		;8b2d   ; abajo?
 	jr nz,L_8B3A		;8b2f
-	inc b			;8b31
-	bit 2,a		;8b32
+	inc b			;8b31   ; tijera
+	bit 2,a		;8b32   ; izquierda?
 	jr nz,L_8B3A		;8b34
-	inc b			;8b36
-	bit 0,a		;8b37
-	ret z			;8b39
+	inc b			;8b36   ; piedra
+	bit 0,a		;8b37   ; arriba?
+	ret z			;8b39   ; nada: la que habia
 L_8B3A:
 	ld (hl),b			;8b3a
 	ret			;8b3b
 pinta_una_mano:		; Una de las seis de 0x8B49: las tres de cada lado
-	add a,a			;8b3c
-	ld hl,08b49h		;8b3d
+	add a,a			;8b3c   ; por dos
+	ld hl,08b49h		;8b3d   ; la tabla de manos
 	call suma_a_a_hl		;8b40
-	ld e,(hl)			;8b43
+	ld e,(hl)			;8b43   ; el guion...
 	inc hl			;8b44
 	ld d,(hl)			;8b45
-	jp guion_en_la_copia		;8b46
+	jp guion_en_la_copia		;8b46   ; ...en la copia
 
 ; ----------------------------------------------------------------------
 ; DATOS manos: Seis punteros a los dibujos de las tres manos (papel, tijera y
@@ -8218,22 +8218,22 @@ pinta_el_resultado:
 	jr z,L_8B65		;8b62
 	inc b			;8b64
 L_8B65:
-	ld a,(0e324h)		;8b65
-	dec a			;8b68
-	add a,a			;8b69
-	add a,b			;8b6a
-	push af			;8b6b
-	call pinta_de_la_tabla		;8b6c
+	ld a,(0e324h)		;8b65   ; el ganador...
+	dec a			;8b68   ; ...desde cero...
+	add a,a			;8b69   ; ...por dos...
+	add a,b			;8b6a   ; ...+ ojos
+	push af			;8b6b   ; a salvo
+	call pinta_de_la_tabla		;8b6c   ; la cara del ganador
 	pop af			;8b6f
-	add a,004h		;8b70
+	add a,004h		;8b70   ; la del perdedor, cuatro mas alla
 pinta_de_la_tabla:
-	ld hl,08b7fh		;8b72
-	add a,a			;8b75
+	ld hl,08b7fh		;8b72   ; la tabla
+	add a,a			;8b75   ; por dos
 	call suma_a_a_hl		;8b76
-	ld e,(hl)			;8b79
+	ld e,(hl)			;8b79   ; el guion...
 	inc hl			;8b7a
 	ld d,(hl)			;8b7b
-	jp guion_en_la_copia		;8b7c
+	jp guion_en_la_copia		;8b7c   ; ...en la copia
 
 ; ----------------------------------------------------------------------
 ; DATOS caras_del_resultado: Ocho punteros: la cara de cada Q*bert ganando y
@@ -8248,29 +8248,29 @@ DATA_caras_del_resultado:
 
 
 parpadean_las_manos_del_jan_ken:
-	ld hl,0e359h		;8b8f
-	dec (hl)			;8b92
+	ld hl,0e359h		;8b8f   ; la cuenta
+	dec (hl)			;8b92   ; un cuadro menos
 	ret nz			;8b93
-	ld (hl),018h		;8b94
-	inc hl			;8b96
+	ld (hl),018h		;8b94   ; otros 24
+	inc hl			;8b96   ; a la vista o no
 	ld a,(hl)			;8b97
 	xor 001h		;8b98
 	ld (hl),a			;8b9a
 	jr nz,L_8BAC		;8b9b
-	ld de,08bbfh		;8b9d
+	ld de,08bbfh		;8b9d   ; escondidas
 	call guion_en_la_copia		;8ba0
-	ld a,0e0h		;8ba3
+	ld a,0e0h		;8ba3   ; sin los sprites 2 y 3
 	ld (0ec88h),a		;8ba5
 	ld (0ec8ch),a		;8ba8
-	ret			;8bab
+	ret			;8bab   ; vuelta
 L_8BAC:
-	ld de,08be0h		;8bac
+	ld de,08be0h		;8bac   ; a la vista
 	call guion_en_la_copia		;8baf
-	ld hl,06897h		;8bb2
+	ld hl,06897h		;8bb2   ; el sprite 2
 	ld (0ec88h),hl		;8bb5
-	ld hl,08897h		;8bb8
+	ld hl,08897h		;8bb8   ; el 3
 	ld (0ec8ch),hl		;8bbb
-	ret			;8bbe
+	ret			;8bbe   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulos_del_jan_ken: Guiones de 0x871C: las manos escondidas (0x8BBF)
@@ -8306,14 +8306,14 @@ borra_el_recuadro:		; Cuatro filas de 18 casillas desde 0xEE26
 L_8C3F:
 	ld b,012h		;8c3f
 L_8C41:
-	ld (hl),000h		;8c41
-	inc hl			;8c43
-	djnz L_8C41		;8c44
-	ld a,00eh		;8c46
+	ld (hl),000h		;8c41   ; cero
+	inc hl			;8c43   ; la siguiente
+	djnz L_8C41		;8c44   ; 18
+	ld a,00eh		;8c46   ; la fila siguiente
 	call suma_a_a_hl		;8c48
-	dec c			;8c4b
-	jr nz,L_8C3F		;8c4c
-	ret			;8c4e
+	dec c			;8c4b   ; una menos
+	jr nz,L_8C3F		;8c4c   ; cuatro
+	ret			;8c4e   ; vuelta
 copia_de_vram_a_vram:		; BC bytes de la VRAM en HL a la VRAM en DE, uno a uno con RDVRM y WRTVRM
 	call 0004ah		;8c4f   ; BIOS RDVRM - Reads the content of VRAM
 	ex de,hl			;8c52
@@ -8358,15 +8358,15 @@ dibujo_del_jan_ken:
 ; LOS GRAFICOS DEL DUELO: los sprites (0x96BA), nueve tiles desde el 0x43 (0x90A7 y 0x90DE) y los 186 tiles del tercer tercio (0x90E3 y 0x95EB). Los 45 ultimos se copian reflejados 45 tiles mas alla: las manos de la derecha son las de la izquierda dadas la vuelta.
 ; ----------------------------------------------------------------------
 graficos_del_duelo:
-	ld de,096bah		;8c86
+	ld de,096bah		;8c86   ; los sprites
 	call guion_rle		;8c89
-	ld hl,02218h		;8c8c
-	ld de,090a7h		;8c8f
-	call guion_rle_en_tres_bancos		;8c92
-	ld hl,00218h		;8c95
+	ld hl,02218h		;8c8c   ; el tile 0x43
+	ld de,090a7h		;8c8f   ; nueve tiles
+	call guion_rle_en_tres_bancos		;8c92   ; en los tres tercios
+	ld hl,00218h		;8c95   ; su color
 	ld de,090deh		;8c98
-	call guion_rle_en_tres_bancos		;8c9b
-	ld hl,03000h		;8c9e
+	call guion_rle_en_tres_bancos		;8c9b   ; en los tres tercios
+	ld hl,03000h		;8c9e   ; el tercer tercio
 dibujos_grandes_en_hl:
 	push hl			;8ca1
 	ld de,090e3h		;8ca2   ; los patrones
@@ -8423,16 +8423,16 @@ pinta_3x3:
 L_8D05:
 	ld b,003h		;8d05
 L_8D07:
-	ld a,(de)			;8d07
+	ld a,(de)			;8d07   ; la casilla
 	ld (hl),a			;8d08
-	inc hl			;8d09
-	inc de			;8d0a
-	djnz L_8D07		;8d0b
-	ld a,01dh		;8d0d
+	inc hl			;8d09   ; al lado
+	inc de			;8d0a   ; la siguiente
+	djnz L_8D07		;8d0b   ; tres
+	ld a,01dh		;8d0d   ; la fila siguiente
 	call suma_a_a_hl		;8d0f
-	dec c			;8d12
-	jr nz,L_8D05		;8d13
-	ret			;8d15
+	dec c			;8d12   ; una menos
+	jr nz,L_8D05		;8d13   ; tres
+	ret			;8d15   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS cubos_acabados: Los nueve tiles del cubo acabado del primero
@@ -8448,21 +8448,21 @@ DATA_cubos_acabados:
 
 
 pinta_dos_cifras:		; A en binario, en dos cifras
-	call bcd_de_a		;8d28
+	call bcd_de_a		;8d28   ; en BCD
 	ld b,a			;8d2b
-	and 0f0h		;8d2c
+	and 0f0h		;8d2c   ; la decena...
 	rrca			;8d2e
 	rrca			;8d2f
 	rrca			;8d30
 	rrca			;8d31
-	add a,010h		;8d32
+	add a,010h		;8d32   ; ...su casilla
 	ld (hl),a			;8d34
-	ld a,b			;8d35
+	ld a,b			;8d35   ; la unidad...
 	and 00fh		;8d36
-	add a,010h		;8d38
+	add a,010h		;8d38   ; ...su casilla
 	inc hl			;8d3a
 	ld (hl),a			;8d3b
-	ret			;8d3c
+	ret			;8d3c   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS dibujos_del_duelo: Guiones de 0x871C: el recuadro del
@@ -8660,13 +8660,13 @@ avanza_el_objeto:
 	ret c			;9066
 	jr se_acabo_el_objeto		;9067
 quita_el_objeto_de_la_vida:		; Fuera de la pantalla y la racha a cero
-	ld a,0e0h		;9069
-	ld (0e350h),a		;906b
+	ld a,0e0h		;9069   ; fuera de la pantalla...
+	ld (0e350h),a		;906b   ; ...sus dos sprites
 	ld (0e354h),a		;906e
-	ld hl,0e34bh		;9071
+	ld hl,0e34bh		;9071   ; el estado y la racha...
 	ld de,0e34ch		;9074
-	ld bc,00004h		;9077
-	ld (hl),000h		;907a
+	ld bc,00004h		;9077   ; ...cinco bytes...
+	ld (hl),000h		;907a   ; ...a cero
 	ldir		;907c
 vuelca_el_objeto:		; Sus dos sprites a los planos 19 y 20
 	ld hl,03b4ch		;907e
@@ -8679,12 +8679,12 @@ se_acabo_el_objeto:
 	ld (0e34bh),a		;908f
 	ret			;9092
 apunta_el_salto:		; Guarda A en la racha de tres (0xE34D-0xE34F), dando la vuelta: 1 cubo acabado, 0 girado sin acabar, 0x40 salto sobre un cubo ya acabado
-	exx			;9093
-	ld b,a			;9094
-	ld hl,0e34ch		;9095
+	exx			;9093   ; los de reserva
+	ld b,a			;9094   ; B = lo que se apunta
+	ld hl,0e34ch		;9095   ; el puesto de la racha
 	ld a,(hl)			;9098
-	inc (hl)			;9099
-	cp 002h		;909a
+	inc (hl)			;9099   ; el siguiente...
+	cp 002h		;909a   ; ...de 0 a 2
 	jr nz,L_90A0		;909c
 	ld (hl),000h		;909e
 L_90A0:

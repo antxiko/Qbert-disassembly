@@ -25,6 +25,7 @@ class Lector:
     def __init__(self, rom):
         self.rom = rom
         self.tocados = {}           # direccion -> quien
+        self.notas_por_instrumento = {}
 
     def b(self, a):
         return self.rom[a - ORG]
@@ -122,7 +123,7 @@ class Lector:
             self.marca(p, 2 * len(notas), "instr%d" % n)
             for k, q in enumerate(notas):
                 self.canal(q, "instr%d.%d" % (n, k), modo=0)
-            print("instrumento %d: %d notas" % (n, len(notas)))
+            self.notas_por_instrumento[n] = len(notas)
         return out
 
     def sonidos(self):
@@ -146,7 +147,8 @@ def main():
     L = Lector(rom)
     ins = L.instrumentos()
     ents = L.sonidos()
-    print("instrumentos:", ["%d@%04X->%04X" % x for x in ins])
+    print("instrumentos:", ["%d@%04X->%04X" % x for x in ins],
+          "notas:", L.notas_por_instrumento)
     print("entradas de 0x52E2: 1..%d (0x%04X-0x%04X)" % (
         len(ents), TABLA + 2, TABLA + 2 * len(ents) + 2))
     ds = sorted(L.tocados)
