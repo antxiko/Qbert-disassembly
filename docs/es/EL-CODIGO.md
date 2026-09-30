@@ -71,7 +71,7 @@ guarda los canales, y al quitar la pausa vuelven.
 ## El código que no se ejecuta
 
 Doce trozos a los que no llega nadie, declarados como tales en
-`src/qbert.entries`: un visor de patrones (`0x6757`), dos copias de la lectura
+`src/qbert.entries` y ejecutados en openMSX (ver [En el emulador](EN-EL-EMULADOR.md)): un visor de patrones (`0x6757`), dos copias de la lectura
 de teclas (`0x705E`, `0x7068`), la lectura de VRAM (`0x4643`), un intercambio
 de bytes (`0x45FD`), tres restos del duelo (`0x821A`, `0x8275`, `0x833C`)
 y otros cuatro. Y un bucle muerto en `0x44A5`: la fase del Game Master

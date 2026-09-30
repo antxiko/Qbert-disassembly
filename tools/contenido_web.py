@@ -55,7 +55,7 @@ PORTADA = {
               "im&aacute;genes est&aacute;n <b>dibujadas desde los bytes de la "
               "ROM</b> con las tablas del propio cartucho: los logotipos, el "
               "t&iacute;tulo, las cincuenta fases, la bonificaci&oacute;n, el "
-              "duelo, Q*bert y los bichos. Nueve pantallas est&aacute;n "
+              "duelo, Q*bert, los bichos y el visor de patrones que no llama nadie. Once pantallas est&aacute;n "
               "<b>cotejadas contra openMSX</b> byte a byte, con 0 diferencias. "
               "El listado y las cifras se reproducen con <code>make</code>, y el "
               "reensamblado devuelve la ROM <b>byte a byte</b>.",
@@ -71,7 +71,7 @@ PORTADA = {
         aviso="<b>Not one capture here.</b> Every picture is <b>drawn from "
               "the bytes of the ROM</b> with the cartridge's own tables: the "
               "logos, the title, the fifty stages, the bonus stage, the duel, "
-              "Q*bert and the creatures. Nine screens are <b>checked against "
+              "Q*bert, the creatures and the pattern viewer nobody calls. Eleven screens are <b>checked against "
               "openMSX</b> byte for byte, with 0 differences. The listing and "
               "the numbers are reproducible with <code>make</code>, and "
               "reassembling gives back the ROM <b>byte for byte</b>.",
@@ -139,7 +139,7 @@ HALLAZGOS = {
         ("Lo que no ejecuta nadie",
          "<p>Doce trozos de c&oacute;digo que no llama nadie: un visor de "
          "patrones de desarrollo que llena la pantalla con 0, 1, 2&hellip; "
-         "(<code>0x6757</code>), copias antiguas de la lectura de teclas y, "
+         "(<code>0x6757</code>), que hemos ejecutado en una partida y est&aacute; en la galer&iacute;a; copias antiguas de la lectura de teclas y, "
          "en <code>0x44A5</code>, la fase del Game Master con un bucle que no "
          "sale nunca, al que no se llega porque la variable se borra justo "
          "antes. Y al final de la ROM, la marca oculta de Konami: "
@@ -203,7 +203,7 @@ HALLAZGOS = {
          "23.</p>"),
         ("What nobody runs",
          "<p>Twelve pieces of code nobody calls: a development pattern viewer "
-         "that fills the screen with 0, 1, 2&hellip; (<code>0x6757</code>), "
+         "that fills the screen with 0, 1, 2&hellip; (<code>0x6757</code>), which we ran in a game and is in the gallery; "
          "old copies of the key reading and, at <code>0x44A5</code>, the Game "
          "Master stage with a loop that never exits, never reached because "
          "the variable is cleared just before. And at the end of the ROM, "
@@ -294,6 +294,23 @@ GALERIA = [
      "derecha es la de la izquierda reflejada (<code>0x8C5F</code>).",
      "The three hands (<code>0x8B49</code>): paper, scissors and rock. The "
      "right-hand one is the left-hand one mirrored (<code>0x8C5F</code>)."),
+    ("visor-fase.png",
+     "El visor de patrones de <code>0x6757</code>, que no llama nadie: pone en "
+     "cada casilla su n&uacute;mero, 0 a 255 en cada tercio, y as&iacute; "
+     "ense&ntilde;a todos los tiles cargados. Sobre la fase 1: las 16 caras, la "
+     "fuente, las aristas del estilo, el cubo acabado, el marco y los corazones. "
+     "Ejecutado en openMSX y cotejado: 0 diferencias en los tiles que monta la "
+     "fase.",
+     "The pattern viewer at <code>0x6757</code>, which nobody calls: it puts "
+     "each cell's number in it, 0 to 255 in every third, and so shows every "
+     "loaded tile. Over stage 1: the 16 faces, the font, the style's edges, the "
+     "finished cube, the frame and the hearts. Run in openMSX and checked: 0 "
+     "differences in the tiles the stage builds."),
+    ("visor-titulo.png",
+     "El mismo visor sobre el t&iacute;tulo: los trozos del r&oacute;tulo y de la "
+     "recreativa. Cotejado: 0 diferencias.",
+     "The same viewer over the title: the pieces of the logo and the arcade "
+     "machine. Checked: 0 differences."),
     ("logotipo-konami.png",
      "El logotipo de Konami que se destapa l&iacute;nea a l&iacute;nea al "
      "encender (<code>0x4982</code>, <code>0x494E</code>). Cotejado: 0 "

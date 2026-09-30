@@ -270,8 +270,13 @@ def logotipo_konami(rom):
 
 
 def titulo(rom):
-    """0x4AEA desde cero: la recreativa, el rotulo, (c)KONAMI y el menu."""
-    p = Pantalla(rom)
+    """0x4AEA: la recreativa, el rotulo, (c)KONAMI y el menu. Se monta
+    encima de la VRAM que deja el logotipo de Konami (escena 0), porque entre
+    una y otra solo se borra la tabla de nombres: los tiles del logotipo que
+    el RLE de 0xB09A no pisa siguen con su color 0xF0."""
+    p = logotipo_konami(rom)
+    p.v[NOMBRES:NOMBRES + 0x300] = bytes(0x300)
+    p.regs = list(REGS)
     p.regs[7] = 0xE0
     p.monta_la_fuente()
     p.rle(0xB09A)                           # 0x8394
@@ -357,3 +362,12 @@ def casillas_del_rotulo(rom):
             out.append(((hl + i) // 32, (hl + i) % 32))
         hl += len(cas) + (14 if k == 6 else 9)
     return out
+
+
+def visor(p):
+    """0x6757, el visor de patrones que no llama nadie: cada casilla de la
+    tabla de nombres con el byte bajo de su direccion (0, 1, 2... 255, tres
+    veces). Enseña los 768 tiles cargados, tercio a tercio."""
+    for i in range(0x300):
+        p.v[NOMBRES + i] = (NOMBRES + i) & 0xFF
+    return p

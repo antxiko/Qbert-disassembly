@@ -54,6 +54,26 @@ def main():
            lambda r: pantallas.fase(rom, 31, duelo=True, **de_ram(r))[0])
     prueba("bonificacion tras la 3", "work/fases/f03b/t03",
            lambda r: pantallas.bonificacion(rom, 3, **de_ram(r))[0])
+    # el visor de 0x6757 (tools/omsx_huerfanos.tcl): los tiles que monta cada
+    # pantalla; los de la fase y los del RLE de 0xB09A con la fuente
+    import graficos
+    fase_tiles = (list(range(0, 0x3B)) + list(range(0x40, 0x91))
+                  + list(range(0xE1, 0xEA)) + list(range(0xEB, 0xF8)) + [0xFC, 0xFD])
+    o, _ = graficos.rle(rom, 0xB09A)
+    titulo_tiles = sorted(set(((d - 0x2000) % 0x800) // 8 for d in o
+                              if 0x2000 <= d < 0x3800) | set(range(0x10, 0x3B)))
+    for nombre, ruta, monta, tiles in (
+            ("visor de 0x6757, fase 1", "work/huerfanos/t_6757_partida",
+             lambda: pantallas.visor(pantallas.fase(rom, 1)[0]), fase_tiles),
+            ("visor de 0x6757, titulo", "work/huerfanos/t_6757_titulo",
+             lambda: pantallas.visor(pantallas.titulo(rom)), titulo_tiles)):
+        v = lee(ruta + ".vram")
+        if v is None:
+            print("%-28s sin volcado (%s)" % (nombre, ruta))
+            continue
+        hechas += 1
+        if not coteja.resumen(nombre, coteja.diferencias_en_tiles(monta().v, v, tiles)):
+            malas += 1
     print("---- %d pantallas cotejadas, %d con diferencias" % (hechas, malas))
     return 1 if malas else 0
 

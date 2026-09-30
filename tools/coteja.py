@@ -61,3 +61,21 @@ def resumen(nombre, difs):
     for t, d, x, y in difs[:12]:
         print("    %-14s 0x%04X  nuestro %02X  volcado %02X" % (t, d, x, y))
     return False
+
+
+def diferencias_en_tiles(a, v, tiles):
+    """Para el visor de 0x6757, que enseña los 768 tiles: la tabla de nombres
+    entera y el patron y el color de los tiles que monta la pantalla. Los
+    demas son restos de pantallas anteriores y no se comparan."""
+    out = []
+    for d in range(NOMBRES, NOMBRES + 0x300):
+        if a[d] != v[d]:
+            out.append(("nombre", d, a[d], v[d]))
+    for banco in range(3):
+        for t in tiles:
+            for base, que in ((0x2000, "patron"), (0x0000, "color")):
+                for i in range(8):
+                    d = base + 0x800 * banco + 8 * t + i
+                    if a[d] != v[d]:
+                        out.append((que, d, a[d], v[d]))
+    return out

@@ -13,7 +13,7 @@ A commented disassembly of ***Q\*bert*** (キューバート), Konami, 1986, car
 | commented | 78.1% of the instructions |
 | routines | 788 (444 with their own name), none below 10% |
 | reassembly | the ROM, byte for byte |
-| pictures | drawn from the ROM; nine screens checked against openMSX, 0 differences |
+| pictures | drawn from the ROM; eleven screens checked against openMSX, 0 differences |
 
 ## What is here
 

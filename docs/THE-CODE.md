@@ -69,8 +69,8 @@ it saves the channels, and they come back when the pause ends.
 
 ## The code that never runs
 
-Twelve pieces nobody reaches, declared as such in `src/qbert.entries`: a
-pattern viewer (`0x6757`), two copies of the key reading (`0x705E`,
+Twelve pieces nobody reaches, declared as such in `src/qbert.entries` and
+run in openMSX (see [In the emulator](IN-THE-EMULATOR.md)): a pattern viewer (`0x6757`), two copies of the key reading (`0x705E`,
 `0x7068`), the VRAM read (`0x4643`), a byte swap (`0x45FD`), three duel
 leftovers (`0x821A`, `0x8275`, `0x833C`) and four more. And a dead loop at
 `0x44A5`: the Game Master stage checked right after being cleared.

@@ -100,6 +100,19 @@ It comes from the code; the drawings, from the ROM.
 `0xE2BC` would remove object 23. It is a reasoned assumption: the high byte was
 lost.
 
+## The pattern viewer, run
+
+`0x6757` puts the low byte of its address in every cell of the name table: 0,
+1, 2… 255, three times. It is a development tool to see every loaded tile at
+once, and it stayed in the ROM with nobody calling it.
+
+*Run in openMSX* (`tools/omsx_huerfanos.tcl`, which diverts one frame to the
+piece and comes back): over stage 1 and over the title. Built from the ROM and
+checked: 0 differences in the tiles each screen builds. The rest are leftovers
+from earlier screens.
+
+![The viewer over stage 1](imagenes/visor-fase.png)
+
 ## Konami's mark
 
 The last ten bytes: the title in katakana backwards (キューバート), its length,

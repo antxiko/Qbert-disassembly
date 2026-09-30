@@ -31,6 +31,10 @@ lives, the objects and the sprite turn of that frame come from the dump's RAM.
 | stage 50 | 0 |
 | duel, stage 31 | 0 |
 | bonus after stage 3 | 0 |
+| `0x6757` viewer over stage 1 | 0 |
+| `0x6757` viewer over the title | 0 |
+
+In both viewers the tiles each screen builds are compared; the rest are leftovers from earlier ones. The title, besides, is built on top of the Konami logo's VRAM: nine of its tiles keep the colour the logo left them.
 
 Two measurement traps. The sprite table is written at the start of the frame
 and the objects move afterwards: a dump taken mid-frame has the RAM's Y one step
@@ -50,11 +54,34 @@ key, dump) and `tools/lanza_prueba.sh` runs it. The five in `tools/pruebas/`:
 | `pausa.txt` | F1 twice | the time stays at 99 until the second F1 |
 | `bonus.txt` | stage 3 and stage cleared | bit 0 of the mode turns on and the bonus stage starts |
 
+## The twelve pieces nobody calls
+
+`tools/omsx_huerfanos.tcl` runs them in a game, one per frame: at `0x40C5` it
+stacks the return, jumps to the piece with the registers it needs and records
+what it did. The last one is the viewer, and the emulator stays paused with it
+on screen (`tools/lanza_huerfanos.sh`).
+
+| piece | what it does |
+|---|---|
+| `0x640D` | with stage 0x23 it returns A=09: the minimum of the stage minus one and 9 |
+| `0x45FD` | swaps 4 bytes between HL and DE |
+| `0x4643` | sets up a VRAM read and leaves port 0x98 in C' |
+| `0x705E` | stores joystick 2: with A=05, 0xE32F=05 and 0xE330=05 |
+| `0x7068` | reads E, S, F and C: with E held, A=01 (up) |
+| `0x722C` | the cube under Q\*bert against the model: not equal |
+| `0x77CC` | writes 0x5A into fourteen objects in a row |
+| `0x833C` | the other player is not falling (with one player there is no other) |
+| `0x9032` | the life object against the second sprite: they do not touch, and it moves one pixel |
+| `0x821A` | takes a life (from 2 to 1) and draws the duel score line |
+| `0x8275` | makes Q\*bert fall dead: state 12 and the falling arc |
+| `0x6757` | the pattern viewer |
+
 ## Running it
 
 ```
 tools/lanza_vuelca.sh work/v1 "6 12" "10"
 tools/lanza_fase.sh "11 0 0 3"
 tools/lanza_prueba.sh tools/pruebas/vida.txt
+tools/lanza_huerfanos.sh
 make coteja
 ```

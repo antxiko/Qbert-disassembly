@@ -111,6 +111,10 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p>Sale del código; los dibujos, de la ROM.</p>
 <h2 id="la-bola-verde-escribe-en-la-bios">La bola verde escribe en la BIOS</h2>
 <p><code>0x7763</code> es <code>ld hl,000BCh</code> y luego <code>0x6E2F</code> escribe en <code>(hl)</code> y <code>(hl-2)</code>: 0x00BC y 0x00BA son la ROM de la BIOS y no pasa nada. El mismo código con <code>0xE2BC</code> quitaría el objeto 23. Es una suposición razonada: el byte alto se perdió.</p>
+<h2 id="el-visor-de-patrones-ejecutado">El visor de patrones, ejecutado</h2>
+<p><code>0x6757</code> pone en cada casilla de la tabla de nombres el byte bajo de su dirección: 0, 1, 2… 255, tres veces. Es una herramienta de desarrollo para ver de golpe todos los tiles cargados, y se quedó en la ROM sin que nadie la llame.</p>
+<p><em>Ejecutado en openMSX</em> (<code>tools/omsx_huerfanos.tcl</code>, que desvía un cuadro al trozo y vuelve): sobre la fase 1 y sobre el título. Montado desde la ROM y cotejado: 0 diferencias en los tiles que monta cada pantalla. Los demás son restos de pantallas anteriores.</p>
+<p><img src="../imagenes/visor-fase.png" alt="El visor sobre la fase 1"></p>
 <h2 id="la-marca-de-konami">La marca de Konami</h2>
 <p>Los diez últimos bytes: el título en katakana al revés (キューバート), su longitud, el 0x46 de RC-746 y 0xAA. Nadie los lee.</p>
 <footer><p><em>Q*bert</em> lo public&oacute; Konami para MSX en 1986, con licencia del original de Gottlieb; su n&uacute;mero de cat&aacute;logo es RC-746 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservaci&oacute;n, estudio y documentaci&oacute;n, y la imagen del cartucho no se distribuye.</p></footer></div>

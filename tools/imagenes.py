@@ -226,6 +226,12 @@ def main():
     # el objeto de la vida extra: 0xD0 rojo oscuro y 0xD4 blanco (0x9019)
     hoja([figura(rom, [(0xABBC, 6), (0xABDC, 15)])], 1, k=6).guarda(
         os.path.join(out, "vida-escondida.png"))
+    # el visor de patrones de 0x6757, que no llama nadie, sobre la fase 1 y
+    # sobre el titulo
+    Lienzo.de_pantalla(pantallas.visor(pantallas.fase(rom, 1)[0]), False).escala(2).guarda(
+        os.path.join(out, "visor-fase.png"))
+    Lienzo.de_pantalla(pantallas.visor(pantallas.titulo(rom)), False).escala(2).guarda(
+        os.path.join(out, "visor-titulo.png"))
     # el piedra-papel-tijera (0x8A36): la pantalla del PON! y las tres manos
     # ampliadas: papel (0), tijera (1) y piedra (2)
     Lienzo.de_pantalla(pantallas.jan_ken(rom, 0, 2)).escala(2).guarda(

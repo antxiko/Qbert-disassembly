@@ -99,6 +99,19 @@ Sale del código; los dibujos, de la ROM.
 `0xE2BC` quitaría el objeto 23. Es una suposición razonada: el byte alto se
 perdió.
 
+## El visor de patrones, ejecutado
+
+`0x6757` pone en cada casilla de la tabla de nombres el byte bajo de su
+dirección: 0, 1, 2… 255, tres veces. Es una herramienta de desarrollo para ver
+de golpe todos los tiles cargados, y se quedó en la ROM sin que nadie la llame.
+
+*Ejecutado en openMSX* (`tools/omsx_huerfanos.tcl`, que desvía un cuadro al
+trozo y vuelve): sobre la fase 1 y sobre el título. Montado desde la ROM y
+cotejado: 0 diferencias en los tiles que monta cada pantalla. Los demás son
+restos de pantallas anteriores.
+
+![El visor sobre la fase 1](../imagenes/visor-fase.png)
+
 ## La marca de Konami
 
 Los diez últimos bytes: el título en katakana al revés

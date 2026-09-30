@@ -111,6 +111,10 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p>It comes from the code; the drawings, from the ROM.</p>
 <h2 id="the-green-ball-writes-into-the-bios">The green ball writes into the BIOS</h2>
 <p><code>0x7763</code> is <code>ld hl,000BCh</code> and then <code>0x6E2F</code> writes to <code>(hl)</code> and <code>(hl-2)</code>: 0x00BC and 0x00BA are the BIOS ROM and nothing happens. The same code with <code>0xE2BC</code> would remove object 23. It is a reasoned assumption: the high byte was lost.</p>
+<h2 id="the-pattern-viewer-run">The pattern viewer, run</h2>
+<p><code>0x6757</code> puts the low byte of its address in every cell of the name table: 0, 1, 2… 255, three times. It is a development tool to see every loaded tile at once, and it stayed in the ROM with nobody calling it.</p>
+<p><em>Run in openMSX</em> (<code>tools/omsx_huerfanos.tcl</code>, which diverts one frame to the piece and comes back): over stage 1 and over the title. Built from the ROM and checked: 0 differences in the tiles each screen builds. The rest are leftovers from earlier screens.</p>
+<p><img src="imagenes/visor-fase.png" alt="The viewer over stage 1"></p>
 <h2 id="konami-s-mark">Konami&#x27;s mark</h2>
 <p>The last ten bytes: the title in katakana backwards (キューバート), its length, the 0x46 of RC-746 and 0xAA. Nobody reads them.</p>
 <footer><p><em>Q*bert</em> was published by Konami for the MSX in 1986, under licence of Gottlieb's original; its catalogue number is RC-746 and it is 32 KB. All rights in the game remain with their holders. This is preservation, study and documentation work, and the cartridge image is not distributed.</p></footer></div>

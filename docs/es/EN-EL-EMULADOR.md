@@ -31,6 +31,10 @@ ese cuadro.
 | fase 50 | 0 |
 | duelo, fase 31 | 0 |
 | bonificación tras la 3 | 0 |
+| visor de `0x6757` sobre la fase 1 | 0 |
+| visor de `0x6757` sobre el título | 0 |
+
+En los dos visores se comparan los tiles que monta cada pantalla; los demás son restos de las anteriores. El título, además, se monta encima de la VRAM del logotipo de Konami: nueve de sus tiles conservan el color que les dejó el logotipo.
 
 Dos trampas de medida. La tabla de sprites se escribe al principio del cuadro
 y los objetos se mueven después: un volcado tomado a mitad de cuadro tiene la Y
@@ -52,11 +56,34 @@ hay en `tools/pruebas/`:
 | `pausa.txt` | F1 dos veces | el tiempo se queda en 99 hasta el segundo F1 |
 | `bonus.txt` | fase 3 y fase acabada | el bit 0 del modo se enciende y empieza la bonificación |
 
+## Los doce trozos que no llama nadie
+
+`tools/omsx_huerfanos.tcl` los ejecuta en una partida, uno por cuadro: en
+`0x40C5` apila la vuelta, salta al trozo con los registros que necesita y
+apunta lo que ha hecho. El último es el visor, y el emulador se queda en pausa
+con él en pantalla (`tools/lanza_huerfanos.sh`).
+
+| trozo | qué hace |
+|---|---|
+| `0x640D` | con la fase 0x23 devuelve A=09: el mínimo entre la fase menos uno y 9 |
+| `0x45FD` | intercambia 4 bytes entre HL y DE |
+| `0x4643` | prepara la lectura de VRAM y deja en C' el puerto 0x98 |
+| `0x705E` | guarda el mando 2: con A=05, 0xE32F=05 y 0xE330=05 |
+| `0x7068` | lee E, S, F y C: con la E pulsada, A=01 (arriba) |
+| `0x722C` | el cubo bajo Q\*bert contra el modelo: no es igual |
+| `0x77CC` | escribe 0x5A en catorce objetos seguidos |
+| `0x833C` | el otro jugador no está cayendo (con un jugador no hay otro) |
+| `0x9032` | el objeto de la vida contra el segundo sprite: no se tocan, y avanza un píxel |
+| `0x821A` | quita una vida (de 2 a 1) y pinta el marcador del duelo |
+| `0x8275` | pone a Q\*bert a caer muerto: estado 12 y el arco de caer |
+| `0x6757` | el visor de patrones |
+
 ## Lanzarlo
 
 ```
 tools/lanza_vuelca.sh work/v1 "6 12" "10"
 tools/lanza_fase.sh "11 0 0 3"
 tools/lanza_prueba.sh tools/pruebas/vida.txt
+tools/lanza_huerfanos.sh
 make coteja
 ```

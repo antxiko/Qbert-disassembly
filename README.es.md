@@ -13,7 +13,7 @@ Desensamblado comentado de ***Q\*bert*** (キューバート), Konami, 1986, car
 | comentado | 78,1 % de las instrucciones |
 | rutinas | 788 (444 con nombre propio), ninguna por debajo del 10 % |
 | reensamblado | la ROM, byte a byte |
-| imágenes | dibujadas desde la ROM; nueve pantallas cotejadas contra openMSX, 0 diferencias |
+| imágenes | dibujadas desde la ROM; once pantallas cotejadas contra openMSX, 0 diferencias |
 
 ## Qué hay
 
