@@ -1,0 +1,116 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Findings — Q*bert (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html" style=color:var(--tinta)>Findings</a><a href="IN-THE-EMULATOR.html">In the emulator</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/HALLAZGOS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="findings">Findings</h1>
+<p>Each one says where it comes from: the code, a ROM table or a test in openMSX. The tests are in <code>tools/pruebas/</code> and are told in <a href="IN-THE-EMULATOR.html">In the emulator</a>.</p>
+<h2 id="five-in-a-row-not-the-whole-pyramid">Five in a row, not the whole pyramid</h2>
+<p>A stage is not cleared by finishing every cube but by having <b>five finished in a row</b> in a row, column or diagonal of the 9 × 9 grid (<code>0x7421</code>). One routine per frame, in turn, counts the rows (<code>0x7330</code>), the columns (<code>0x7353</code>) and both diagonals (<code>0x7369</code>, <code>0x737D</code>), and on each four-frame round it counts one player&#x27;s cubes: the mask of the <code>and</code> in the three-byte routine the game writes at <code>0xE4FD</code> switches from 0x40 to 0x20.</p>
+<p>The fourth check decides: one line is enough up to stage 30, two are needed from 31 to 40 and three from 41 to 50 (<code>0x7391</code>-<code>0x73A6</code>).</p>
+<p><em>Tested in openMSX</em>: with five cubes on row 4 of stage 1 marked as finished, the game moves to the stage-cleared step and pays the time.</p>
+<h2 id="the-cubes-roll">The cubes roll</h2>
+<p><code>0x72C0</code> is 24 rows of four bytes: the rotation each of the 24 turns into when jumped on in each of the four diagonals. They are the 24 rotations of a cube: every column is a permutation, and any rotation is reachable from any other in <b>four jumps at most</b> (measured walking the table; <code>tests/test_juego.py</code> checks it).</p>
+<p>A cube is finished when its three visible faces match the model&#x27;s (<code>0x722F</code>), so finishing one means planning the route of jumps.</p>
+<h2 id="rock-paper-scissors">Rock, paper, scissors</h2>
+<p>In the duel, if time runs out with equal cubes, or if both fall, JAN-KEN-PON is played (<code>0x89C6</code>): LET&#x27;S PLAY JAN-KEN, each one picks with their joystick (down paper, left scissors, up rock, <code>0x8B2B</code>) and the next hand beats the previous one: scissors beat paper, rock beats scissors, paper beats rock (<code>0x8A89</code>). Without a press, each gets one at random.</p>
+<p>The right-hand hands are the left-hand ones mirrored: <code>0x8C5F</code> copies 45 tiles from VRAM to VRAM reversing every byte.</p>
+<p><img src="imagenes/manos.png" alt="The three hands"></p>
+<h2 id="the-hidden-life">The hidden life</h2>
+<p><code>0x9093</code> records the result of the last three jumps: 1 if it finished a cube, 0 if it rotated one without finishing it, 0x40 if it landed on one already finished. With three ones in a row, fewer than 8 lives and one player, an object appears once at Q\*bert&#x27;s height and crosses from left to right one pixel per frame (<code>0x8FDF</code>), and touching it gives a life with the extra-life sound.</p>
+<p><em>Tested in openMSX</em>: with the streak set by hand, the object appears at Q\*bert&#x27;s Y, crosses, and the lives go from 2 to 3.</p>
+<p><img src="imagenes/vida-escondida.png" alt="The life object"></p>
+<h2 id="f5-and-f1">F5 and F1</h2>
+<p>In scene 7 row 7 of the keyboard is read: <b>F5</b> sets the score to zero, three lives and goes back to the same stage (<code>0x4396</code>). <b>F1</b> pauses and unpauses, but only while the stage tunes are playing (<code>0x6AA3</code>).</p>
+<p><em>Tested in openMSX</em>: the CONTINUE goes back to the game on stage 1 with two lives in reserve; the pause keeps the time still until the second F1.</p>
+<h2 id="the-bonus-stage">The bonus stage</h2>
+<p>After stages 3, 6 and 10 of every ten (<code>0x79AE</code>, on the units of the stage minus one) bit 0 of the mode turns on, the board at <code>0xA7AD</code> is loaded and the game runs another step (<code>0x789D</code>): the screen is uncovered top to bottom, Q\*bert stays on each cube and the diagonals rotate it (<code>0x7A37</code>); when it is finished he moves on (<code>0x7A47</code>). At the end they are counted: every finished cube is covered with its points, 100 the first, 200 the second… and with all 27 comes PERFECT 5000 POINT.</p>
+<p><em>Tested in openMSX</em>: after stage 3 the bonus stage starts. The PERFECT comes from the code.</p>
+<h2 id="fifteen-objects">Fifteen objects</h2>
+<p>Objects 4 to 18 each come out in their own time (<code>0x7444</code>: every 64 frames their wait drops, and after coming out it goes back to 15) onto one of the two top cubes. What each one does is dispatched by <code>0x7628</code>: the green ball freezes for 128 counts of four frames, the grey one makes everyone run away, the red one gives the long jump, the yellow one and the turtle change the speed, the blue one gives invincibility and the cube spinner gives 100 points. The eight that kill are the moai, the hooded one and the six coloured ones, which stick to cubes whose top face is their colour (<code>0x750D</code>). The hooded one heads for Q\*bert (<code>0x7559</code>), and if it lands on a spinning cube it falls and gives 1,000 points (<code>0x6E99</code>).</p>
+<p>It comes from the code; the drawings, from the ROM.</p>
+<h2 id="the-green-ball-writes-into-the-bios">The green ball writes into the BIOS</h2>
+<p><code>0x7763</code> is <code>ld hl,000BCh</code> and then <code>0x6E2F</code> writes to <code>(hl)</code> and <code>(hl-2)</code>: 0x00BC and 0x00BA are the BIOS ROM and nothing happens. The same code with <code>0xE2BC</code> would remove object 23. It is a reasoned assumption: the high byte was lost.</p>
+<h2 id="konami-s-mark">Konami&#x27;s mark</h2>
+<p>The last ten bytes: the title in katakana backwards (キューバート), its length, the 0x46 of RC-746 and 0xAA. Nobody reads them.</p>
+<footer><p><em>Q*bert</em> was published by Konami for the MSX in 1986, under licence of Gottlieb's original; its catalogue number is RC-746 and it is 32 KB. All rights in the game remain with their holders. This is preservation, study and documentation work, and the cartridge image is not distributed.</p></footer></div>

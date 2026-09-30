@@ -159,7 +159,15 @@ def main():
     t = pantallas.titulo(rom)
     tl = Lienzo.de_pantalla(t)
     tl.escala(3).guarda(os.path.join(out, "titulo.png"))
-    tl.recorta(5 * 8, 2 * 8, 23 * 8, 7 * 8).escala(3).guarda(os.path.join(out, "rotulo.png"))
+    # el recorte del rotulo se mide sobre las casillas que escribe 0x4B40 en
+    # la copia de la tabla de nombres (desde 0xED45), no se pone a ojo
+    cas = pantallas.casillas_del_rotulo(rom)
+    f0, f1 = min(f for f, c in cas), max(f for f, c in cas)
+    c0, c1 = min(c for f, c in cas), max(c for f, c in cas)
+    # arriba sin margen: en la fila de encima esta (c)KONAMI 1986
+    m = 4
+    tl.recorta(c0 * 8 - m, f0 * 8, (c1 - c0 + 1) * 8 + 2 * m,
+               (f1 - f0 + 1) * 8 + m).escala(3).guarda(os.path.join(out, "rotulo.png"))
 
     # las 50 fases
     laminas = []
@@ -218,6 +226,15 @@ def main():
     # el objeto de la vida extra: 0xD0 rojo oscuro y 0xD4 blanco (0x9019)
     hoja([figura(rom, [(0xABBC, 6), (0xABDC, 15)])], 1, k=6).guarda(
         os.path.join(out, "vida-escondida.png"))
+    # el piedra-papel-tijera (0x8A36): la pantalla del PON! y las tres manos
+    # ampliadas: papel (0), tijera (1) y piedra (2)
+    Lienzo.de_pantalla(pantallas.jan_ken(rom, 0, 2)).escala(2).guarda(
+        os.path.join(out, "jan-ken.png"))
+    M = Lienzo(56 * 3 + 16, 40, (16, 16, 24))
+    for k in range(3):
+        c = Lienzo.de_pantalla(pantallas.jan_ken(rom, k, k)).recorta(104, 136, 56, 40)
+        M.pega(c, k * (56 + 8), 0)
+    M.escala(4).guarda(os.path.join(out, "manos.png"))
     print("imagenes en", out)
 
 

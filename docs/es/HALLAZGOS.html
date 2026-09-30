@@ -1,0 +1,116 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hallazgos — Q*bert (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html" style=color:var(--tinta)>Hallazgos</a><a href="EN-EL-EMULADOR.html">En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../FINDINGS.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="hallazgos">Hallazgos</h1>
+<p>Cada uno dice de dónde sale: del código, de una tabla de la ROM o de una prueba en openMSX. Las pruebas están en <code>tools/pruebas/</code> y se cuentan en <a href="EN-EL-EMULADOR.html">En el emulador</a>.</p>
+<h2 id="cinco-en-linea-no-la-piramide-entera">Cinco en línea, no la pirámide entera</h2>
+<p>La fase no se acaba al acabar todos los cubos sino al tener <b>cinco acabados seguidos</b> en una fila, columna o diagonal de la cuadrícula de 9 × 9 (<code>0x7421</code>). Una rutina por cuadro, por turnos, cuenta las filas (<code>0x7330</code>), las columnas (<code>0x7353</code>) y las dos diagonales (<code>0x7369</code>, <code>0x737D</code>), y en cada vuelta de cuatro cuadros cuenta los cubos de un jugador: la máscara del <code>and</code> de la rutina de tres bytes que el juego escribe en <code>0xE4FD</code> pasa de 0x40 a 0x20.</p>
+<p>La cuarta comprobación decide: una línea basta hasta la fase 30, hacen falta dos de la 31 a la 40 y tres de la 41 a la 50 (<code>0x7391</code>-<code>0x73A6</code>).</p>
+<p><em>Probado en openMSX</em>: con cinco cubos de la fila 4 de la fase 1 marcados como acabados, el juego pasa al paso de fase acabada y cobra el tiempo.</p>
+<h2 id="los-cubos-ruedan">Los cubos ruedan</h2>
+<p><code>0x72C0</code> son 24 filas de cuatro bytes: el giro en el que se convierte cada uno de los 24 al saltarle encima en cada una de las cuatro diagonales. Son los 24 giros de un cubo: cada columna es una permutación, y cualquier giro se alcanza desde cualquier otro en <b>cuatro saltos como mucho</b> (medido recorriendo la tabla; lo comprueba <code>tests/test_juego.py</code>).</p>
+<p>Un cubo está acabado cuando sus tres caras visibles coinciden con las del modelo (<code>0x722F</code>), así que para acabar uno hay que planear la ruta de saltos.</p>
+<h2 id="piedra-papel-o-tijera">Piedra, papel o tijera</h2>
+<p>En el duelo, si se acaba el tiempo con los mismos cubos, o si caen los dos, se juega a JAN-KEN-PON (<code>0x89C6</code>): LET&#x27;S PLAY JAN-KEN, cada uno elige con su mando (abajo papel, izquierda tijera, arriba piedra, <code>0x8B2B</code>) y la mano siguiente gana a la anterior: tijera a papel, piedra a tijera, papel a piedra (<code>0x8A89</code>). Sin pulsar, a cada uno le toca una al azar.</p>
+<p>Las manos de la derecha son las de la izquierda reflejadas: <code>0x8C5F</code> copia 45 tiles de la VRAM a la VRAM dándole la vuelta a cada byte.</p>
+<p><img src="../imagenes/manos.png" alt="Las tres manos"></p>
+<h2 id="la-vida-escondida">La vida escondida</h2>
+<p><code>0x9093</code> apunta el resultado de los tres últimos saltos: 1 si acabó un cubo, 0 si lo giró sin acabarlo, 0x40 si cayó en uno ya acabado. Con tres unos seguidos, menos de 8 vidas y un jugador, sale una vez un objeto a la altura de Q\*bert que cruza de izquierda a derecha un píxel por cuadro (<code>0x8FDF</code>), y tocarlo da una vida con el sonido de la vida extra.</p>
+<p><em>Probado en openMSX</em>: con la racha puesta a mano, el objeto sale en la Y de Q\*bert, cruza, y las vidas pasan de 2 a 3.</p>
+<p><img src="../imagenes/vida-escondida.png" alt="El objeto de la vida"></p>
+<h2 id="f5-y-f1">F5 y F1</h2>
+<p>En la escena 7 se lee la fila 7 del teclado: <b>F5</b> pone la puntuación a cero, tres vidas y vuelve a la misma fase (<code>0x4396</code>). <b>F1</b> pausa y quita la pausa, pero solo mientras suenan las músicas de la fase (<code>0x6AA3</code>).</p>
+<p><em>Probado en openMSX</em>: el CONTINUE vuelve a la partida con la fase 1 y dos vidas de reserva; la pausa deja el tiempo quieto hasta el segundo F1.</p>
+<h2 id="la-bonificacion">La bonificación</h2>
+<p>Tras las fases 3, 6 y 10 de cada decena (<code>0x79AE</code>, sobre las unidades de la fase menos una) el bit 0 del modo se enciende, se carga el tablero de <code>0xA7AD</code> y la partida corre otro paso (<code>0x789D</code>): la pantalla se destapa de arriba abajo, Q\*bert se queda en cada cubo y las diagonales lo giran (<code>0x7A37</code>); al acabarlo pasa al siguiente (<code>0x7A47</code>). Al final se cuentan: cada cubo acabado se tapa con sus puntos, 100 el primero, 200 el segundo… y con los 27 sale PERFECT 5000 POINT.</p>
+<p><em>Probado en openMSX</em>: tras la fase 3 empieza la bonificación. El PERFECT sale del código.</p>
+<h2 id="quince-objetos">Quince objetos</h2>
+<p>Los objetos 4 a 18 salen cada uno a su tiempo (<code>0x7444</code>: cada 64 cuadros baja su espera, y al salir vuelve a 15) sobre uno de los dos cubos de la cima. Lo que hace cada uno lo reparte <code>0x7628</code>: la bola verde congela 128 cuentas de cuatro cuadros, la gris hace huir a todos, la roja da el salto largo, la amarilla y la tortuga cambian la velocidad, la azul da invencibilidad y el que gira cubos da 100 puntos. Los ocho que matan son el moái, el encapuchado y los seis de colores, que se quedan pegados a los cubos cuya cara de arriba es de su color (<code>0x750D</code>). El encapuchado va hacia Q\*bert (<code>0x7559</code>), y si cae en un cubo que está girando se cae y da 1.000 puntos (<code>0x6E99</code>).</p>
+<p>Sale del código; los dibujos, de la ROM.</p>
+<h2 id="la-bola-verde-escribe-en-la-bios">La bola verde escribe en la BIOS</h2>
+<p><code>0x7763</code> es <code>ld hl,000BCh</code> y luego <code>0x6E2F</code> escribe en <code>(hl)</code> y <code>(hl-2)</code>: 0x00BC y 0x00BA son la ROM de la BIOS y no pasa nada. El mismo código con <code>0xE2BC</code> quitaría el objeto 23. Es una suposición razonada: el byte alto se perdió.</p>
+<h2 id="la-marca-de-konami">La marca de Konami</h2>
+<p>Los diez últimos bytes: el título en katakana al revés (キューバート), su longitud, el 0x46 de RC-746 y 0xAA. Nadie los lee.</p>
+<footer><p><em>Q*bert</em> lo public&oacute; Konami para MSX en 1986, con licencia del original de Gottlieb; su n&uacute;mero de cat&aacute;logo es RC-746 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservaci&oacute;n, estudio y documentaci&oacute;n, y la imagen del cartucho no se distribuye.</p></footer></div>

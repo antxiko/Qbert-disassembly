@@ -86,7 +86,7 @@ coteja: $(ROM)
 	@python3 tools/coteja_todo.py $(ROM)
 
 # LA WEB. Bilingue: el ingles en docs/ y el castellano en docs/es/.
-web: $(ROM)
+web: imagenes
 	python3 tools/md2html.py docs en
 	python3 tools/md2html.py docs/es es
 	python3 tools/make_web.py docs/imagenes docs/index.html en

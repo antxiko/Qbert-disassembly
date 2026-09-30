@@ -1,0 +1,102 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El cartucho — Q*bert (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html" style=color:var(--tinta)>El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="EN-EL-EMULADOR.html">En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../THE-CARTRIDGE.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="el-cartucho">El cartucho</h1>
+<p>32 KB sin mapeador, en las páginas 1 y 2 (<code>0x4000</code>-<code>0xBFFF</code>). INIT pone la página 2 en la misma ranura que la 1 (<code>0x405E</code>), y escribe 1, 2 y 3 en <code>0x6000</code>, <code>0x8000</code> y <code>0xA000</code>, las escrituras de banco de los mapeadores de Konami, que aquí no hacen nada.</p>
+<h2 id="las-cabeceras">Las cabeceras</h2>
+<p><code>0x4000</code>: &quot;AB&quot; e INIT en <code>0x405E</code>. <code>0x4010</code>: la cabecera del Konami Game Master, &quot;CD&quot; y RC-746, con siete campos: la variable de escena y la escena del menú de nivel (<code>0xE000</code>, 3), la fase que elige el Game Master y cuántas hay (<code>0xE114</code>, 50), las vidas (<code>0xE110</code>), el récord (<code>0xE105</code>), la puntuación (<code>0xE10B</code>), un segundo marcador que el juego no lee (<code>0xE108</code>) y los bits de modo (<code>0xE002</code>).</p>
+<h2 id="el-mapa-de-la-rom">El mapa de la ROM</h2>
+<table><tr><th>desde</th><th>hasta</th><th>qué</th></tr><tr><td><code>0x4025</code></td><td><code>0x50A6</code></td><td>el armazón, las escenas, el marcador, los mandos, la fuente, los logotipos y el motor de sonido</td></tr><tr><td><code>0x50A6</code></td><td><code>0x61DD</code></td><td>los datos de sonido: dos instrumentos, 93 entradas y las secuencias</td></tr><tr><td><code>0x61DD</code></td><td><code>0x9093</code></td><td>el juego: la fase, los saltos, los cubos, los bichos, el duelo, la presentación</td></tr><tr><td><code>0x90A7</code></td><td><code>0x97DB</code></td><td>los gráficos del duelo y del piedra-papel-tijera</td></tr><tr><td><code>0x97DB</code></td><td><code>0xA7AD</code></td><td>los 50 tableros de 9 × 9</td></tr><tr><td><code>0xA7AD</code></td><td><code>0xA7FE</code></td><td>el tablero de la bonificación</td></tr><tr><td><code>0xA7FE</code></td><td><code>0xAABC</code></td><td>los cubos: 3 estilos de 26 cubos de 3 × 3 casillas</td></tr><tr><td><code>0xAABC</code></td><td><code>0xAFBC</code></td><td>los sprites de los bichos y de Q\*bert</td></tr><tr><td><code>0xAFBC</code></td><td><code>0xB09A</code></td><td>los tiles de los cubos que giran y del cubo acabado</td></tr><tr><td><code>0xB09A</code></td><td><code>0xBFE7</code></td><td>la presentación y los menús, en RLE</td></tr><tr><td><code>0xBFF6</code></td><td><code>0xC000</code></td><td>la marca oculta de Konami</td></tr></table>
+<p>El reparto entero, byte a byte, está en <code>src/qbert.notes</code>: el código son 11.743 bytes y los datos 21.025, y no queda ninguno sin explicar.</p>
+<h2 id="la-ram">La RAM</h2>
+<table><tr><th>dirección</th><th>qué</th></tr><tr><td><code>0xE000</code> / <code>0xE001</code></td><td>la escena y su paso</td></tr><tr><td><code>0xE002</code></td><td>el modo: bit 6 partida, bit 5 duelo, bit 0 bonificación</td></tr><tr><td><code>0xE003</code></td><td>el contador de cuadros</td></tr><tr><td><code>0xE008</code> / <code>0xE009</code></td><td>el mando 1: recién pulsado y pulsado</td></tr><tr><td><code>0xE010</code>-<code>0xE08F</code></td><td>los cuatro canales de sonido</td></tr><tr><td><code>0xE105</code>-<code>0xE107</code></td><td>el récord, en BCD</td></tr><tr><td><code>0xE10B</code>-<code>0xE10D</code></td><td>la puntuación, en BCD</td></tr><tr><td><code>0xE110</code> / <code>0xE111</code></td><td>las vidas y la fase, en BCD</td></tr><tr><td><code>0xE200</code>-<code>0xE2BF</code></td><td>24 objetos de 8 bytes: los dos Q\*bert (dos sprites cada uno) y los bichos</td></tr><tr><td><code>0xE2C0</code></td><td>los diez huecos de los cubos que giran</td></tr><tr><td><code>0xE32F</code> / <code>0xE330</code></td><td>el mando 2</td></tr><tr><td><code>0xEB00</code></td><td>los 26 cubos del estilo de la fase</td></tr><tr><td><code>0xEC00</code></td><td>el tablero de 9 × 9; el bit 6 marca los cubos acabados del primero y el 5 los del segundo</td></tr><tr><td><code>0xEC51</code></td><td>el tiempo, en BCD</td></tr><tr><td><code>0xED00</code>-<code>0xEFFF</code></td><td>la copia de la tabla de nombres</td></tr></table>
+<p>Cada objeto: estado, velocidad, estado otra vez, paso del arco, Y, X, patrón y color. Los estados están en <code>0x6D35</code>.</p>
+<h2 id="la-vram">La VRAM</h2>
+<p>SCREEN 2 con los registros de <code>0x46F0</code>: nombres en <code>0x3800</code>, patrones en <code>0x2000</code>, color en <code>0x0000</code>, atributos de sprites en <code>0x3B00</code> y patrones de sprites en <code>0x1800</code>, con sprites de 16 × 16.</p>
+<p>Los tiles 0 a 15 tienen el patrón a cero y el color 0x00-0x0F: cada uno es un bloque macizo de ese color, y son las <b>caras</b> de los cubos. Los tiles 0x40-0x87 llevan todos el mismo triángulo (<code>0x6286</code>) con dos colores cada uno (<code>0x628E</code>): son las <b>aristas</b>. Un cubo de 3 × 3 casillas es una combinación de caras y aristas.</p>
+<h2 id="los-formatos">Los formatos</h2>
+<ul><li><b>El RLE de la VRAM</b> (<code>0x46A0</code>): 0x00 acaba, 0x01-0x7F repite el byte siguiente, 0x81-0xFF copia literales y 0x80 cambia de dirección.</li><li><b>El guion de texto</b> (<code>0x4685</code>): una dirección de la tabla de nombres y los caracteres; 0xFE salta a otra dirección y 0xFF acaba. Con la máscara a cero borra el mismo rótulo. <code>0x871C</code> es igual pero escribe en la copia de la RAM.</li><li><b>El sonido</b> (<code>0x4D2D</code> y <code>0x4E0F</code>): dos modos, efecto (volumen y periodo por paso) y música (notas con octava, duración, decaimiento e instrumento), y 0xFE para bucles y subrutinas.</li></ul>
+<p><code>tools/graficos.py</code> y <code>tools/sonido.py</code> leen los tres, y cada bloque de datos del listado acaba exactamente donde acaba su formato.</p>
+<footer><p><em>Q*bert</em> lo public&oacute; Konami para MSX en 1986, con licencia del original de Gottlieb; su n&uacute;mero de cat&aacute;logo es RC-746 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservaci&oacute;n, estudio y documentaci&oacute;n, y la imagen del cartucho no se distribuye.</p></footer></div>

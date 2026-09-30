@@ -1,0 +1,102 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The cartridge — Q*bert (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html" style=color:var(--tinta)>The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="IN-THE-EMULATOR.html">In the emulator</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/EL-CARTUCHO.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="the-cartridge">The cartridge</h1>
+<p>32 KB with no mapper, in pages 1 and 2 (<code>0x4000</code>-<code>0xBFFF</code>). INIT puts page 2 in the same slot as page 1 (<code>0x405E</code>), and writes 1, 2 and 3 to <code>0x6000</code>, <code>0x8000</code> and <code>0xA000</code>, the bank writes of Konami&#x27;s mappers, which do nothing here.</p>
+<h2 id="the-headers">The headers</h2>
+<p><code>0x4000</code>: &quot;AB&quot; and INIT at <code>0x405E</code>. <code>0x4010</code>: the Konami Game Master header, &quot;CD&quot; and RC-746, with seven fields: the scene variable and the level menu scene (<code>0xE000</code>, 3), the stage the Game Master picks and how many there are (<code>0xE114</code>, 50), the lives (<code>0xE110</code>), the high score (<code>0xE105</code>), the score (<code>0xE10B</code>), a second score the game never reads (<code>0xE108</code>) and the mode bits (<code>0xE002</code>).</p>
+<h2 id="the-rom-map">The ROM map</h2>
+<table><tr><th>from</th><th>to</th><th>what</th></tr><tr><td><code>0x4025</code></td><td><code>0x50A6</code></td><td>the framework, the scenes, the score line, the controls, the font, the logos and the sound engine</td></tr><tr><td><code>0x50A6</code></td><td><code>0x61DD</code></td><td>the sound data: two instruments, 93 entries and the sequences</td></tr><tr><td><code>0x61DD</code></td><td><code>0x9093</code></td><td>the game: the stage, the jumps, the cubes, the creatures, the duel, the intro</td></tr><tr><td><code>0x90A7</code></td><td><code>0x97DB</code></td><td>the graphics of the duel and of rock, paper, scissors</td></tr><tr><td><code>0x97DB</code></td><td><code>0xA7AD</code></td><td>the 50 boards of 9 × 9</td></tr><tr><td><code>0xA7AD</code></td><td><code>0xA7FE</code></td><td>the bonus board</td></tr><tr><td><code>0xA7FE</code></td><td><code>0xAABC</code></td><td>the cubes: 3 styles of 26 cubes of 3 × 3 cells</td></tr><tr><td><code>0xAABC</code></td><td><code>0xAFBC</code></td><td>the sprites of the creatures and of Q\*bert</td></tr><tr><td><code>0xAFBC</code></td><td><code>0xB09A</code></td><td>the tiles of the spinning cubes and the finished cube</td></tr><tr><td><code>0xB09A</code></td><td><code>0xBFE7</code></td><td>the intro and the menus, in RLE</td></tr><tr><td><code>0xBFF6</code></td><td><code>0xC000</code></td><td>Konami&#x27;s hidden mark</td></tr></table>
+<p>The whole split, byte by byte, is in <code>src/qbert.notes</code>: the code is 11,743 bytes and the data 21,025, and not one is left unexplained.</p>
+<h2 id="the-ram">The RAM</h2>
+<table><tr><th>address</th><th>what</th></tr><tr><td><code>0xE000</code> / <code>0xE001</code></td><td>the scene and its step</td></tr><tr><td><code>0xE002</code></td><td>the mode: bit 6 game, bit 5 duel, bit 0 bonus</td></tr><tr><td><code>0xE003</code></td><td>the frame counter</td></tr><tr><td><code>0xE008</code> / <code>0xE009</code></td><td>joystick 1: just pressed and held</td></tr><tr><td><code>0xE010</code>-<code>0xE08F</code></td><td>the four sound channels</td></tr><tr><td><code>0xE105</code>-<code>0xE107</code></td><td>the high score, in BCD</td></tr><tr><td><code>0xE10B</code>-<code>0xE10D</code></td><td>the score, in BCD</td></tr><tr><td><code>0xE110</code> / <code>0xE111</code></td><td>the lives and the stage, in BCD</td></tr><tr><td><code>0xE200</code>-<code>0xE2BF</code></td><td>24 objects of 8 bytes: the two Q\*berts (two sprites each) and the creatures</td></tr><tr><td><code>0xE2C0</code></td><td>the ten slots of the spinning cubes</td></tr><tr><td><code>0xE32F</code> / <code>0xE330</code></td><td>joystick 2</td></tr><tr><td><code>0xEB00</code></td><td>the 26 cubes of the stage&#x27;s style</td></tr><tr><td><code>0xEC00</code></td><td>the 9 × 9 board; bit 6 marks the first player&#x27;s finished cubes and bit 5 the second&#x27;s</td></tr><tr><td><code>0xEC51</code></td><td>the time, in BCD</td></tr><tr><td><code>0xED00</code>-<code>0xEFFF</code></td><td>the copy of the name table</td></tr></table>
+<p>Each object: state, speed, state again, arc step, Y, X, pattern and colour. The states are at <code>0x6D35</code>.</p>
+<h2 id="the-vram">The VRAM</h2>
+<p>SCREEN 2 with the registers at <code>0x46F0</code>: names at <code>0x3800</code>, patterns at <code>0x2000</code>, colour at <code>0x0000</code>, sprite attributes at <code>0x3B00</code> and sprite patterns at <code>0x1800</code>, with 16 × 16 sprites.</p>
+<p>Tiles 0 to 15 have a blank pattern and colour 0x00-0x0F: each one is a solid block of that colour, and they are the cubes&#x27; <b>faces</b>. Tiles 0x40-0x87 all carry the same triangle (<code>0x6286</code>) with two colours each (<code>0x628E</code>): they are the <b>edges</b>. A 3 × 3 cube is a combination of faces and edges.</p>
+<h2 id="the-formats">The formats</h2>
+<ul><li><b>The VRAM RLE</b> (<code>0x46A0</code>): 0x00 ends, 0x01-0x7F repeats the next byte, 0x81-0xFF copies literals and 0x80 changes the address.</li><li><b>The text script</b> (<code>0x4685</code>): a name table address and the characters; 0xFE jumps to another address and 0xFF ends. With the mask at zero it erases the same text. <code>0x871C</code> is the same but writes to the RAM copy.</li><li><b>The sound</b> (<code>0x4D2D</code> and <code>0x4E0F</code>): two modes, effect (volume and period per step) and music (notes with octave, length, decay and instrument), and 0xFE for loops and subroutines.</li></ul>
+<p><code>tools/graficos.py</code> and <code>tools/sonido.py</code> read all three, and every data block in the listing ends exactly where its format ends.</p>
+<footer><p><em>Q*bert</em> was published by Konami for the MSX in 1986, under licence of Gottlieb's original; its catalogue number is RC-746 and it is 32 KB. All rights in the game remain with their holders. This is preservation, study and documentation work, and the cartridge image is not distributed.</p></footer></div>

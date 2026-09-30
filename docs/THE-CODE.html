@@ -1,0 +1,104 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The code — Q*bert (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html" style=color:var(--tinta)>The code</a><a href="FINDINGS.html">Findings</a><a href="IN-THE-EMULATOR.html">In the emulator</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/EL-CODIGO.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="the-code">The code</h1>
+<p>The listing is <code>src/qbert.asm</code>: 5,939 instructions, 4,636 of them commented (78.1%), 444 named routines, no routine below 10% and no <code>call</code> target without a name. It reassembles byte for byte.</p>
+<h2 id="the-framework">The framework</h2>
+<p>INIT leaves a <code>jp</code> in H.KEYI and sits in a <code>jr $</code>: <b>the whole game runs in the VDP interrupt</b> (<code>0x4025</code>). Every frame the sound plays; the scene only runs if the previous frame finished (<code>0xE005</code>), with interrupts enabled so the sound is never lost.</p>
+<p>The framework is the one in The Goonies and Yie Ar Kung-Fu II: <code>tools/porta_nombres.py</code> finds here, by instruction signature, their script, RLE and font routines. The sound engine and the game belong to this cartridge.</p>
+<h2 id="the-scenes">The scenes</h2>
+<p><code>0x40C5</code> dispatches on <code>0xE000</code> with the table at <code>0x40E3</code>:</p>
+<table><tr><th>scene</th><th>what</th></tr><tr><td>0</td><td>the Konami logo, uncovered line by line</td></tr><tr><td>1</td><td>the intro: Q\*bert at the arcade machine, the title and 1PLAYER/2PLAYERS</td></tr><tr><td>2</td><td>the demo</td></tr><tr><td>3</td><td>the level menu</td></tr><tr><td>4</td><td>the start of a stage: LEVEL, STAGE or READY, and building it</td></tr><tr><td>5</td><td>the game</td></tr><tr><td>6</td><td>TIME OVER or GAME OVER</td></tr><tr><td>7</td><td>GAME OVER, with the F5 CONTINUE</td></tr><tr><td>8</td><td>stage cleared: the next one, or the bonus stage</td></tr></table>
+<p>Each scene is a chain of <code>djnz</code> on its step (<code>0xE001</code>). Since <code>djnz</code> with B=0 gives 0xFF and jumps, <b>step 0 is the last block of the chain</b>: every scene starts with the block that sets it up.</p>
+<p>Without a game, the scene returns to <code>0x441E</code>, which checks for a key press: on the logo or the demo it jumps to the title; on the title, the directions change option and the trigger starts.</p>
+<h2 id="the-game">The game</h2>
+<p><code>0x68E6</code> is the game frame: the sprite table (with the planes rotating every frame to share the flicker when there are more than four on a line), a quarter of the name table, one of the four line checks (rows, columns and both diagonals, one per frame), the controls of both Q\*berts, the collisions, the movement of the 24 objects, the spinning cubes, the hidden life and, if there is no green ball, the creatures&#x27; release, their decisions and the time.</p>
+<p>Objects move according to their state (<code>0x6D35</code>): still, jumping left or right, coming in from the top, falling off a side, going down to the row at <code>0xE29C</code>, running away or falling dead. The jump follows one of the five arcs at <code>0x6F9E</code> (normal, long and falling dead) and moves X by one and two pixels in turn: one column of cubes every 16 steps.</p>
+<p>When Q\*bert lands, <code>0x708E</code> spins the cube: it takes one of the ten animation slots, paints nine tiles with the colours of the faces taken from two templates (<code>0x727A</code>, <code>0x729F</code>) and eight frames later <code>0x715A</code> leaves the new rotation and checks whether it now matches the model.</p>
+<h2 id="the-sound">The sound</h2>
+<p>Four channels of 0x20 bytes: the three of the PSG and an effects one that, when it plays, takes over the third one&#x27;s registers. Sounds 0x01 to 0x16 are one-channel effects; from 0x17 on, three-channel tunes that use three consecutive entries of the table at <code>0x52E2</code>. 0x56 is the pause: before playing it saves the channels, and they come back when the pause ends.</p>
+<h2 id="the-code-that-never-runs">The code that never runs</h2>
+<p>Twelve pieces nobody reaches, declared as such in <code>src/qbert.entries</code>: a pattern viewer (<code>0x6757</code>), two copies of the key reading (<code>0x705E</code>, <code>0x7068</code>), the VRAM read (<code>0x4643</code>), a byte swap (<code>0x45FD</code>), three duel leftovers (<code>0x821A</code>, <code>0x8275</code>, <code>0x833C</code>) and four more. And a dead loop at <code>0x44A5</code>: the Game Master stage checked right after being cleared.</p>
+<footer><p><em>Q*bert</em> was published by Konami for the MSX in 1986, under licence of Gottlieb's original; its catalogue number is RC-746 and it is 32 KB. All rights in the game remain with their holders. This is preservation, study and documentation work, and the cartridge image is not distributed.</p></footer></div>

@@ -344,3 +344,16 @@ def jan_ken(rom, izquierda, derecha):
     p.vuelca_copia()
     p.v[SAT] = 0xD0
     return p
+
+
+def casillas_del_rotulo(rom):
+    """Las (fila, columna) que 0x4B40 escribe desde 0xED45: el rotulo."""
+    out = []
+    hl = 0x45
+    a = 0x4B95
+    for k in range(8):
+        cas, a = literal(rom, a)
+        for i in range(len(cas)):
+            out.append(((hl + i) // 32, (hl + i) % 32))
+        hl += len(cas) + (14 if k == 6 else 9)
+    return out
