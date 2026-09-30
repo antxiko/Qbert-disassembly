@@ -84,7 +84,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 </style>
 <div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html" style=color:var(--tinta)>El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="EN-EL-EMULADOR.html">En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../THE-CODE.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
 <h1 id="el-codigo">El código</h1>
-<p>El listado es <code>src/qbert.asm</code>: 5.939 instrucciones, 4.636 con comentario (78,1 %), 444 rutinas con nombre, ninguna rutina por debajo del 10 % y ningún destino de <code>call</code> sin nombre. Reensambla byte a byte.</p>
+<p>El listado es <code>src/qbert.asm</code>: 5.939 instrucciones, 4.636 con comentario (78,1 %), 788 rutinas (444 con nombre propio), ninguna rutina por debajo del 10 % y ningún destino de <code>call</code> sin nombre. Reensambla byte a byte.</p>
 <h2 id="el-armazon">El armazón</h2>
 <p>INIT deja un <code>jp</code> en H.KEYI y se queda en un <code>jr $</code>: <b>todo el juego corre en la interrupción</b> del VDP (<code>0x4025</code>). En cada cuadro suena el sonido; la escena solo corre si el cuadro anterior acabó (<code>0xE005</code>), con las interrupciones abiertas para que el sonido no se pierda.</p>
 <p>El armazón es el de The Goonies y Yie Ar Kung-Fu II: <code>tools/porta_nombres.py</code> encuentra aquí, por firma de instrucciones, sus rutinas de guion, de RLE y de fuente. El motor de sonido y el juego son de este cartucho.</p>

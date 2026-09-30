@@ -6,7 +6,7 @@ ningun juego: lo leen de aqui.
 
 Las cifras estan medidas sobre este cartucho: CODIGO y DATOS los imprime
 tools/presupuesto.py (make sanity); INSTRUCCIONES y COMENTARIOS, tools/
-densidad.py (make densidad); RUTINAS son las etiquetas con nombre del .notes.
+densidad.py (make densidad), que da tambien RUTINAS.
 """
 
 NOMBRE = "Q*bert"
@@ -16,7 +16,7 @@ REPOSITORIO = "https://github.com/antxiko/Qbert-disassembly"
 
 CODIGO = 11743
 DATOS = 21025
-RUTINAS = 444
+RUTINAS = 788
 INSTRUCCIONES = 5939
 COMENTARIOS = 4636
 
@@ -49,7 +49,7 @@ PORTADA = {
               "piedra, papel o tijera y una vida escondida. Todo dibujado desde "
               "la ROM.",
         ficha=["Konami - <b>(c) Konami 1986</b>",
-               "Cartucho <b>RC-746</b> de 32 KB", "<b>MSX1</b>",
+               "Cartucho <b>RC-746</b> de 32 KB", "<b>MSX</b>",
                "Volcado <b>bd253f32...</b>"],
         aviso="<b>Aqu&iacute; no hay ninguna captura.</b> Todas las "
               "im&aacute;genes est&aacute;n <b>dibujadas desde los bytes de la "
@@ -66,7 +66,7 @@ PORTADA = {
               "clear a stage, a duel settled by rock, paper, scissors and a "
               "hidden life. All drawn from the ROM.",
         ficha=["Konami - <b>(c) Konami 1986</b>",
-               "An <b>RC-746</b> 32 KB cartridge", "<b>MSX1</b>",
+               "An <b>RC-746</b> 32 KB cartridge", "<b>MSX</b>",
                "Dump <b>bd253f32...</b>"],
         aviso="<b>Not one capture here.</b> Every picture is <b>drawn from "
               "the bytes of the ROM</b> with the cartridge's own tables: the "

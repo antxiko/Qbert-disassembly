@@ -84,7 +84,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 </style>
 <div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html" style=color:var(--tinta)>The code</a><a href="FINDINGS.html">Findings</a><a href="IN-THE-EMULATOR.html">In the emulator</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/EL-CODIGO.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
 <h1 id="the-code">The code</h1>
-<p>The listing is <code>src/qbert.asm</code>: 5,939 instructions, 4,636 of them commented (78.1%), 444 named routines, no routine below 10% and no <code>call</code> target without a name. It reassembles byte for byte.</p>
+<p>The listing is <code>src/qbert.asm</code>: 5,939 instructions, 4,636 of them commented (78.1%), 788 routines (444 with their own name), no routine below 10% and no <code>call</code> target without a name. It reassembles byte for byte.</p>
 <h2 id="the-framework">The framework</h2>
 <p>INIT leaves a <code>jp</code> in H.KEYI and sits in a <code>jr $</code>: <b>the whole game runs in the VDP interrupt</b> (<code>0x4025</code>). Every frame the sound plays; the scene only runs if the previous frame finished (<code>0xE005</code>), with interrupts enabled so the sound is never lost.</p>
 <p>The framework is the one in The Goonies and Yie Ar Kung-Fu II: <code>tools/porta_nombres.py</code> finds here, by instruction signature, their script, RLE and font routines. The sound engine and the game belong to this cartridge.</p>

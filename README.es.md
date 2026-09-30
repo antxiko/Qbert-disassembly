@@ -3,7 +3,7 @@
 *(Also available [in English](README.md).)*
 
 Desensamblado comentado de ***Q\*bert*** (キューバート), Konami, 1986, cartucho
-**RC-746** para **MSX1**: 32 KB sin mapeador en las páginas 1 y 2.
+**RC-746** para **MSX**: 32 KB sin mapeador en las páginas 1 y 2.
 
 **La web**: https://antxiko.github.io/Qbert-disassembly/es/
 
@@ -11,7 +11,7 @@ Desensamblado comentado de ***Q\*bert*** (キューバート), Konami, 1986, car
 |---|---|
 | explicado | 100 % (11.743 bytes de código, 21.025 de datos) |
 | comentado | 78,1 % de las instrucciones |
-| rutinas | 444 con nombre, ninguna por debajo del 10 % |
+| rutinas | 788 (444 con nombre propio), ninguna por debajo del 10 % |
 | reensamblado | la ROM, byte a byte |
 | imágenes | dibujadas desde la ROM; nueve pantallas cotejadas contra openMSX, 0 diferencias |
 

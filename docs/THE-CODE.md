@@ -1,7 +1,7 @@
 # The code
 
 The listing is `src/qbert.asm`: 5,939 instructions, 4,636 of them commented
-(78.1%), 444 named routines, no routine below 10% and no `call` target without
+(78.1%), 788 routines (444 with their own name), no routine below 10% and no `call` target without
 a name. It reassembles byte for byte.
 
 ## The framework

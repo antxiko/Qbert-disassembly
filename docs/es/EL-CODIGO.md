@@ -1,7 +1,7 @@
 # El código
 
 El listado es `src/qbert.asm`: 5.939 instrucciones, 4.636 con comentario
-(78,1 %), 444 rutinas con nombre, ninguna rutina por debajo del 10 % y ningún
+(78,1 %), 788 rutinas (444 con nombre propio), ninguna rutina por debajo del 10 % y ningún
 destino de `call` sin nombre. Reensambla byte a byte.
 
 ## El armazón

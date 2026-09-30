@@ -3,7 +3,7 @@
 *(También disponible [en castellano](README.es.md).)*
 
 A commented disassembly of ***Q\*bert*** (キューバート), Konami, 1986, cartridge
-**RC-746** for the **MSX1**: 32 KB with no mapper in pages 1 and 2.
+**RC-746** for the **MSX**: 32 KB with no mapper in pages 1 and 2.
 
 **The website**: https://antxiko.github.io/Qbert-disassembly/
 
@@ -11,7 +11,7 @@ A commented disassembly of ***Q\*bert*** (キューバート), Konami, 1986, car
 |---|---|
 | explained | 100% (11,743 bytes of code, 21,025 of data) |
 | commented | 78.1% of the instructions |
-| routines | 444 named, none below 10% |
+| routines | 788 (444 with their own name), none below 10% |
 | reassembly | the ROM, byte for byte |
 | pictures | drawn from the ROM; nine screens checked against openMSX, 0 differences |
 

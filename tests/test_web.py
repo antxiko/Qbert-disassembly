@@ -82,10 +82,12 @@ class LasCifrasDeLaPortada(unittest.TestCase):
         m = re.search(r"(\d+) rutinas por debajo del 10 %", salida)
         self.assertEqual(int(m.group(1)), 0, "hay rutinas flojas")
 
-    def test_las_rutinas_con_nombre(self):
-        notas = lee_texto(os.path.join(RAIZ, "src", "qbert.notes"))
-        n = sum(1 for ln in notas.splitlines() if ln.startswith("L "))
-        self.assertEqual(self.w.RUTINAS, n)
+    def test_las_rutinas_son_las_de_densidad(self):
+        salida = subprocess.run(
+            [sys.executable, os.path.join(RAIZ, "tools", "densidad.py"), ASM],
+            capture_output=True, text=True, check=True).stdout
+        m = re.search(r"por debajo del 10 %, de (\d+)", salida)
+        self.assertEqual(self.w.RUTINAS, int(m.group(1)))
 
     def test_ningun_call_sin_nombre(self):
         salida = subprocess.run(
