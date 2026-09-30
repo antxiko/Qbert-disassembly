@@ -1,0 +1,10 @@
+10 k 8 0x01
+13 k 8 0x01
+15.5 k 8 0x01
+16 k 8 0x01
+22 w 0xE111 3
+22.1 w 0xE00D 1
+23 d acaba
+30 d bonus
+34 d bonus2
+35 x

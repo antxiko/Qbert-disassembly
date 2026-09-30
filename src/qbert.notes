@@ -1583,7 +1583,7 @@ C 0x8985 si nadie pulsa, una mano al azar para cada uno (R y el contador de cuad
 C 0x8994 al paso 6 con 128 cuadros
 L 0x89A1 mano_al_azar              A & 3, salvo el 3
 L 0x89A8 prepara_el_piedra_papel_tijera  El recuadro de ladrillo, los sprites y los dos Q*bert
-B 0x89C6 PASO 6: JAN-KEN. LET'S PLAY JAN-KEN y JAN-KEN! con las manos parpadeando mientras suena la musica; cada jugador elige con su mando: abajo, izquierda o arriba.
+B 0x89C6 PASO 6: JAN-KEN. LET'S PLAY JAN-KEN y JAN-KEN! con las manos parpadeando mientras suena la musica; cada jugador elige con su mando: abajo papel, izquierda tijera, arriba piedra.
 L 0x89C6 jan_ken
 C 0x89CF dos musicas alternas: 0x26 y 0x4A
 C 0x89DE el recuadro limpio
@@ -1593,7 +1593,7 @@ C 0x8A06 hasta que acaba la musica
 C 0x8A0B el sonido 0x3B y PON!
 L 0x8A36 pon                       Paso 7: las dos manos a la vista
 C 0x8A3B el sonido 0x3E
-L 0x8A89 quien_gana                Paso 8: la mano A+1 (modulo 3) gana a la A
+L 0x8A89 quien_gana                Paso 8: la mano A+1 (modulo 3) gana a la A: tijera a papel, piedra a tijera y papel a piedra
 C 0x8A99 iguales: otra vez
 C 0x8A9C si la del primero es la siguiente a la del segundo, gana el primero
 L 0x8AA7 gana_el_segundo
@@ -1604,9 +1604,9 @@ L 0x8AD2 otra_vez_jan_ken
 L 0x8AE1 despues_del_jan_ken       Paso 9: la partida se la lleva el ganador
 C 0x8AF3 con la partida acabada, el ganador se apunta la partida
 C 0x8B03 si no, el de (0xE332) sale rebotado y se vuelve al tablero
-L 0x8B2B mano_del_mando            0 abajo, 1 izquierda, 2 arriba; sin pulsar, la que habia
+L 0x8B2B mano_del_mando            Abajo, papel (0); izquierda, tijera (1); arriba, piedra (2). Sin pulsar, la que habia
 L 0x8B3C pinta_una_mano            Una de las seis de 0x8B49: las tres de cada lado
-D 0x8B49 0x8B55 manos  Seis punteros a los dibujos de las tres manos, a la izquierda (0x8E2B, 0x8E35, 0x8E3F) y a la derecha (0x8E49, 0x8E53, 0x8E5D)
+D 0x8B49 0x8B55 manos  Seis punteros a los dibujos de las tres manos (papel, tijera y piedra), a la izquierda (0x8E2B, 0x8E35, 0x8E3F) y a la derecha (0x8E49, 0x8E53, 0x8E5D)
 F 0x8B49 w
 L 0x8B55 parpadea_el_resultado
 L 0x8B5B pinta_el_resultado
@@ -1691,7 +1691,7 @@ D 0x96BA 0x97BA duelo_sprites  RLE de 0x46A0 con destino 0x1800: los patrones de
 F 0x96BA 8
 D 0x97BA 0x97BB cero_suelto  Un 0x00 detras del fin del RLE de 0x96BA, que no lee nadie
 F 0x97BA 1
-D 0x97BB 0x97DB sprite_de_la_cara  Un sprite de 16x16 (32 bytes) que 0x7C68 pone en el patron 0 para la cara grande del marcador
+D 0x97BB 0x97DB patron_de_la_cara  Un sprite de 16x16 (32 bytes) que 0x7C68 pone en el patron 0 para la cara grande del marcador
 F 0x97BB 8
 D 0x97DB 0xA7AD tableros  Las 50 fases, 81 bytes cada una: la cuadricula de 9x9 fila a fila. 0xFF es hueco; cualquier otro, el giro de ese cubo (0 a 23). La casilla 0 es el modelo que hay que conseguir, y en las fases 31-50, que son las del duelo, la 1 es el modelo del segundo
 F 0x97DB 9
@@ -1723,9 +1723,1262 @@ D 0xB09A 0xBE63 graficos_de_la_recreativa  RLE de 0x46A0 de 6.560 bytes con dest
 F 0xB09A 16
 D 0xBE63 0xBFA5 graficos_del_menu  RLE de 0x46A0: el Q*bert grande de los menus de nivel, patrones y colores del tercer tercio (640 bytes)
 F 0xBE63 16
-D 0xBFA5 0xBFE7 sprites_del_menu  RLE de 0x46A0 con destino 0x1800: cuatro sprites del menu (128 bytes)
+D 0xBFA5 0xBFE7 patrones_del_menu  RLE de 0x46A0 con destino 0x1800: cuatro sprites del menu (128 bytes)
 F 0xBFA5 8
 D 0xBFE7 0xBFF6 relleno  Un 0x00 y catorce 0xFF hasta la marca
 F 0xBFE7 15
 D 0xBFF6 0xC000 marca_de_konami  La marca oculta de Konami: el titulo en katakana AL REVES, siete caracteres (0x86 0xB2 0xBA 0x99 0xBA 0xB7 0x93 leidos de atras adelante: キューバート, Q*bert), su longitud (7), el RC en BCD (0x46) y 0xAA. Nadie la lee: tools/marca_konami.py
 F 0xBFF6 10
+
+C 0x4028 el sonido no puede partirse por otra interrupcion
+C 0x402F bit 0: aun sin acabar
+C 0x403D y se deja libre para el siguiente
+C 0x4043 el bit 7 del estado va al signo
+C 0x4044 cerradas mientras suena
+C 0x4048 y abiertas otra vez
+C 0x4049 vuelta a la BIOS, que acaba la interrupcion
+C 0x404A L + A...
+C 0x404B ...en L
+C 0x404C sin acarreo, ya esta
+C 0x404D con acarreo, H + 1
+C 0x404F E + A...
+C 0x4050 ...en E
+C 0x4051 sin acarreo, ya esta
+C 0x4052 con acarreo, D + 1
+C 0x4056 HL = tabla + 2A
+C 0x405A el byte alto
+C 0x405C HL = la entrada
+C 0x405E sin interrupciones mientras se prepara todo
+C 0x4063 bits 2-3 del registro de ranuras: la de la pagina 1
+C 0x4066 C = la ranura primaria
+C 0x406A EXPTBL + ranura
+C 0x406D bit 7: expandida
+C 0x406F y en C, junto a la primaria
+C 0x4070 C = ranura y bit de expansion
+C 0x4075 SLTTBL + ranura: el registro de subranuras de esa ranura
+C 0x4078 junto a lo que ya habia
+C 0x4080 0x6000 = 1
+C 0x4084 0x8000 = 2
+C 0x4088 0xA000 = 3
+C 0x408E destino, uno mas alla: el `ldir` corre el 0xC9
+C 0x4091 512 bytes
+C 0x4094 `ret`
+C 0x4096 relleno
+C 0x409A el `jp`...
+C 0x409D ...a cada_cuadro...
+C 0x40A0 ...en 0xFD9B
+C 0x40A9 destino, uno mas alla: se corre el cero
+C 0x40AC 1.024 bytes
+C 0x40AF el cero
+C 0x40B1 borrado
+C 0x40B5 (0xE005) = 1: la interrupcion solo suena
+C 0x40BB y ya puede hacer escenas
+C 0x40C2 a partir de aqui manda la interrupcion
+C 0x40C3 `jr $`: se queda aqui para siempre
+C 0x40C8 un cuadro mas
+C 0x40CC bit 6
+C 0x40D1 con partida, 0x45FC
+C 0x40DA C: la escena
+C 0x40DD la 3 salta sin apilar
+C 0x40E0 A = escena: la entrada de la tabla
+C 0x40FA el bit 0 al acarreo
+C 0x40FB los cuadros pares, nada
+C 0x40FF sin acabar, vuelve
+C 0x4101 E004=0 y al paso siguiente
+C 0x4106 la espera
+C 0x4109 un cuadro menos
+C 0x410A hasta cero
+C 0x4110 registro 7 a 0: fondo transparente, negro
+C 0x4122 y al paso 1
+C 0x4126 paso 1
+C 0x4129 paso 2...
+C 0x412B ...Q*bert llega a la recreativa
+C 0x412E paso 3...
+C 0x4130 ...el bicho baja por su guion
+C 0x4133 paso 4...
+C 0x4135 ...una espera
+C 0x4138 paso 5...
+C 0x413A ...el rotulo sube
+C 0x413D paso 6...
+C 0x413F ...Q*bert se vuelve
+C 0x4142 paso 7...
+C 0x4144 ...el rotulo y la maquina suben
+C 0x4147 paso 8...
+C 0x4149 ...el ultimo movimiento
+C 0x414E el titulo entero
+C 0x4151 E004 = 0: 256 cuadros de cursor
+C 0x4152 y al paso 10
+C 0x4156 la espera
+C 0x4159 un cuadro menos
+C 0x415D se acabo: a la demostracion
+C 0x4163 y la musica de la presentacion
+C 0x4171 el Q*bert de la demostracion...
+C 0x4172 ...sigue: nada mas
+C 0x4175 sonido 0x14
+C 0x4178 120 cuadros de espera
+C 0x417A y al paso 2
+C 0x417E la espera
+C 0x4181 un cuadro menos
+C 0x4182 hasta cero
+C 0x4184 A = escena
+C 0x4187 32 cuadros...
+C 0x4189 ...de espera
+C 0x418C y al paso 0 de esa escena
+C 0x4192 la demostracion montada
+C 0x4195 32 cuadros
+C 0x4197 la espera
+C 0x419A el paso...
+C 0x419D ...mas uno
+C 0x41A4 0: un jugador
+C 0x41A7 dos: su menu
+C 0x41AA y al paso 2
+C 0x41AC uno: el suyo
+C 0x41AF y al paso 2
+C 0x41B3 uno o dos
+C 0x41B6 0: un jugador
+C 0x41B9 el del duelo; vuelve aqui solo con el disparo
+C 0x41BC ya elegido
+C 0x41BE el de un jugador; lo mismo
+C 0x41C9 la musica del nivel elegido
+C 0x41CC 80 cuadros
+C 0x41CE y al paso 3
+C 0x41D2 la espera
+C 0x41D5 un cuadro menos
+C 0x41D6 acabada: a la partida
+C 0x41D8 en el duelo...
+C 0x41DB ...uno o dos...
+C 0x41DC ...no parpadea nada
+C 0x41DD con uno, parpadea el nivel
+C 0x41E5 la fuente
+C 0x41E8 80 cuadros
+C 0x41EA y al paso 1
+C 0x41EE la espera
+C 0x41F1 si ya es cero...
+C 0x41F2 ...no se toca
+C 0x41F3 cero: adelante
+C 0x41F5 si no, un cuadro menos
+C 0x41F6 hasta cero
+C 0x41FA musica del canal 1 sonando...
+C 0x41FB ...se espera
+C 0x41FE la de la fase
+C 0x4201 32 cuadros...
+C 0x4203 ...de espera
+C 0x4206 pantalla en negro
+C 0x420F (0xE113)=1
+C 0x4214 (0xE35C)=1
+C 0x4216 32 cuadros
+C 0x4218 la espera
+C 0x421B la escena...
+C 0x421E ...mas uno
+C 0x421F y su paso...
+C 0x4220 ...a cero
+C 0x4223 vuelta
+C 0x4227 las vidas, en BCD
+C 0x4228 menos una...
+C 0x422A ...en BCD
+C 0x422B de vuelta
+C 0x422F el modo
+C 0x4234 con uno, a 0x424A
+C 0x423F READY en 0x39AD
+C 0x4245 el canal 1 aun suena...
+C 0x4246 ...y se espera aqui, con la interrupcion tocando
+C 0x4248 un cuadro de espera y al paso 1
+C 0x424D las unidades de la fase
+C 0x424F menos una: cero en la 1, 11, 21...
+C 0x4250 A=1 sin tocar la bandera
+C 0x4252 no es la primera del nivel: sin rotulo
+C 0x4257 LEVEL
+C 0x425A en 0x390C
+C 0x425D y el numero
+C 0x4263 STAGE en 0x394C, y HL detras
+C 0x4266 un espacio
+C 0x4267 y la fase
+C 0x426A un `ret`: aqui no hace nada
+C 0x426D un cuadro de espera
+C 0x426F la espera
+C 0x4272 y al paso siguiente
+C 0x4285 detras de LEVEL
+C 0x4288 el nivel: 0 a 4
+C 0x428B 1 a 5
+C 0x428E WRTVRM
+C 0x4294 el modo
+C 0x4297 bit 5: el duelo
+C 0x429F puesta...
+C 0x42A0 ...escena 8...
+C 0x42A2 ...con 32 cuadros de espera
+C 0x42A8 sigue en juego...
+C 0x42A9 ...nada mas
+C 0x42AD tiempo a cero: se pone de nuevo sin esperar
+C 0x42B3 cayendo por un lado
+C 0x42B5 espera
+C 0x42B6 cayendo muerto hacia un lado
+C 0x42B8 espera
+C 0x42B9 o hacia el otro
+C 0x42BB espera
+C 0x42BE el primero en juego
+C 0x42C1 y el segundo
+C 0x42CA a los dos primeros objetos
+C 0x42CD 16 bytes
+C 0x42D0 copiados
+C 0x42D3 sin congelar
+C 0x42D6 sin el poder de la bola roja
+C 0x42D9 sin invencibilidad
+C 0x42DF sin tiempo...
+C 0x42E0 ...a la escena 6
+C 0x42E6 las vidas
+C 0x42E7 ninguna...
+C 0x42E8 ...a la escena 6
+C 0x42EC en BCD
+C 0x42ED guardadas
+C 0x42F4 siempre: viene de un `jr z`
+
+C 0x430C mientras suene la musica del canal 1...
+C 0x4310 ...se espera
+C 0x4315 A = vidas: la espera, y al paso 2
+C 0x431B el duelo
+C 0x431D 0x53, la de un jugador...
+C 0x4321 ...o 0x50, la del duelo
+C 0x4323 suena
+C 0x4329 escena 7 y paso 1 de una vez
+C 0x432F GAME OVER y CONTINUE--F5 en pantalla
+C 0x4334 escena 4...
+C 0x4337 ...y paso 0
+C 0x433A 128 cuadros...
+C 0x433C ...de espera
+C 0x4340 el modo
+C 0x4343 el duelo
+C 0x4345 0x53 con uno...
+C 0x4349 ...0x50 con dos
+C 0x434B suena
+C 0x434E y a la escena 7
+C 0x4354 queda...
+C 0x4355 ...es un GAME OVER
+C 0x4359 (0xE324)=1: la cara con su sprite
+C 0x435C la pantalla del marcador
+C 0x4362 TIME  OVER
+C 0x4365 128 cuadros
+C 0x4367 y al paso 1
+C 0x4379 el modo
+C 0x437C el duelo...
+C 0x437E ...no tiene CONTINUE
+C 0x4382 SNSMAT
+C 0x4385 bit 1: F5
+C 0x4387 pulsada: CONTINUE
+C 0x4389 la cara parpadea
+C 0x438C la musica del GAME OVER...
+C 0x4390 ...suena todavia
+C 0x4391 60 cuadros mas para pulsar F5
+C 0x4393 y al paso 2
+C 0x4399 los tres bytes de la puntuacion
+C 0x439C 0xE10B-0xE10D: dos mas
+C 0x439F el primero a cero...
+C 0x43A1 ...y los otros dos
+C 0x43A6 tres vidas
+C 0x43A8 0xE111, la fase, tal cual
+C 0x43A9 0xE112
+C 0x43AC y a jugar la misma fase
+C 0x43B1 la espera
+C 0x43B4 un cuadro menos
+C 0x43B5 hasta cero
+C 0x43B9 el modo
+C 0x43BA fuera el bit 6: sin partida
+C 0x43BC guardado
+C 0x43C2 (0xE324)=1
+C 0x43C5 la pantalla del marcador
+C 0x43C8 y al paso 1
+C 0x43CD la cara parpadea
+C 0x43D0 la espera
+C 0x43D3 un cuadro menos
+C 0x43D4 hasta cero
+C 0x43D5 y se queda en uno
+C 0x43D7 el modo
+C 0x43DA en el duelo...
+C 0x43DC ...sin esperar a la musica
+C 0x43DE con uno, la musica del canal 1...
+C 0x43E2 ...aun suena
+C 0x43E3 a la escena 4: la fase siguiente
+C 0x43E7 (0xE00D)=0
+C 0x43EA el modo
+C 0x43ED el duelo
+C 0x43F7 las vidas...
+C 0x43F8 ...mas una...
+C 0x43FA ...en BCD
+C 0x43FB guardadas
+C 0x43FD la fase...
+C 0x43FE ...mas una...
+C 0x4400 ...en BCD
+C 0x4401 guardada
+C 0x4404 hasta la 50, tal cual
+C 0x4406 la 51 es la 1
+C 0x4408 y sigue
+C 0x440C sonido 0x59: silencio
+C 0x4412 (0xE324)=0: la cara sin sprite
+C 0x4413 guardado
+C 0x4416 la pantalla del marcador
+C 0x4419 128 cuadros
+C 0x441B y al paso 1
+C 0x4421 encima, los cursores, el espacio y SELECT
+C 0x4427 (0xE101) y (0xE100)
+C 0x442A nada recien pulsado...
+C 0x442B ...vuelve
+C 0x442F (0xE004)=0
+C 0x4431 L=0: HL=0xE000
+C 0x4432 DE: uno o dos jugadores
+C 0x4436 escena distinta de 1: al titulo
+C 0x4438 0xE001: el paso
+C 0x4439 lo pulsado, en B
+C 0x443A el paso...
+C 0x443B HL otra vez en 0xE000
+C 0x443E A = lo pulsado
+C 0x443F antes del paso 9: al titulo
+C 0x4443 solo direcciones: cambia la opcion
+C 0x4446 0: un jugador
+C 0x4449 0x40...
+C 0x444B ...o 0x60
+C 0x444D el modo de la partida
+C 0x4452 0xE001
+C 0x4453 paso 0
+C 0x4455 guardado
+C 0x4456 C=0xFF: pinta
+C 0x445A y los datos de la partida
+C 0x445F 0xE001
+C 0x4460 paso 10
+C 0x4464 silencio
+C 0x4467 el titulo
+C 0x446A uno o dos...
+C 0x446B ...el otro
+C 0x446D guardado
+C 0x4470 sonido 3
+C 0x4473 vuelta
+C 0x4474 no hace nada
+C 0x4475 desde 0xE108
+C 0x4478 hasta 0xE4FF
+C 0x447B DE = HL...
+C 0x447D ...+ 1
+C 0x447E el cero
+C 0x4480 corrido
+C 0x4485 (0xE114), siempre cero aqui
+C 0x4486 nunca salta
+C 0x448B a 0xE110...
+C 0x448E ...tres bytes
+C 0x4491 copiados
+C 0x4496 bit 5: dos jugadores
+C 0x4498 uno: ya esta
+C 0x4499 de 0xE110...
+C 0x449C ...a 0xE120...
+C 0x449F ...16 bytes
+C 0x44A2 copiados
+C 0x44A4 vuelta
+C 0x44A8 como mucho, la 50
+C 0x44AA menos: tal cual
+C 0x44AC la 50
+C 0x44AE la fase
+C 0x44B1 el umbral de la vida extra...
+C 0x44B3 ...en 10.000
+C 0x44B6 y otra vez: no sale
+C 0x44BB la fase que escribio el Game Master
+C 0x44BE si...
+C 0x44BF ...no hay...
+C 0x44C0 ...nada
+C 0x44C1 se consume
+C 0x44C3 en BCD
+C 0x44C6 como mucho...
+C 0x44C8 ...la 50
+C 0x44CA la 50
+C 0x44CC la fase de la partida
+C 0x44CF el modo
+C 0x44D2 dos jugadores...
+C 0x44D4 ...no: ya esta
+C 0x44D5 si: tambien la del segundo
+C 0x44D8 el primer sprite
+C 0x44DB 0xD0: fin de la lista
+C 0x44DD WRTVRM
+C 0x44E0 A=0
+C 0x44E1 vuelta
+C 0x44E2 el tercer byte no se toca: C=0
+C 0x44E7 modo 0: la demostracion
+C 0x44E8 no puntua
+C 0x44EB duelo: no puntua
+C 0x44EC unidades y decenas
+C 0x44EF el byte bajo...
+C 0x44F0 ...+ E...
+C 0x44F1 ...en BCD
+C 0x44F2 guardado
+C 0x44F3 centenas y millares
+C 0x44F4 el de en medio...
+C 0x44F5 ...+ D y el acarreo...
+C 0x44F6 ...en BCD
+C 0x44F7 guardado
+C 0x44F8 decenas y centenas de millar
+C 0x44F9 el alto...
+C 0x44FA ...+ el acarreo...
+C 0x44FB ...en BCD
+C 0x44FC guardado
+C 0x4502 0xE105 y 0xE106
+C 0x4506 0xE106 y 0xE107
+C 0x450A la puntuacion en pantalla
+C 0x450D DE: el byte alto
+C 0x450E el umbral
+C 0x4512 no llega: al record
+C 0x4515 cinco mas...
+C 0x4517 ...en BCD
+C 0x4518 sin pasarse...
+C 0x451A ...o 0xFF: ya no hay mas
+C 0x451C el umbral nuevo
+C 0x451D se guarda DE
+C 0x4521 las vidas...
+C 0x4522 ...mas una...
+C 0x4524 ...en BCD
+C 0x4525 guardadas
+C 0x4528 el sonido de la vida
+C 0x452B en pantalla
+C 0x452E DE otra vez
+C 0x4531 el byte alto del record
+C 0x4534 DE el record, HL la puntuacion
+C 0x4535 C: donde empieza la puntuacion
+C 0x4536 cifra del record...
+C 0x4537 ...menos la de la puntuacion
+C 0x4538 la puntuacion es mayor: se copia
+C 0x453A menor: solo se pinta
+C 0x453D iguales: el byte siguiente
+C 0x453E de los dos
+C 0x453F tres bytes
+C 0x4542 los tres...
+C 0x4545 ...hasta 0xE107...
+C 0x4547 ...de arriba abajo
+C 0x4549 y la puntuacion en pantalla
+C 0x454D HI-SCORE, REST, STAGE- y 1P-SCORE
+C 0x4550 en pantalla
+C 0x4553 el modo
+C 0x4556 el duelo...
+C 0x4558 ...no
+C 0x455A A invertido
+C 0x455B la puntuacion donde se quedo HL
+C 0x455E las vidas
+C 0x4561 la fase
+C 0x4564 el record y la puntuacion
+C 0x4567 STAGE-, SCORE- y P-
+C 0x456A en la fila 0
+C 0x4575 la fila 0, toda de ladrillo
+C 0x4578 2P- y 1P-
+C 0x457B en pantalla
+C 0x457E detras de 2P-...
+C 0x4581 ...las vidas del segundo
+C 0x4584 dos cifras
+C 0x4587 detras de 1P-...
+C 0x458A ...las del primero
+C 0x458D un byte
+C 0x458F a pinta_bcd
+C 0x459D HI-SCORE...
+C 0x45A0 ...el record, tres bytes
+C 0x45A3 en pantalla
+C 0x45A6 1P-SCORE...
+C 0x45A9 ...la puntuacion
+
+C 0x45AC tres bytes
+C 0x45AE seis cifras
+C 0x45B0 detras de SCORE-
+C 0x45B3 desde el byte alto
+C 0x45B6 tres bytes
+C 0x45B8 seis cifras
+C 0x45BA detras de STAGE-, en la pantalla del marcador
+C 0x45BD la fase
+C 0x45C0 un byte
+C 0x45C2 dos cifras
+C 0x45C4 detras de STAGE-
+C 0x45C7 la fase
+C 0x45CA un byte
+C 0x45CC dos cifras
+C 0x45CE detras de REST
+C 0x45D1 las vidas
+C 0x45D4 un byte
+C 0x45D6 dos cifras
+C 0x45D8 detras de P-
+C 0x45DB las vidas
+C 0x45DE un byte
+C 0x45E0 dos cifras
+C 0x45E3 el nibble alto...
+C 0x45E7 ...abajo
+C 0x45EB WRTVRM
+C 0x45EE la casilla siguiente
+C 0x45F0 el nibble bajo
+C 0x45F2 su casilla
+C 0x45F4 WRTVRM
+C 0x45F8 y la siguiente
+C 0x45F9 B bytes
+C 0x45FB vuelta
+C 0x45FC y la escena acaba aqui
+C 0x45FE el de (DE)...
+C 0x45FF ...a (HL)...
+C 0x4600 ...y el de (HL)...
+C 0x4601 ...a (DE)
+C 0x4602 los dos punteros...
+C 0x4603 ...avanzan
+C 0x4604 B bytes
+C 0x4606 vuelta
+C 0x462A sin sprites
+C 0x462D la tabla de nombres...
+C 0x4630 ...768 casillas...
+C 0x4633 ...a cero
+C 0x4637 A a salvo
+C 0x463B en los registros de reserva...
+C 0x463F ...C = el puerto
+C 0x4640 y otra vez los normales
+C 0x4641 A de vuelta
+C 0x4642 vuelta
+C 0x4646 en los de reserva...
+C 0x464A ...C = el puerto
+C 0x464B otra vez los normales
+C 0x464C vuelta
+C 0x464D HL el origen, DE el destino
+C 0x464E LDIRVM
+C 0x4651 B' = 3 tercios
+C 0x4654 los normales
+C 0x4655 BC y DE...
+C 0x4656 ...a salvo
+C 0x4657 un tercio
+C 0x465D HL + 0x800
+C 0x465E DE y BC...
+C 0x465F ...otra vez
+C 0x4660 B' cuenta
+C 0x4661 tres veces
+C 0x4663 vuelta
+C 0x4664 tres tercios
+C 0x4666 BC...
+C 0x4667 ...y DE a salvo
+C 0x466B el tercio siguiente...
+C 0x466E ...0x800 mas alla
+C 0x466F DE...
+C 0x4670 ...y BC otra vez
+C 0x4671 uno menos
+C 0x4672 tres veces
+C 0x4674 vuelta
+C 0x4675 tres tercios
+C 0x4677 B...
+C 0x4678 ...y el guion a salvo
+C 0x4679 un tercio
+C 0x467C el siguiente...
+C 0x467F ...0x800 mas alla
+C 0x4680 el guion otra vez desde el principio
+C 0x4681 y B
+C 0x4682 tres veces
+C 0x4684 vuelta
+C 0x4688 el byte bajo...
+C 0x4689 ...y el alto
+C 0x468A HL = la direccion
+C 0x468B DE sigue en el guion
+C 0x468C salta el byte alto
+C 0x468D el caracter
+C 0x468E el siguiente
+C 0x4690 0xFF: B = 0
+C 0x4691 se acabo
+C 0x4693 0xFE: B = 0
+C 0x4699 la casilla siguiente
+C 0x469A y el caracter siguiente
+C 0x469C C=0: borra
+C 0x469E y adelante
+C 0x46A1 el byte bajo...
+C 0x46A2 ...y el alto
+C 0x46A3 de la direccion
+C 0x46A4 HL = destino
+C 0x46A5 DE, detras
+C 0x46A6 SETWRT y el puerto en C'
+C 0x46A9 la orden
+C 0x46AB 0x00: se acabo
+C 0x46AC la siguiente
+C 0x46AD B = la orden
+C 0x46B0 igual: bit 7 a cero
+C 0x46B4 0x80: nueva direccion
+C 0x46B7 el literal
+C 0x46B8 el siguiente
+C 0x46B9 con el puerto de C'...
+C 0x46BA ...al VDP
+C 0x46BC los normales
+C 0x46BD B literales
+C 0x46BF la orden siguiente
+C 0x46C1 el byte que se repite
+C 0x46C2 detras
+C 0x46C3 con el puerto de C'...
+C 0x46C4 ...al VDP
+C 0x46C6 los normales
+C 0x46C7 B veces
+C 0x46C9 la orden siguiente
+C 0x46CD al registro 7
+C 0x46D2 todos los canales libres
+C 0x46D8 16 KB...
+C 0x46DB ...a cero
+C 0x46DC FILVRM
+C 0x46DF la tabla de 0x46F0
+C 0x46E2 ocho registros
+C 0x46E4 desde el 0
+C 0x46E7 WRTVDP
+C 0x46EA el siguiente valor
+C 0x46EB el siguiente registro
+C 0x46EC ocho
+C 0x46ED veces
+C 0x46EF vuelta
+C 0x46F8 registro 7
+C 0x46FA WRTVDP con B
+C 0x46FF el puerto 2
+C 0x4708 a 0xE330 y 0xE32F
+C 0x470E encima, los cursores, el espacio y SELECT
+C 0x4711 el mando 1
+C 0x4714 C = lo de antes
+C 0x4715 lo de ahora, guardado
+C 0x4718 el byte de antes
+C 0x4719 lo recien pulsado
+C 0x471A vuelta
+C 0x471B bit 6 a cero: el puerto 1
+C 0x471D registro 15...
+C 0x4722 registro 14...
+C 0x4724 sin interrupciones...
+C 0x4728 ...para leerlo
+C 0x472A seis bits
+C 0x472C vuelta
+C 0x472D lo del puerto, a salvo
+C 0x4730 SNSMAT
+C 0x4733 pulsado a uno
+C 0x4735 el bit 5
+C 0x4737 en E
+C 0x473A SNSMAT
+C 0x473D pulsado a uno
+C 0x4740 B, para seguir rotando
+C 0x4743 con SELECT
+C 0x4744 en C
+C 0x4745 dos vueltas mas
+C 0x4748 en B
+C 0x474B con lo de antes
+C 0x474C en C
+C 0x474D una vuelta mas
+C 0x474E arriba al bit 0, abajo al 1
+C 0x4751 todo junto
+C 0x4753 con lo del puerto
+C 0x4754 vuelta
+C 0x4755 lo del puerto, a salvo
+C 0x4756 B: lo pulsado
+C 0x4758 fila 3
+C 0x475F no pulsada
+C 0x4761 abajo
+C 0x4765 no pulsada
+C 0x4767 arriba
+C 0x476B no pulsada
+C 0x476D derecha
+C 0x476F fila 5
+C 0x4774 bit 0: la S
+C 0x4776 no pulsada
+C 0x4778 izquierda
+C 0x477A fila 6
+C 0x477F bit 1: CTRL
+C 0x4781 no pulsada
+C 0x4783 el disparo
+C 0x4785 lo del puerto
+C 0x4786 con las teclas
+C 0x4787 vuelta
+C 0x47B7 los 16 primeros tiles
+C 0x47BA la fuente de 0x47EF
+C 0x47C0 en los tres tercios
+C 0x47C8 43 tiles: 0x158 bytes
+C 0x47CB en los tres tercios
+C 0x47CE los patrones de los tiles 0 a 15...
+C 0x47D1 ...128 bytes...
+C 0x47D4 ...a cero...
+C 0x47D8 el color del tile 0
+C 0x47DB de 8 en 8
+C 0x47E0 B, a salvo
+C 0x47E1 un tile
+C 0x47E4 HL a salvo
+C 0x47E5 los tres tercios con A
+C 0x47E8 HL otra vez
+C 0x47E9 el tile siguiente
+C 0x47EA el color siguiente
+C 0x47EB B otra vez
+C 0x47EC dieciseis
+C 0x47EE vuelta
+C 0x4923 (0xE00E) y (0xE00F) a cero
+C 0x4929 a la VRAM
+C 0x492F 126 tiles de color...
+C 0x4932 ...a cero
+C 0x4933 FILVRM
+C 0x493B seis filas
+C 0x493D el salto al acabar la fila
+C 0x4940 21 tiles
+C 0x4942 WRTVRM
+C 0x4945 la casilla siguiente
+C 0x4946 el tile siguiente
+C 0x4947 21 veces
+C 0x494A una fila menos
+C 0x494B seis
+C 0x494D vuelta
+C 0x494E C: la linea; B: la fila
+C 0x4954 una vuelta mas que la fila
+C 0x4955 + 21...
+C 0x4957 ...por fila
+C 0x4959 L = 21 * fila
+C 0x495A H = 0
+C 0x495C por 2...
+C 0x495D ...por 4...
+C 0x4961 + 0x0A00
+C 0x4963 + la linea
+C 0x4966 21 tiles
+C 0x4968 de 8 en 8 bytes
+C 0x496D WRTVRM
+C 0x4970 la misma linea del tile de al lado
+C 0x4971 21 veces
+C 0x4976 la linea...
+C 0x4977 ...mas una...
+C 0x4978 ...de 0 a 7
+C 0x497A guardada
+C 0x497B sin dar la vuelta, ya esta
+C 0x497D la fila siguiente
+C 0x497E la fila
+C 0x4981 vuelta: Z con la sexta
+C 0x4AE6 al registro 7
+C 0x4AE9 vuelta
+C 0x4AEA fondo negro
+C 0x4AED (0xE115): la presentacion ya lo dejo pintado
+C 0x4AF0 lo lee...
+C 0x4AF1 ...lo mira...
+C 0x4AF2 ...y lo borra
+C 0x4AF4 pintado: solo los textos
+C 0x4AF9 la fuente
+C 0x4B02 en la copia de la tabla de nombres
+C 0x4B0A en color 8
+C 0x4B16 en pantalla
+C 0x4B1C la espera: cuenta hacia abajo
+C 0x4B1F bit 3: cada 8 cuadros
+C 0x4B21 pinta...
+C 0x4B23 ...o...
+C 0x4B25 ...C=0: borra
+C 0x4B29 2PLAYERS
+C 0x4B2C uno o dos
+C 0x4B2F uno: la mano en 1PLAYER
+C 0x4B32 dos: en 2PLAYERS
+C 0x4B33 la otra, para despues
+C 0x4B34 la mano en la buena
+C 0x4B37 la otra...
+C 0x4B38 ...borrada
+C 0x4B3A los dos tiles de la mano
+C 0x4B3D sin direccion
+C 0x4B40 pinta
+C 0x4B42 la primera fila
+C 0x4B45 en la copia
+C 0x4B4A a la fila siguiente
+C 0x4B4D la segunda
+C 0x4B50 en la copia
+C 0x4B53 nueve mas
+C 0x4B55 a la fila siguiente
+C 0x4B58 la tercera
+C 0x4B5B en la copia
+C 0x4B5E nueve mas
+C 0x4B60 a la fila siguiente
+C 0x4B63 la cuarta
+C 0x4B66 en la copia
+C 0x4B69 nueve mas
+C 0x4B6B a la fila siguiente
+C 0x4B6E la quinta
+C 0x4B71 en la copia
+C 0x4B74 nueve mas
+C 0x4B76 a la fila siguiente
+C 0x4B79 la sexta
+C 0x4B7C en la copia
+C 0x4B7F nueve mas
+C 0x4B81 a la fila siguiente
+C 0x4B84 la septima
+C 0x4B87 en la copia
+C 0x4B8C 14 mas: 5 columnas a la derecha
+C 0x4B8F la octava: el pie
+C 0x4B92 en la copia
+
+C 0x4C41 sin interrupciones
+C 0x4C42 HL a salvo
+C 0x4C43 el modo
+C 0x4C46 bit 6: partida de verdad
+C 0x4C48 sin ella, nada
+C 0x4C4A con ella, como 0x4C4C
+C 0x4C4C sin interrupciones: el motor no puede correr a medias
+C 0x4C4D todo a salvo
+C 0x4C51 arranca A
+C 0x4C54 todo de vuelta
+C 0x4C57 HL
+C 0x4C58 interrupciones abiertas
+C 0x4C59 vuelta
+C 0x4C5C no es la pausa
+C 0x4C5E los tres canales de musica...
+C 0x4C61 ...a 0xE090
+C 0x4C64 0x60 bytes
+C 0x4C67 C, que ha devuelto 0x5004
+C 0x4C68 C = el sonido
+C 0x4C6C un canal
+C 0x4C6E el sonido
+C 0x4C6F por debajo de 0x17...
+C 0x4C71 ...efecto
+C 0x4C75 no es la pausa: tres
+C 0x4C78 dos mas: tres canales
+C 0x4C79 (cuatro con la pausa)
+C 0x4C7C la 0x2C deja sonar el efecto
+C 0x4C7E cualquier otra...
+C 0x4C7F ...lo corta
+C 0x4C82 y adelante
+C 0x4C89 la musica 0x2C o posterior...
+C 0x4C8B ...manda: no hay efecto
+C 0x4C8D E = el efecto que suena
+C 0x4C8E el nuevo
+C 0x4C8F contra el que suena
+C 0x4C90 menor: no se oye
+C 0x4C91 el sonido...
+C 0x4C95 ...por dos...
+C 0x4C96 ...con acarreo
+C 0x4C98 al byte alto
+C 0x4C99 + 0x52E2
+C 0x4C9A en E
+C 0x4C9B con acarreo...
+C 0x4C9D ...al alto
+C 0x4C9E HL al +0 del canal
+C 0x4CA2 +2
+C 0x4CA5 +3
+C 0x4CA7 el byte bajo del puntero
+C 0x4CA8 +4
+C 0x4CA9 el alto
+C 0x4CAB guardado
+C 0x4CAC siete mas...
+C 0x4CAF ...+0x0B
+C 0x4CB0 cero
+C 0x4CB2 tres mas...
+C 0x4CB5 ...+0x0E
+C 0x4CB6 uno
+C 0x4CB9 +0x0F
+C 0x4CBA cero
+C 0x4CBB guardado
+C 0x4CBC +0x10
+C 0x4CBE nueve mas...
+C 0x4CC1 ...+0x19
+C 0x4CC4 siete mas...
+C 0x4CC7 ...el canal siguiente
+C 0x4CC8 la entrada siguiente de la tabla
+C 0x4CC9 B canales
+C 0x4CCB vuelta
+C 0x4CCF al registro 7
+C 0x4CD2 en los de reserva...
+C 0x4CD5 ...0x20 entre canal y canal
+C 0x4CD8 los normales
+C 0x4CDA (0xE0F3)=0
+C 0x4CDD C: el registro de periodo del primer canal
+C 0x4CDF IX: el primer canal
+C 0x4CE6 no: sigue
+C 0x4CE9 A = C, que 0x5004 devuelve
+C 0x4CED de 0xE090 a 0xE010
+C 0x4CF0 los canales guardados, de vuelta
+C 0x4CF3 (0xE0F3)=1: rehacer los registros...
+C 0x4CF5 ...de los cuatro
+C 0x4CF8 B' y DE' listos
+C 0x4CF9 los normales
+C 0x4CFD suena algo?
+C 0x4CFE la respuesta, a salvo
+C 0x4CFF si: adelante
+C 0x4D02 la respuesta
+C 0x4D03 sonaba: ya esta
+C 0x4D06 el de efectos no...
+C 0x4D08 ...los demas, en silencio
+C 0x4D0B el registro de periodo...
+C 0x4D0C ...del canal siguiente
+C 0x4D0D los de reserva
+C 0x4D0E IX al canal siguiente
+C 0x4D10 cuatro
+C 0x4D12 vuelta
+C 0x4D16 tras la pausa?
+C 0x4D17 a salvo
+C 0x4D18 si: el periodo de antes
+C 0x4D1B la respuesta
+C 0x4D1C y el volumen de antes
+C 0x4D22 musica...
+C 0x4D23 ...su decaimiento
+C 0x4D2C no se acabo la nota
+C 0x4D2D el puntero...
+C 0x4D30 ...de los datos
+C 0x4D34 0xFE...
+C 0x4D36 ...orden especial
+C 0x4D3C el modo
+C 0x4D3F musica?
+C 0x4D40 la orden
+C 0x4D41 si: en su formato
+C 0x4D46 0x2X?
+C 0x4D48 no: al ruido o a la nota
+C 0x4D4A el tipo...
+C 0x4D4B ...a +5
+C 0x4D4F con instrumento?
+C 0x4D52 A...
+C 0x4D53 ...la duracion
+C 0x4D54 con instrumento, a +14
+C 0x4D56 sin el, a +1
+C 0x4D59 y siempre a +14
+C 0x4D5C el byte siguiente
+C 0x4D60 0x20 exacto...
+C 0x4D62 ...no
+C 0x4D64 un silencio: no hay nota detras
+C 0x4D65 periodo...
+C 0x4D66 ...y volumen a cero
+C 0x4D67 a guardarlo
+C 0x4D6B sin envolvente: sigue
+C 0x4D6E su periodo, byte bajo...
+C 0x4D6F ...al registro 12
+C 0x4D71 WRTPSG
+C 0x4D74 el siguiente
+C 0x4D75 el alto...
+C 0x4D76 ...en E...
+C 0x4D77 ...al registro 11
+C 0x4D79 WRTPSG
+C 0x4D7C detras
+C 0x4D7E el nibble alto
+C 0x4D80 0x1X?
+C 0x4D82 no: la nota
+C 0x4D84 si: el periodo del ruido
+C 0x4D85 X...
+C 0x4D87 ...por dos
+C 0x4D88 en E
+C 0x4D89 registro 6
+C 0x4D8B WRTPSG
+C 0x4D8E detras
+C 0x4D90 el nibble alto: el volumen
+C 0x4D92 en B
+C 0x4D93 el bajo...
+C 0x4D94 ...en D: el alto del periodo
+C 0x4D95 el siguiente
+C 0x4D96 E: el bajo del periodo
+C 0x4D97 con instrumento...
+C 0x4D9A ...?
+C 0x4D9B si: el paso del instrumento
+C 0x4D9E el puntero, detras de la nota
+C 0x4DA1 HL = el periodo
+C 0x4DA2 a +15...
+C 0x4DA5 ...y +16
+C 0x4DA8 tras la pausa?
+C 0x4DAB no...
+C 0x4DAC ...al PSG ya
+C 0x4DB0 el volumen...
+C 0x4DB4 ...a +17
+C 0x4DB7 con instrumento?
+C 0x4DBA no...
+C 0x4DBB ...la duracion de la nota
+C 0x4DBD si: la del paso...
+C 0x4DC0 ...a su cuenta
+C 0x4DC3 tras la pausa?
+C 0x4DC6 no...
+C 0x4DC7 ...el volumen al PSG
+C 0x4DCA vuelta
+C 0x4DCB la duracion...
+C 0x4DCE ...a la cuenta
+C 0x4DD1 tras la pausa?
+C 0x4DD4 no...
+C 0x4DD5 ...el volumen al PSG
+C 0x4DD8 vuelta
+C 0x4DDC acabada: la siguiente orden
+C 0x4DDF con instrumento...
+C 0x4DE2 ...?
+C 0x4DE3 si: el paso del instrumento
+C 0x4DE9 la cuenta del decaimiento...
+C 0x4DEC ...contra la de la nota
+C 0x4DEF no coinciden: una menos
+C 0x4DF1 E = la cuenta
+C 0x4DF2 el suelo del decaimiento
+C 0x4DF5 por debajo...
+C 0x4DF6 ...a bajar el volumen
+C 0x4DF8 vuelta
+C 0x4DF9 una menos
+C 0x4DFF el volumen menos uno
+C 0x4E00 negativo: ya esta en cero
+C 0x4E01 el actual...
+C 0x4E04 ...y el de salida
+C 0x4E07 tras la pausa?
+C 0x4E0A no...
+C 0x4E0B ...al PSG
+C 0x4E0E vuelta
+C 0x4E0F la orden
+C 0x4E10 el nibble alto
+C 0x4E12 0xDX?
+C 0x4E14 la orden otra vez
+C 0x4E15 no: sigue
+C 0x4E19 la unidad de tiempo
+C 0x4E1C el byte siguiente
+C 0x4E1D la orden
+C 0x4E20 no es 0xFX
+C 0x4E22 X...
+C 0x4E24 ...mas dos...
+C 0x4E26 ...el volumen
+C 0x4E29 el byte siguiente
+C 0x4E2B el nibble alto...
+C 0x4E31 ...el ritmo del decaimiento
+C 0x4E34 el bajo...
+C 0x4E37 ...su suelo
+C 0x4E3A el byte siguiente
+C 0x4E3B la orden
+C 0x4E3E no es 0xEX: una nota
+C 0x4E40 X
+C 0x4E44 0 a 7
+C 0x4E46 8
+C 0x4E4A 15
+C 0x4E4E 9 a 14: el instrumento, de 1 a 6
+C 0x4E51 y la nota que sigue
+C 0x4E53 cero...
+C 0x4E54 ...sin desafinar...
+C 0x4E57 ...y sin instrumento
+C 0x4E5A el byte siguiente
+C 0x4E5B y otra orden
+C 0x4E5D +0F = 8
+C 0x4E60 el byte siguiente
+C 0x4E61 y otra orden
+C 0x4E63 la octava
+C 0x4E66 el byte siguiente
+C 0x4E67 la nota
+C 0x4E6A B = las unidades de mas
+C 0x4E6B la unidad
+C 0x4E6E ninguna de mas
+C 0x4E70 una unidad...
+C 0x4E73 ...por cada una de mas
+C 0x4E75 la duracion
+C 0x4E78 la nota otra vez
+C 0x4E79 el puntero, detras
+C 0x4E7E el nibble alto...
+C 0x4E82 ...en B: la nota
+C 0x4E83 con instrumento...
+C 0x4E86 ...?
+C 0x4E87 si: su secuencia para esa nota
+C 0x4E89 la nota
+C 0x4E8C la 12: volumen cero
+C 0x4E8E si no, el volumen del canal
+C 0x4E91 el actual...
+C 0x4E94 ...y el de salida
+C 0x4E9A por debajo de 12...
+C 0x4E9C ...tal cual
+C 0x4E9E si no, 12
+C 0x4EA2 la duracion...
+C 0x4EA5 ...a la cuenta
+C 0x4EA8 el ritmo del decaimiento...
+C 0x4EAB ...mas la duracion...
+C 0x4EAC ...a su cuenta
+C 0x4EB0 la tabla de periodos
+C 0x4EB3 + la nota
+C 0x4EB5 con acarreo...
+C 0x4EB7 ...al alto
+C 0x4EB8 el periodo de la octava mas aguda
+C 0x4EB9 en HL
+C 0x4EBB la octava
+C 0x4EBE 0: tal cual
+C 0x4EC1 B veces
+C 0x4EC3 el doble: una octava mas grave
+C 0x4EC5 el periodo...
+C 0x4EC8 ...a +15/+16
+C 0x4ECB tras la pausa?
+C 0x4ECE la respuesta
+C 0x4ECF a salvo
+C 0x4ED0 no: el periodo al PSG
+C 0x4ED3 la respuesta
+C 0x4ED4 no: y el volumen
+C 0x4ED7 vuelta
+C 0x4ED9 la tabla de instrumentos, menos dos
+C 0x4EDC + el instrumento por dos
+C 0x4EDD en E
+C 0x4EDE con acarreo...
+C 0x4EE0 ...al alto
+C 0x4EE1 el puntero de ese instrumento...
+C 0x4EE2 ...byte bajo...
+C 0x4EE3 ...y...
+C 0x4EE4 ...alto
+C 0x4EE5 HL = sus notas
+C 0x4EE6 la duracion...
+C 0x4EE9 ...a la cuenta
+C 0x4EED la nota por dos...
+C 0x4EEE ...+ HL
+C 0x4EEF en L
+C 0x4EF0 con acarreo...
+C 0x4EF2 ...al alto
+C 0x4EF3 el puntero de la secuencia de la nota...
+C 0x4EF4 ...a +11...
+C 0x4EF7 ...y...
+C 0x4EF8 ...el alto...
+C 0x4EF9 ...a +12
+C 0x4EFC HL = la secuencia
+C 0x4EFD su primer paso
+C 0x4EFE en formato de efecto
+C 0x4F01 la cuenta del paso
+C 0x4F04 sin acabar, nada
+C 0x4F05 el puntero...
+C 0x4F08 ...del instrumento
+C 0x4F0B el paso siguiente
+C 0x4F0E 0xFF: se acabo
+C 0x4F10 como un efecto
+C 0x4F13 detras del paso
+C 0x4F14 el puntero...
+C 0x4F17 ...guardado
+C 0x4F1A y el periodo
+C 0x4F1D cero...
+C 0x4F1E ...sin tono ni ruido...
+C 0x4F21 ...y sin volumen
+C 0x4F24 tras la pausa?
+C 0x4F27 no...
+C 0x4F28 ...el volumen al PSG
+C 0x4F2B vuelta
+C 0x4F2F abierta?
+C 0x4F30 no: el canal se libera
+C 0x4F32 el alto de la vuelta...
+C 0x4F35 ...y el bajo...
+C 0x4F38 ...al puntero
+C 0x4F3B la subrutina, cerrada
+C 0x4F3F la orden siguiente, ya
+C 0x4F43 y adelante
+C 0x4F46 D = el sonido que acaba
+C 0x4F49 cero:
+C 0x4F4A canal libre
+C 0x4F4D sin tono ni ruido
+C 0x4F50 sin bucle
+C 0x4F53 sin instrumento
+C 0x4F56 sin volumen
+C 0x4F59 sin subrutina
+C 0x4F5D el de efectos...
+C 0x4F5F ...va aparte
+C 0x4F61 tras la pausa?
+C 0x4F64 no...
+C 0x4F65 ...silencio al PSG
+C 0x4F68 vuelta
+C 0x4F6A era el efecto 2?
+C 0x4F6C la musica 0x2C...
+C 0x4F6E ...la toca
+C 0x4F72 C del tercer canal
+C 0x4F73 tras la pausa?
+C 0x4F76 no...
+C 0x4F77 ...el volumen del tercero
+C 0x4F7A IX: el tercer canal...
+C 0x4F7E ...su periodo al PSG
+C 0x4F83 E = el efecto que suena
+C 0x4F85 los dos primeros canales...
+C 0x4F87 ...siempre
+C 0x4F8B el tercero...
+C 0x4F8C ...con efecto sonando...
+C 0x4F8D ...no toca el PSG
+C 0x4F8E sin efecto, si
+C 0x4F91 el de efectos, sin efecto...
+C 0x4F92 ...nada
+C 0x4F93 con efecto, los registros del tercero
+C 0x4F95 escritos
+C 0x4F98 C otra vez...
+C 0x4F99 ...el suyo
+C 0x4F9A vuelta
+C 0x4F9B el periodo...
+C 0x4F9E ...del canal
+C 0x4FA4 desafinado?
+C 0x4FA6 no
+C 0x4FA8 si: uno mas
+C 0x4FAA el byte alto
+C 0x4FAB WRTPSG
+C 0x4FAF registro C-1...
+C 0x4FB0 ...el bajo
+C 0x4FB1 WRTPSG
+C 0x4FB4 con instrumento...
+C 0x4FB7 ...?
+C 0x4FB8 si: ya esta
+C 0x4FB9 el modo
+C 0x4FBC efecto...
+C 0x4FBD ...ya esta
+C 0x4FC2 vuelta
+C 0x4FCF el efecto que suena
+C 0x4FD2 en E
+C 0x4FD3 el canal
+C 0x4FD4 los dos primeros...
+C 0x4FD6 ...siempre
+C 0x4FD8 el de efectos: a 0x4FDF
+C 0x4FDA el tercero con efecto...
+C 0x4FDB ...sonando...
+C 0x4FDC ...no toca el PSG
+C 0x4FDD sin efecto, si
+C 0x4FDF el de efectos...
+C 0x4FE0 ...sin efecto...
+C 0x4FE1 ...nada
+C 0x4FE2 con efecto, el registro del tercero
+C 0x4FE8 1, 3 o 5 -> 0x80, 0x81 o 0x82...
+C 0x4FE9 ...+ 0x88: 8, 9 o 10 (el acarreo se pierde)
+C 0x4FEB D = el registro
+C 0x4FEC el volumen
+C 0x4FEF el tipo
+C 0x4FF4 sin envolvente
+C 0x4FF6 la forma...
+C 0x4FF7 ...al registro 13
+C 0x4FF9 WRTPSG
+C 0x4FFC 16: volumen de la envolvente
+C 0x4FFE en H
+C 0x4FFF el registro
+C 0x5000 el volumen
+C 0x5001 WRTPSG
+C 0x5004 0x60 bytes
+C 0x5007 copiados
+C 0x5009 C = A
+C 0x500A cero...
+C 0x500B ...en (0xE0F1)
+C 0x500E vuelta
+C 0x500F el byte de detras del 0xFE
+C 0x5011 0x00...
+C 0x5012 ...cambia de modo
+C 0x5015 0xFF: subrutina
+C 0x501A la vuelta que toca
+C 0x501B se han dado todas?
+C 0x501C si: se acabo el bucle
+C 0x5021 si no, la cuenta se queda como estaba
+C 0x5022 la cuenta
+C 0x5025 la direccion del bucle...
+C 0x5026 ...byte bajo...
+C 0x5027 ...al puntero
+C 0x502A ...y alto
+C 0x502C ...al puntero
+C 0x502F y adelante
+C 0x5031 se salta la direccion
+C 0x5033 cuenta...
+C 0x5034 ...a cero
+C 0x5037 el puntero, detras
+C 0x503A la cuenta, sin acabar
+C 0x503D y la orden siguiente
+C 0x5040 el modo
+C 0x5043 musica?
+C 0x5044 efecto: a musica
+C 0x5046 musica: a efecto
+C 0x5049 y adelante
+C 0x504B a musica
+C 0x504E y adelante
+C 0x5050 la direccion de la subrutina...
+C 0x5051 ...byte bajo...
+C 0x5052 ...al puntero
+C 0x5055 ...alto...
+C 0x5057 ...al puntero
+C 0x505A la vuelta: detras de la direccion
+C 0x505E su byte alto
+C 0x5061 HL = la subrutina
+C 0x5062 y su primera orden
+C 0x5065 detras
+C 0x5066 el puntero...
+C 0x5069 ...guardado
+C 0x506C vuelta
+C 0x506D el registro 7 que hay
+C 0x5070 en E
+C 0x5071 el tipo del canal
+C 0x5074 tono y ruido
+C 0x5076 en D
+C 0x5078 el primero: bit 1
+C 0x507C los otros: 2 y 4
+C 0x507D B = el bit del canal
+C 0x5080 sin tono: se cierra
+C 0x5083 con tono...
+C 0x5085 ...se abre
+C 0x5089 el bit del ruido, tres mas arriba
+C 0x508C sin ruido...
+C 0x508E ...se cierra
+C 0x5091 con ruido...
+C 0x5093 ...se abre
+C 0x5096 guardado
+C 0x5099 en E
+C 0x509A registro 7
+C 0x509C WRTPSG
+C 0x509F el bit, invertido...
+C 0x50A0 ...a cero en el registro
+C 0x50A1 en E
+C 0x50A2 vuelta
+C 0x50A3 el bit a uno
+C 0x50A4 en E
+C 0x50A5 vuelta
+C 0x501E por debajo de N, la cuenta sube

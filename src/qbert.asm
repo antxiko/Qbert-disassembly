@@ -59,118 +59,118 @@ DATA_punteros_del_game_master:
 ; ----------------------------------------------------------------------
 cada_cuadro:		; El gancho de H.KEYI: el juego ENTERO cuelga de aqui
 	call 0013eh		;4025   ; BIOS RDVDP - Reads VDP status register | lee el registro de estado del VDP, que baja la peticion de interrupcion
-	di			;4028
+	di			;4028   ; el sonido no puede partirse por otra interrupcion
 	call suena_un_cuadro		;4029   ; el sonido va primero y con las interrupciones cortadas: no se salta un cuadro
 	ld hl,0e005h		;402c   ; (0xE005) a uno: el cuadro anterior sigue a medias
-	bit 0,(hl)		;402f
+	bit 0,(hl)		;402f   ; bit 0: aun sin acabar
 	jr nz,L_4040		;4031   ; si sigue, este cuadro solo suena
 	inc (hl)			;4033   ; se marca el cuadro como en curso
 	ei			;4034   ; y se abren las interrupciones: la escena puede durar mas de un cuadro
 	call lee_los_mandos		;4035   ; lee los dos mandos y el teclado
 	call haz_el_cuadro		;4038   ; y hace la escena que toque
 	ld a,000h		;403b   ; cuadro acabado
-	ld (0e005h),a		;403d
+	ld (0e005h),a		;403d   ; y se deja libre para el siguiente
 L_4040:
 	call 0013eh		;4040   ; BIOS RDVDP - Reads VDP status register | si mientras tanto llego otra interrupcion (bit 7 del estado)...
-	or a			;4043
-	di			;4044
+	or a			;4043   ; el bit 7 del estado va al signo
+	di			;4044   ; cerradas mientras suena
 	call m,suena_un_cuadro		;4045   ; ...su sonido se hace ahora, para no perderlo
-	ei			;4048
-	ret			;4049
+	ei			;4048   ; y abiertas otra vez
+	ret			;4049   ; vuelta a la BIOS, que acaba la interrupcion
 suma_a_a_hl:		; HL += A, con el acarreo al alto
-	add a,l			;404a
-	ld l,a			;404b
-	ret nc			;404c
-	inc h			;404d
+	add a,l			;404a   ; L + A...
+	ld l,a			;404b   ; ...en L
+	ret nc			;404c   ; sin acarreo, ya esta
+	inc h			;404d   ; con acarreo, H + 1
 	ret			;404e
 suma_a_a_de:		; DE += A, igual
-	add a,e			;404f
-	ld e,a			;4050
-	ret nc			;4051
-	inc d			;4052
+	add a,e			;404f   ; E + A...
+	ld e,a			;4050   ; ...en E
+	ret nc			;4051   ; sin acarreo, ya esta
+	inc d			;4052   ; con acarreo, D + 1
 	ret			;4053
 reparte_por_tabla:		; El `pop hl` recoge la tabla: es la direccion de retorno
 	pop hl			;4054   ; la tabla va pegada detras del `call`: su direccion es la de retorno
 	add a,a			;4055   ; entradas de dos bytes
-	call suma_a_a_hl		;4056
+	call suma_a_a_hl		;4056   ; HL = tabla + 2A
 	ld e,(hl)			;4059   ; la entrada A de la tabla...
-	inc hl			;405a
+	inc hl			;405a   ; el byte alto
 	ld d,(hl)			;405b
-	ex de,hl			;405c
+	ex de,hl			;405c   ; HL = la entrada
 	jp (hl)			;405d   ; ...y alli se salta
 
 ; ----------------------------------------------------------------------
 ; INIT. Lo que ejecuta la BIOS al encontrar la "AB". Busca en que ranura esta el cartucho, pone la pagina 2 en esa misma ranura (el juego ocupa 0x4000-0xBFFF), engancha la interrupcion y se queda parado: todo lo demas pasa en 0x4025.
 ; ----------------------------------------------------------------------
 INIT:		; Lo que ejecuta la BIOS al encontrar la "AB" de 0x4000
-	di			;405e
+	di			;405e   ; sin interrupciones mientras se prepara todo
 	call 00138h		;405f   ; BIOS RSLREG - Reads the primary slot register | RSLREG: las ranuras de las cuatro paginas
 	rrca			;4062   ; la de la pagina 1, que es donde corre esto
-	rrca			;4063
+	rrca			;4063   ; bits 2-3 del registro de ranuras: la de la pagina 1
 	and 003h		;4064
-	ld c,a			;4066
+	ld c,a			;4066   ; C = la ranura primaria
 	ld hl,0fcc1h		;4067   ; EXPTBL: si esa ranura esta expandida (bit 7)...
-	add a,l			;406a
+	add a,l			;406a   ; EXPTBL + ranura
 	ld l,a			;406b
 	ld a,(hl)			;406c   ; ...se anade el bit de expansion
-	and 080h		;406d
-	or c			;406f
-	ld c,a			;4070
+	and 080h		;406d   ; bit 7: expandida
+	or c			;406f   ; y en C, junto a la primaria
+	ld c,a			;4070   ; C = ranura y bit de expansion
 	inc l			;4071   ; y en SLTTBL, cuatro bytes mas alla, la subranura de la pagina 1
 	inc l			;4072
 	inc l			;4073
 	inc l			;4074
-	ld a,(hl)			;4075
+	ld a,(hl)			;4075   ; SLTTBL + ranura: el registro de subranuras de esa ranura
 	and 00ch		;4076   ; bits 2-3: la subranura
-	or c			;4078
+	or c			;4078   ; junto a lo que ya habia
 	ld h,080h		;4079   ; H=0x80: la pagina 2
 	call 00024h		;407b   ; BIOS ENASLT - Switches to specified slot and page definitively | ENASLT: la pagina 2 pasa a la ranura del cartucho
 	ld a,001h		;407e   ; 1, 2 y 3 a los registros de banco de un mapeador de Konami. En un cartucho de 32 KB sin mapeador no hacen nada: son las escrituras de la casa, las mismas en todos
-	ld (06000h),a		;4080
+	ld (06000h),a		;4080   ; 0x6000 = 1
 	inc a			;4083
-	ld (08000h),a		;4084
+	ld (08000h),a		;4084   ; 0x8000 = 2
 	inc a			;4087
-	ld (0a000h),a		;4088
+	ld (0a000h),a		;4088   ; 0xA000 = 3
 	ld hl,0fd00h		;408b   ; de 0xFD00 a 0xFEFF todo `ret`: los ganchos de la BIOS quedan mudos
-	ld de,0fd01h		;408e
-	ld bc,00200h		;4091
-	ld (hl),0c9h		;4094
-	ldir		;4096
+	ld de,0fd01h		;408e   ; destino, uno mas alla: el `ldir` corre el 0xC9
+	ld bc,00200h		;4091   ; 512 bytes
+	ld (hl),0c9h		;4094   ; `ret`
+	ldir		;4096   ; relleno
 	ld a,0c3h		;4098   ; y en H.KEYI (0xFD9A) un `jp 0x4025`
-	ld (0fd9ah),a		;409a
-	ld hl,cada_cuadro		;409d
-	ld (0fd9bh),hl		;40a0
+	ld (0fd9ah),a		;409a   ; el `jp`...
+	ld hl,cada_cuadro		;409d   ; ...a cada_cuadro...
+	ld (0fd9bh),hl		;40a0   ; ...en 0xFD9B
 	ld sp,0eaffh		;40a3   ; la pila, debajo de 0xEB00
 	ld hl,0e000h		;40a6   ; borra de 0xE000 a 0xE3FF
-	ld de,0e001h		;40a9
-	ld bc,003ffh		;40ac
-	ld (hl),000h		;40af
-	ldir		;40b1
+	ld de,0e001h		;40a9   ; destino, uno mas alla: se corre el cero
+	ld bc,003ffh		;40ac   ; 1.024 bytes
+	ld (hl),000h		;40af   ; el cero
+	ldir		;40b1   ; borrado
 	ld a,001h		;40b3   ; (0xE005)=1 mientras se prepara el VDP: la interrupcion no toca escenas
-	ld (0e005h),a		;40b5
+	ld (0e005h),a		;40b5   ; (0xE005) = 1: la interrupcion solo suena
 	call apaga_y_borra_la_vram		;40b8   ; apaga el sonido, borra la VRAM y pone los registros
-	xor a			;40bb
+	xor a			;40bb   ; y ya puede hacer escenas
 	ld (0e005h),a		;40bc
 	call 0013eh		;40bf   ; BIOS RDVDP - Reads VDP status register | lee el estado para no arrancar con una interrupcion pendiente
-	ei			;40c2
+	ei			;40c2   ; a partir de aqui manda la interrupcion
 el_bucle_vacio:		; INIT acaba aqui: a partir de este `jr $` todo pasa en la interrupcion
-	jr el_bucle_vacio		;40c3
+	jr el_bucle_vacio		;40c3   ; `jr $`: se queda aqui para siempre
 haz_el_cuadro:		; Cuenta el cuadro y reparte la escena que toque
 	ld hl,0e003h		;40c5   ; (0xE003): el contador de cuadros, que usa medio juego para ir a su ritmo
-	inc (hl)			;40c8
+	inc (hl)			;40c8   ; un cuadro mas
 	ld a,(0e002h)		;40c9   ; bit 6 de (0xE002): hay partida de verdad
-	and 040h		;40cc
+	and 040h		;40cc   ; bit 6
 	ld hl,045fch		;40ce   ; con partida, la escena vuelve a un `ret` y ya esta...
-	jr nz,L_40D6		;40d1
+	jr nz,L_40D6		;40d1   ; con partida, 0x45FC
 	ld hl,0441eh		;40d3   ; ...sin partida, vuelve a 0x441E, que mira si se pulsa para empezar
 L_40D6:
 	ld bc,(0e000h)		;40d6   ; C = escena (0xE000), B = su paso (0xE001)
-	ld a,c			;40da
+	ld a,c			;40da   ; C: la escena
 	cp 003h		;40db   ; la escena 3, el menu de nivel, no mira nada a la vuelta
-	jr z,L_40E0		;40dd
+	jr z,L_40E0		;40dd   ; la 3 salta sin apilar
 	push hl			;40df   ; la vuelta se apila: el `ret` de la escena salta ahi
 L_40E0:
-	call reparte_por_tabla		;40e0
+	call reparte_por_tabla		;40e0   ; A = escena: la entrada de la tabla
 
 ; ----------------------------------------------------------------------
 ; DATOS tabla_de_escenas: Nueve entradas; reparte segun (0xE000): el logotipo
@@ -194,69 +194,69 @@ DATA_tabla_de_escenas:
 escena_logotipo:
 	djnz L_4104		;40f5   ; paso 1: destapar
 	ld a,(0e003h)		;40f7   ; una linea cada dos cuadros
-	rra			;40fa
-	ret nc			;40fb
+	rra			;40fa   ; el bit 0 al acarreo
+	ret nc			;40fb   ; los cuadros pares, nada
 	call destapa_una_linea_del_logotipo		;40fc   ; pinta una linea de pixeles del logotipo; Z cuando acaba
-	ret nz			;40ff
+	ret nz			;40ff   ; sin acabar, vuelve
 	xor a			;4100   ; hecho: espera de 256 cuadros (0xE004=0) y al paso 2
-	jp espera_a_y_sigue		;4101
+	jp espera_a_y_sigue		;4101   ; E004=0 y al paso siguiente
 L_4104:
 	djnz L_4116		;4104   ; paso 2: esperar
-	ld hl,0e004h		;4106
-	dec (hl)			;4109
-	ret nz			;410a
+	ld hl,0e004h		;4106   ; la espera
+	dec (hl)			;4109   ; un cuadro menos
+	ret nz			;410a   ; hasta cero
 	call borra_la_copia_de_nombres		;410b   ; borra la copia de la tabla de nombres
 	ld b,000h		;410e   ; fondo negro...
-	call pon_el_fondo		;4110
+	call pon_el_fondo		;4110   ; registro 7 a 0: fondo transparente, negro
 	jp escena_siguiente_con_espera_a		;4113   ; ...y a la escena 1
 L_4116:
 	call pon_los_registros_del_vdp		;4116   ; paso 0: registros del VDP
 	call borra_la_pantalla		;4119   ; tabla de nombres a cero
 	call monta_la_fuente		;411c   ; la fuente
 	call monta_el_logotipo_de_konami		;411f   ; y el logotipo de KONAMI, con los colores a cero
-	jr paso_siguiente		;4122
+	jr paso_siguiente		;4122   ; y al paso 1
 
 ; ----------------------------------------------------------------------
 ; ESCENA 1: LA PRESENTACION. Q*bert delante de la maquina recreativa (pasos 1 a 8, en 0x83DA-0x8528), el titulo (paso 9) y el cursor de 1PLAYER/2PLAYERS parpadeando (paso 10). El paso 0 la prepara.
 ; ----------------------------------------------------------------------
 escena_presentacion:
 	djnz L_4129		;4124   ; pasos 1 a 8: la presentacion, un bloque por paso
-	jp presentacion_paso_1		;4126
+	jp presentacion_paso_1		;4126   ; paso 1
 L_4129:
-	djnz L_412E		;4129
-	jp presentacion_paso_2		;412b
+	djnz L_412E		;4129   ; paso 2...
+	jp presentacion_paso_2		;412b   ; ...Q*bert llega a la recreativa
 L_412E:
-	djnz L_4133		;412e
-	jp presentacion_paso_3		;4130
+	djnz L_4133		;412e   ; paso 3...
+	jp presentacion_paso_3		;4130   ; ...el bicho baja por su guion
 L_4133:
-	djnz L_4138		;4133
-	jp presentacion_paso_4		;4135
+	djnz L_4138		;4133   ; paso 4...
+	jp presentacion_paso_4		;4135   ; ...una espera
 L_4138:
-	djnz L_413D		;4138
-	jp presentacion_paso_5		;413a
+	djnz L_413D		;4138   ; paso 5...
+	jp presentacion_paso_5		;413a   ; ...el rotulo sube
 L_413D:
-	djnz L_4142		;413d
-	jp presentacion_paso_6		;413f
+	djnz L_4142		;413d   ; paso 6...
+	jp presentacion_paso_6		;413f   ; ...Q*bert se vuelve
 L_4142:
-	djnz L_4147		;4142
-	jp presentacion_paso_7		;4144
+	djnz L_4147		;4142   ; paso 7...
+	jp presentacion_paso_7		;4144   ; ...el rotulo y la maquina suben
 L_4147:
-	djnz L_414C		;4147
-	jp presentacion_paso_8		;4149
+	djnz L_414C		;4147   ; paso 8...
+	jp presentacion_paso_8		;4149   ; ...el ultimo movimiento
 L_414C:
 	djnz L_4154		;414c   ; paso 9: el titulo
-	call pinta_el_titulo		;414e
-	xor a			;4151
-	jr espera_a_y_sigue		;4152
+	call pinta_el_titulo		;414e   ; el titulo entero
+	xor a			;4151   ; E004 = 0: 256 cuadros de cursor
+	jr espera_a_y_sigue		;4152   ; y al paso 10
 L_4154:
 	djnz L_4160		;4154   ; paso 10: el cursor parpadea 256 cuadros...
-	ld hl,0e004h		;4156
-	dec (hl)			;4159
+	ld hl,0e004h		;4156   ; la espera
+	dec (hl)			;4159   ; un cuadro menos
 	jp nz,parpadea_el_cursor		;415a   ; ...y si nadie pulsa, la escena 2, la demostracion
-	jp escena_siguiente		;415d
+	jp escena_siguiente		;415d   ; se acabo: a la demostracion
 L_4160:
 	call prepara_la_recreativa		;4160   ; paso 0: la pantalla de la recreativa, y a por el paso 1
-	jp empieza_la_presentacion		;4163
+	jp empieza_la_presentacion		;4163   ; y la musica de la presentacion
 
 ; ----------------------------------------------------------------------
 ; ESCENA 2: LA DEMOSTRACION. El juego de verdad, con las pulsaciones sacadas de 0x6BBF/0x6BD8. Se alternan dos: un jugador en la fase 34 y dos a la vez en la 37.
@@ -266,33 +266,33 @@ escena_demostracion:
 	call pulsaciones_de_la_demostracion		;4168   ; las pulsaciones grabadas
 	call cuadro_de_la_demostracion		;416b   ; el cuadro de partida, el mismo que en el juego
 	ld a,(0e113h)		;416e   ; (0xE113) a cero: el Q*bert de la demostracion ha caido o se acabo el guion
-	or a			;4171
-	ret nz			;4172
+	or a			;4171   ; el Q*bert de la demostracion...
+	ret nz			;4172   ; ...sigue: nada mas
 	ld a,014h		;4173   ; sonido 0x14 y 120 cuadros de espera
-	call toca_sonido		;4175
-	ld a,078h		;4178
-	jr espera_a_y_sigue		;417a
+	call toca_sonido		;4175   ; sonido 0x14
+	ld a,078h		;4178   ; 120 cuadros de espera
+	jr espera_a_y_sigue		;417a   ; y al paso 2
 L_417C:
 	djnz L_418F		;417c   ; paso 2: la espera
-	ld hl,0e004h		;417e
-	dec (hl)			;4181
-	ret nz			;4182
+	ld hl,0e004h		;417e   ; la espera
+	dec (hl)			;4181   ; un cuadro menos
+	ret nz			;4182   ; hasta cero
 vuelve_al_logotipo:
 	xor a			;4183   ; escena 0, el logotipo, con 32 cuadros de espera
 pon_escena_a:
-	ld (0e000h),a		;4184
-	ld a,020h		;4187
-	ld (0e004h),a		;4189
-	jp al_paso_0		;418c
+	ld (0e000h),a		;4184   ; A = escena
+	ld a,020h		;4187   ; 32 cuadros...
+	ld (0e004h),a		;4189   ; ...de espera
+	jp al_paso_0		;418c   ; y al paso 0 de esa escena
 L_418F:
 	call borra_la_pantalla		;418f   ; paso 0: pantalla en negro y a montar la demostracion
-	call prepara_la_demostracion		;4192
-	ld a,020h		;4195
+	call prepara_la_demostracion		;4192   ; la demostracion montada
+	ld a,020h		;4195   ; 32 cuadros
 espera_a_y_sigue:		; (0xE004)=A y al paso siguiente
-	ld (0e004h),a		;4197
+	ld (0e004h),a		;4197   ; la espera
 paso_siguiente:
-	ld hl,0e001h		;419a
-	inc (hl)			;419d
+	ld hl,0e001h		;419a   ; el paso...
+	inc (hl)			;419d   ; ...mas uno
 	ret			;419e
 
 ; ----------------------------------------------------------------------
@@ -301,120 +301,120 @@ paso_siguiente:
 escena_menu_de_nivel:
 	djnz L_41B1		;419f   ; paso 1: dibujar el menu
 	ld a,(0e102h)		;41a1   ; (0xE102): uno o dos jugadores
-	or a			;41a4
+	or a			;41a4   ; 0: un jugador
 	jr z,L_41AC		;41a5
-	call menu_del_duelo		;41a7
-	jr paso_siguiente		;41aa
+	call menu_del_duelo		;41a7   ; dos: su menu
+	jr paso_siguiente		;41aa   ; y al paso 2
 L_41AC:
-	call menu_de_un_jugador		;41ac
-	jr paso_siguiente		;41af
+	call menu_de_un_jugador		;41ac   ; uno: el suyo
+	jr paso_siguiente		;41af   ; y al paso 2
 L_41B1:
 	djnz L_41D0		;41b1   ; paso 2: elegir. Los dos lectores hacen `pop hl` y vuelven de la escena mientras no se pulse el disparo
-	ld a,(0e102h)		;41b3
-	or a			;41b6
+	ld a,(0e102h)		;41b3   ; uno o dos
+	or a			;41b6   ; 0: un jugador
 	jr z,L_41BE		;41b7
-	call elige_el_duelo		;41b9
-	jr L_41C1		;41bc
+	call elige_el_duelo		;41b9   ; el del duelo; vuelve aqui solo con el disparo
+	jr L_41C1		;41bc   ; ya elegido
 L_41BE:
-	call elige_el_nivel		;41be
+	call elige_el_nivel		;41be   ; el de un jugador; lo mismo
 L_41C1:
 	call empieza_en_el_nivel_elegido		;41c1   ; con el nivel ya elegido, la fase en la que se empieza
 	call aplica_la_fase_del_game_master		;41c4   ; y si el Game Master pide otra, esa
 	ld a,041h		;41c7   ; sonido 0x41 y 80 cuadros
-	call toca_sonido		;41c9
-	ld a,050h		;41cc
-	jr espera_a_y_sigue		;41ce
+	call toca_sonido		;41c9   ; la musica del nivel elegido
+	ld a,050h		;41cc   ; 80 cuadros
+	jr espera_a_y_sigue		;41ce   ; y al paso 3
 L_41D0:
 	djnz L_41E2		;41d0   ; paso 3: parpadea la opcion elegida mientras dura la espera
-	ld hl,0e004h		;41d2
-	dec (hl)			;41d5
-	jr z,L_41E0		;41d6
-	ld a,(0e102h)		;41d8
-	or a			;41db
-	ret nz			;41dc
-	jp parpadea_el_nivel_elegido		;41dd
+	ld hl,0e004h		;41d2   ; la espera
+	dec (hl)			;41d5   ; un cuadro menos
+	jr z,L_41E0		;41d6   ; acabada: a la partida
+	ld a,(0e102h)		;41d8   ; en el duelo...
+	or a			;41db   ; ...uno o dos...
+	ret nz			;41dc   ; ...no parpadea nada
+	jp parpadea_el_nivel_elegido		;41dd   ; con uno, parpadea el nivel
 L_41E0:
 	jr escena_siguiente		;41e0   ; y a la escena 4
 L_41E2:
 	call borra_la_pantalla		;41e2   ; paso 0: pantalla en negro, la fuente y 80 cuadros
-	call monta_la_fuente		;41e5
-	ld a,050h		;41e8
-	jr espera_a_y_sigue		;41ea
+	call monta_la_fuente		;41e5   ; la fuente
+	ld a,050h		;41e8   ; 80 cuadros
+	jr espera_a_y_sigue		;41ea   ; y al paso 1
 
 ; ----------------------------------------------------------------------
 ; ESCENA 4: EL PRINCIPIO DE FASE. El paso 0 descuenta la vida que se va a jugar y pone el rotulo (LEVEL y STAGE al empezar un nivel, READY en el duelo); el paso 1 monta la fase cuando callan el sonido y la espera.
 ; ----------------------------------------------------------------------
 escena_principio_de_fase:
 	djnz L_4224		;41ec   ; paso 1: montar
-	ld hl,0e004h		;41ee
-	ld a,(hl)			;41f1
-	or a			;41f2
-	jr z,L_41F7		;41f3
-	dec (hl)			;41f5
-	ret nz			;41f6
+	ld hl,0e004h		;41ee   ; la espera
+	ld a,(hl)			;41f1   ; si ya es cero...
+	or a			;41f2   ; ...no se toca
+	jr z,L_41F7		;41f3   ; cero: adelante
+	dec (hl)			;41f5   ; si no, un cuadro menos
+	ret nz			;41f6   ; hasta cero
 L_41F7:
 	ld a,(0e012h)		;41f7   ; espera a que acabe la musica del canal 1
-	or a			;41fa
-	ret nz			;41fb
+	or a			;41fa   ; musica del canal 1 sonando...
+	ret nz			;41fb   ; ...se espera
 	ld a,017h		;41fc   ; sonido 0x17, la musica de la fase
-	call toca_sonido		;41fe
-	ld a,020h		;4201
-	ld (0e004h),a		;4203
-	call borra_la_pantalla		;4206
+	call toca_sonido		;41fe   ; la de la fase
+	ld a,020h		;4201   ; 32 cuadros...
+	ld (0e004h),a		;4203   ; ...de espera
+	call borra_la_pantalla		;4206   ; pantalla en negro
 	call monta_la_fase		;4209   ; la fase entera: tablero, cubos, bichos y marcador
 	ld hl,0e113h		;420c   ; Q*bert en juego
-	ld (hl),001h		;420f
+	ld (hl),001h		;420f   ; (0xE113)=1
 	ld hl,0e35ch		;4211   ; y el segundo Q*bert tambien
-	ld (hl),001h		;4214
+	ld (hl),001h		;4214   ; (0xE35C)=1
 escena_siguiente:		; Siguiente escena, con 32 cuadros de espera
-	ld a,020h		;4216
+	ld a,020h		;4216   ; 32 cuadros
 escena_siguiente_con_espera_a:
-	ld (0e004h),a		;4218
-	ld hl,0e000h		;421b
-	inc (hl)			;421e
+	ld (0e004h),a		;4218   ; la espera
+	ld hl,0e000h		;421b   ; la escena...
+	inc (hl)			;421e   ; ...mas uno
 al_paso_0:
-	xor a			;421f
-	ld (0e001h),a		;4220
-	ret			;4223
+	xor a			;421f   ; y su paso...
+	ld (0e001h),a		;4220   ; ...a cero
+	ret			;4223   ; vuelta
 L_4224:
 	ld hl,0e110h		;4224   ; paso 0: una vida menos, la que se juega ahora; el marcador de vidas cuenta las de reserva
-	ld a,(hl)			;4227
-	sub 001h		;4228
-	daa			;422a
-	ld (hl),a			;422b
+	ld a,(hl)			;4227   ; las vidas, en BCD
+	sub 001h		;4228   ; menos una...
+	daa			;422a   ; ...en BCD
+	ld (hl),a			;422b   ; de vuelta
 	ld (0e120h),a		;422c   ; y la copia del segundo jugador
-	ld a,(0e002h)		;422f
+	ld a,(0e002h)		;422f   ; el modo
 	bit 5,a		;4232   ; bit 5 de (0xE002): el duelo
-	jr z,L_424A		;4234
+	jr z,L_424A		;4234   ; con uno, a 0x424A
 	call limpia_el_marco		;4236   ; marco de ladrillo limpio
 	call cabecera_del_duelo		;4239   ; la cabecera del duelo: cuantas partidas quedan
 	ld de,04275h		;423c   ; READY
-	call pinta_guion		;423f
+	call pinta_guion		;423f   ; READY en 0x39AD
 L_4242:
 	ld a,(0e012h)		;4242   ; y no sigue hasta que acaba su musica
-	or a			;4245
-	jr nz,L_4242		;4246
-	jr L_426D		;4248
+	or a			;4245   ; el canal 1 aun suena...
+	jr nz,L_4242		;4246   ; ...y se espera aqui, con la interrupcion tocando
+	jr L_426D		;4248   ; un cuadro de espera y al paso 1
 L_424A:
 	ld a,(0e111h)		;424a   ; con un jugador, solo en la primera fase de cada nivel (01, 11, 21, 31 y 41)...
-	and 00fh		;424d
-	dec a			;424f
-	ld a,001h		;4250
-	jr nz,L_426F		;4252
+	and 00fh		;424d   ; las unidades de la fase
+	dec a			;424f   ; menos una: cero en la 1, 11, 21...
+	ld a,001h		;4250   ; A=1 sin tocar la bandera
+	jr nz,L_426F		;4252   ; no es la primera del nivel: sin rotulo
 	call limpia_el_marco		;4254   ; ...el rotulo: LEVEL n y STAGE nn
-	ld de,0427dh		;4257
-	call pinta_guion		;425a
-	call pinta_el_numero_de_nivel		;425d
+	ld de,0427dh		;4257   ; LEVEL
+	call pinta_guion		;425a   ; en 0x390C
+	call pinta_el_numero_de_nivel		;425d   ; y el numero
 	ld de,04788h		;4260   ; STAGE, y el numero de fase dos casillas mas alla
-	call pinta_guion		;4263
-	inc l			;4266
-	call pinta_la_fase_en_hl		;4267
-	call gancho_vacio		;426a
+	call pinta_guion		;4263   ; STAGE en 0x394C, y HL detras
+	inc l			;4266   ; un espacio
+	call pinta_la_fase_en_hl		;4267   ; y la fase
+	call gancho_vacio		;426a   ; un `ret`: aqui no hace nada
 L_426D:
-	ld a,001h		;426d
+	ld a,001h		;426d   ; un cuadro de espera
 L_426F:
-	ld (0e004h),a		;426f
-	jp paso_siguiente		;4272
+	ld (0e004h),a		;426f   ; la espera
+	jp paso_siguiente		;4272   ; y al paso siguiente
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulos_ready_y_level: Dos guiones de 0x4685: READY en 0x39AD y LEVEL
@@ -431,64 +431,64 @@ DATA_rotulos_ready_y_level:
 
 
 pinta_el_numero_de_nivel:		; El nivel elegido (0xE103, de 0 a 4) mas uno, detras de LEVEL
-	ld hl,03913h		;4285
-	ld a,(0e103h)		;4288
-	inc a			;428b
+	ld hl,03913h		;4285   ; detras de LEVEL
+	ld a,(0e103h)		;4288   ; el nivel: 0 a 4
+	inc a			;428b   ; 1 a 5
 	add a,010h		;428c   ; los digitos son las casillas 0x10 a 0x19
-	jp 0004dh		;428e   ; BIOS WRTVRM - Writes data in VRAM
+	jp 0004dh		;428e   ; BIOS WRTVRM - Writes data in VRAM | WRTVRM
 
 ; ----------------------------------------------------------------------
 ; ESCENA 5: LA PARTIDA. Cada cuadro hace el paso que toque (0x6782) y luego mira si la fase se ha acabado o si Q*bert ha caido: si queda tiempo y vidas, lo vuelve a poner arriba; si no, a la escena 6.
 ; ----------------------------------------------------------------------
 escena_partida:
 	call paso_de_la_partida		;4291   ; el paso de la partida
-	ld a,(0e002h)		;4294
-	bit 5,a		;4297
+	ld a,(0e002h)		;4294   ; el modo
+	bit 5,a		;4297   ; bit 5: el duelo
 	call nz,vuelve_al_duelo		;4299   ; en el duelo, el Q*bert que cae vuelve a salir
 	ld a,(0e00dh)		;429c   ; (0xE00D): fase acabada, a la escena 8
-	and a			;429f
-	ld a,008h		;42a0
-	jp nz,pon_escena_a		;42a2
+	and a			;429f   ; puesta...
+	ld a,008h		;42a0   ; ...escena 8...
+	jp nz,pon_escena_a		;42a2   ; ...con 32 cuadros de espera
 	ld a,(0e113h)		;42a5   ; (0xE113) puesto: Q*bert sigue en juego
-	or a			;42a8
-	ret nz			;42a9
+	or a			;42a8   ; sigue en juego...
+	ret nz			;42a9   ; ...nada mas
 	ld a,(0ec51h)		;42aa   ; (0xEC51): el tiempo que queda, en BCD
-	or a			;42ad
+	or a			;42ad   ; tiempo a cero: se pone de nuevo sin esperar
 	jr z,vuelve_a_poner_a_qbert		;42ae
 	ld a,(0e202h)		;42b0   ; con tiempo, espera a que acabe de caer: estados 4, 12 y 13 de 0xE202
-	cp 004h		;42b3
-	ret z			;42b5
-	cp 00ch		;42b6
-	ret z			;42b8
-	cp 00dh		;42b9
-	ret z			;42bb
+	cp 004h		;42b3   ; cayendo por un lado
+	ret z			;42b5   ; espera
+	cp 00ch		;42b6   ; cayendo muerto hacia un lado
+	ret z			;42b8   ; espera
+	cp 00dh		;42b9   ; o hacia el otro
+	ret z			;42bb   ; espera
 vuelve_a_poner_a_qbert:
 	ld a,001h		;42bc   ; Q*bert otra vez en juego, los dos
-	ld (0e113h),a		;42be
-	ld (0e35ch),a		;42c1
+	ld (0e113h),a		;42be   ; el primero en juego
+	ld (0e35ch),a		;42c1   ; y el segundo
 	call quita_el_objeto_de_la_vida		;42c4   ; fuera el objeto de la vida extra
 	ld hl,042f7h		;42c7   ; los dos sprites de Q*bert, arriba del todo y cayendo
-	ld de,0e200h		;42ca
-	ld bc,00010h		;42cd
-	ldir		;42d0
+	ld de,0e200h		;42ca   ; a los dos primeros objetos
+	ld bc,00010h		;42cd   ; 16 bytes
+	ldir		;42d0   ; copiados
 	xor a			;42d2   ; sin bola verde, sin congelar y sin bichos parados
-	ld (0e321h),a		;42d3
-	ld (0e322h),a		;42d6
-	ld (0e345h),a		;42d9
+	ld (0e321h),a		;42d3   ; sin congelar
+	ld (0e322h),a		;42d6   ; sin el poder de la bola roja
+	ld (0e345h),a		;42d9   ; sin invencibilidad
 	ld a,(0ec51h)		;42dc   ; sin tiempo: a la escena 6, TIME OVER
-	or a			;42df
-	jp z,escena_siguiente		;42e0
+	or a			;42df   ; sin tiempo...
+	jp z,escena_siguiente		;42e0   ; ...a la escena 6
 	ld hl,0e110h		;42e3   ; sin vidas: a la escena 6, GAME OVER
-	ld a,(hl)			;42e6
-	or a			;42e7
-	jr z,L_42F4		;42e8
+	ld a,(hl)			;42e6   ; las vidas
+	or a			;42e7   ; ninguna...
+	jr z,L_42F4		;42e8   ; ...a la escena 6
 	sub 001h		;42ea   ; una vida menos...
-	daa			;42ec
-	ld (hl),a			;42ed
+	daa			;42ec   ; en BCD
+	ld (hl),a			;42ed   ; guardadas
 	call pinta_las_vidas		;42ee   ; ...se pinta...
 	jp tiempo_a_99		;42f1   ; ...y el tiempo vuelve a 99
 L_42F4:
-	jp z,escena_siguiente		;42f4
+	jp z,escena_siguiente		;42f4   ; siempre: viene de un `jr z`
 
 ; ----------------------------------------------------------------------
 ; DATOS qbert_al_salir: Los dos objetos de Q*bert que 0x42C7 copia a 0xE200:
@@ -513,51 +513,51 @@ DATA_qbert_al_salir:
 escena_fin_de_partida:
 	djnz L_4332		;4307   ; paso 1
 	call parpadea_el_marcador		;4309   ; en el duelo, el marcador de partidas parpadea
-	ld a,(0e012h)		;430c
+	ld a,(0e012h)		;430c   ; mientras suene la musica del canal 1...
 	or a			;430f
-	ret nz			;4310
+	ret nz			;4310   ; ...se espera
 	ld a,(0e110h)		;4311   ; con vidas, 256 cuadros y al paso 2
 	or a			;4314
-	jp nz,espera_a_y_sigue		;4315
+	jp nz,espera_a_y_sigue		;4315   ; A = vidas: la espera, y al paso 2
 	ld a,(0e002h)		;4318   ; sin vidas: la musica del GAME OVER, 0x53 (0x50 en el duelo)...
-	bit 5,a		;431b
-	ld a,053h		;431d
+	bit 5,a		;431b   ; el duelo
+	ld a,053h		;431d   ; 0x53, la de un jugador...
 	jr z,L_4323		;431f
-	ld a,050h		;4321
+	ld a,050h		;4321   ; ...o 0x50, la del duelo
 L_4323:
-	call toca_sonido		;4323
+	call toca_sonido		;4323   ; suena
 	ld hl,00107h		;4326   ; ...escena 7, paso 1...
-	ld (0e000h),hl		;4329
+	ld (0e000h),hl		;4329   ; escena 7 y paso 1 de una vez
 	ld de,07e8eh		;432c   ; ...y el rotulo GAME OVER / CONTINUE--F5
-	jp pinta_guion		;432f
+	jp pinta_guion		;432f   ; GAME OVER y CONTINUE--F5 en pantalla
 L_4332:
 	djnz L_4351		;4332   ; paso 2
 vuelve_a_la_fase:		; Escena 4, paso 0, con 128 cuadros de espera: se repite la fase
-	ld hl,00004h		;4334
-	ld (0e000h),hl		;4337
-	ld a,080h		;433a
-	ld (0e004h),a		;433c
+	ld hl,00004h		;4334   ; escena 4...
+	ld (0e000h),hl		;4337   ; ...y paso 0
+	ld a,080h		;433a   ; 128 cuadros...
+	ld (0e004h),a		;433c   ; ...de espera
 	ret			;433f
 musica_de_game_over:
-	ld a,(0e002h)		;4340
-	bit 5,a		;4343
-	ld a,053h		;4345
+	ld a,(0e002h)		;4340   ; el modo
+	bit 5,a		;4343   ; el duelo
+	ld a,053h		;4345   ; 0x53 con uno...
 	jr z,L_434B		;4347
-	ld a,050h		;4349
+	ld a,050h		;4349   ; ...0x50 con dos
 L_434B:
-	call toca_sonido		;434b
-	jp escena_siguiente		;434e
+	call toca_sonido		;434b   ; suena
+	jp escena_siguiente		;434e   ; y a la escena 7
 L_4351:
 	ld a,(0ec51h)		;4351   ; paso 0: si queda tiempo, es que no quedan vidas
-	or a			;4354
-	jr nz,musica_de_game_over		;4355
+	or a			;4354   ; queda...
+	jr nz,musica_de_game_over		;4355   ; ...es un GAME OVER
 	ld a,001h		;4357   ; TIME OVER: la pantalla del marcador
-	ld (0e324h),a		;4359
-	call pantalla_del_marcador		;435c
+	ld (0e324h),a		;4359   ; (0xE324)=1: la cara con su sprite
+	call pantalla_del_marcador		;435c   ; la pantalla del marcador
 	ld de,0436ah		;435f
-	call pinta_guion		;4362
-	ld a,080h		;4365
-	jp espera_a_y_sigue		;4367
+	call pinta_guion		;4362   ; TIME  OVER
+	ld a,080h		;4365   ; 128 cuadros
+	jp espera_a_y_sigue		;4367   ; y al paso 1
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulo_time_over: Guion de 0x4685: "TIME  OVER" en 0x38CB
@@ -576,188 +576,188 @@ DATA_rotulo_time_over:
 ; ----------------------------------------------------------------------
 escena_game_over:
 	djnz L_43AF		;4377   ; paso 1
-	ld a,(0e002h)		;4379
-	bit 5,a		;437c
-	jr nz,L_4389		;437e
+	ld a,(0e002h)		;4379   ; el modo
+	bit 5,a		;437c   ; el duelo...
+	jr nz,L_4389		;437e   ; ...no tiene CONTINUE
 	ld a,007h		;4380   ; fila 7 del teclado: el bit 1 es F5, a cero si esta pulsada
-	call 00141h		;4382   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
-	bit 1,a		;4385
-	jr z,continua_la_partida		;4387
+	call 00141h		;4382   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix | SNSMAT
+	bit 1,a		;4385   ; bit 1: F5
+	jr z,continua_la_partida		;4387   ; pulsada: CONTINUE
 L_4389:
-	call parpadea_el_marcador		;4389
-	ld a,(0e012h)		;438c
+	call parpadea_el_marcador		;4389   ; la cara parpadea
+	ld a,(0e012h)		;438c   ; la musica del GAME OVER...
 	or a			;438f
-	ret nz			;4390
-	ld a,03ch		;4391
-	jp espera_a_y_sigue		;4393
+	ret nz			;4390   ; ...suena todavia
+	ld a,03ch		;4391   ; 60 cuadros mas para pulsar F5
+	jp espera_a_y_sigue		;4393   ; y al paso 2
 continua_la_partida:
 	ld hl,0e10bh		;4396   ; CONTINUE: la puntuacion a cero...
-	ld de,0e10ch		;4399
-	ld bc,00002h		;439c
-	ld (hl),000h		;439f
-	ldir		;43a1
+	ld de,0e10ch		;4399   ; los tres bytes de la puntuacion
+	ld bc,00002h		;439c   ; 0xE10B-0xE10D: dos mas
+	ld (hl),000h		;439f   ; el primero a cero...
+	ldir		;43a1   ; ...y los otros dos
 	ld hl,0e110h		;43a3   ; ...tres vidas...
-	ld (hl),003h		;43a6
-	inc hl			;43a8
-	inc hl			;43a9
+	ld (hl),003h		;43a6   ; tres vidas
+	inc hl			;43a8   ; 0xE111, la fase, tal cual
+	inc hl			;43a9   ; 0xE112
 	ld (hl),001h		;43aa   ; ...y el umbral de la vida extra otra vez en 10.000
-	jp vuelve_a_la_fase		;43ac
+	jp vuelve_a_la_fase		;43ac   ; y a jugar la misma fase
 L_43AF:
 	djnz L_43C0		;43af   ; paso 2: se acaba la espera...
-	ld hl,0e004h		;43b1
-	dec (hl)			;43b4
-	ret nz			;43b5
+	ld hl,0e004h		;43b1   ; la espera
+	dec (hl)			;43b4   ; un cuadro menos
+	ret nz			;43b5   ; hasta cero
 	ld hl,0e002h		;43b6   ; ...se quita el bit de partida...
-	ld a,(hl)			;43b9
-	and 0bfh		;43ba
-	ld (hl),a			;43bc
+	ld a,(hl)			;43b9   ; el modo
+	and 0bfh		;43ba   ; fuera el bit 6: sin partida
+	ld (hl),a			;43bc   ; guardado
 	jp vuelve_al_logotipo		;43bd   ; ...y al logotipo
 L_43C0:
 	ld a,001h		;43c0   ; paso 0: la pantalla del marcador
-	ld (0e324h),a		;43c2
-	call pantalla_del_marcador		;43c5
-	jp paso_siguiente		;43c8
+	ld (0e324h),a		;43c2   ; (0xE324)=1
+	call pantalla_del_marcador		;43c5   ; la pantalla del marcador
+	jp paso_siguiente		;43c8   ; y al paso 1
 
 ; ----------------------------------------------------------------------
 ; ESCENA 8: FASE ACABADA. El paso 0 devuelve la vida que se desconto al empezar, sube la fase (de la 50 vuelve a la 1) y monta la siguiente; tras la 3, la 6 y la 10 de cada decena, la fase de bonificacion.
 ; ----------------------------------------------------------------------
 escena_fase_acabada:
 	djnz L_43E6		;43cb   ; paso 1: espera y a la escena 4
-	call parpadea_el_marcador		;43cd
-	ld hl,0e004h		;43d0
-	dec (hl)			;43d3
-	ret nz			;43d4
-	ld (hl),001h		;43d5
-	ld a,(0e002h)		;43d7
-	bit 5,a		;43da
-	jr nz,L_43E3		;43dc
-	ld a,(0e012h)		;43de
+	call parpadea_el_marcador		;43cd   ; la cara parpadea
+	ld hl,0e004h		;43d0   ; la espera
+	dec (hl)			;43d3   ; un cuadro menos
+	ret nz			;43d4   ; hasta cero
+	ld (hl),001h		;43d5   ; y se queda en uno
+	ld a,(0e002h)		;43d7   ; el modo
+	bit 5,a		;43da   ; en el duelo...
+	jr nz,L_43E3		;43dc   ; ...sin esperar a la musica
+	ld a,(0e012h)		;43de   ; con uno, la musica del canal 1...
 	or a			;43e1
-	ret nz			;43e2
+	ret nz			;43e2   ; ...aun suena
 L_43E3:
-	jp vuelve_a_la_fase		;43e3
+	jp vuelve_a_la_fase		;43e3   ; a la escena 4: la fase siguiente
 L_43E6:
 	xor a			;43e6   ; paso 0
-	ld (0e00dh),a		;43e7
-	ld a,(0e002h)		;43ea
-	bit 5,a		;43ed
+	ld (0e00dh),a		;43e7   ; (0xE00D)=0
+	ld a,(0e002h)		;43ea   ; el modo
+	bit 5,a		;43ed   ; el duelo
 	jr nz,L_440A		;43ef   ; con un jugador...
 	call mira_la_bonificacion		;43f1   ; ...quiza la fase de bonificacion, que no vuelve de aqui
 	ld hl,0e110h		;43f4   ; la vida que se desconto al empezar
-	ld a,(hl)			;43f7
-	add a,001h		;43f8
-	daa			;43fa
-	ld (hl),a			;43fb
+	ld a,(hl)			;43f7   ; las vidas...
+	add a,001h		;43f8   ; ...mas una...
+	daa			;43fa   ; ...en BCD
+	ld (hl),a			;43fb   ; guardadas
 	inc hl			;43fc   ; la fase siguiente, en BCD
-	ld a,(hl)			;43fd
-	add a,001h		;43fe
-	daa			;4400
-	ld (hl),a			;4401
+	ld a,(hl)			;43fd   ; la fase...
+	add a,001h		;43fe   ; ...mas una...
+	daa			;4400   ; ...en BCD
+	ld (hl),a			;4401   ; guardada
 	cp 051h		;4402   ; despues de la 50, la 1
-	jr c,L_440F		;4404
-	ld (hl),001h		;4406
-	jr L_440F		;4408
+	jr c,L_440F		;4404   ; hasta la 50, tal cual
+	ld (hl),001h		;4406   ; la 51 es la 1
+	jr L_440F		;4408   ; y sigue
 L_440A:
 	ld a,059h		;440a   ; en el duelo, silencio
-	call toca_sonido		;440c
+	call toca_sonido		;440c   ; sonido 0x59: silencio
 L_440F:
 	call carga_el_tablero_siguiente		;440f   ; el tablero de la fase nueva
-	xor a			;4412
-	ld (0e324h),a		;4413
-	call pantalla_del_marcador		;4416
-	ld a,080h		;4419
-	jp espera_a_y_sigue		;441b
+	xor a			;4412   ; (0xE324)=0: la cara sin sprite
+	ld (0e324h),a		;4413   ; guardado
+	call pantalla_del_marcador		;4416   ; la pantalla del marcador
+	ld a,080h		;4419   ; 128 cuadros
+	jp espera_a_y_sigue		;441b   ; y al paso 1
 
 ; ----------------------------------------------------------------------
 ; LO QUE MIRA LA VUELTA DE LAS ESCENAS SIN PARTIDA. Cualquier tecla en el logotipo o la demostracion salta al titulo; en el titulo, las direcciones cambian 1PLAYER/2PLAYERS y el disparo empieza.
 ; ----------------------------------------------------------------------
 mira_si_empiezan:
 	call lee_el_puerto_1		;441e   ; el mando 1 y el teclado...
-	call lee_cursores_espacio_y_select		;4421
+	call lee_cursores_espacio_y_select		;4421   ; encima, los cursores, el espacio y SELECT
 	ld hl,0e101h		;4424   ; ...y lo que ACABA de pulsarse, en (0xE100)
-	call guarda_mando_en_hl		;4427
-	or a			;442a
-	ret z			;442b
+	call guarda_mando_en_hl		;4427   ; (0xE101) y (0xE100)
+	or a			;442a   ; nada recien pulsado...
+	ret z			;442b   ; ...vuelve
 	ld hl,0e004h		;442c   ; la espera a cero, y HL=0xE000
-	ld (hl),000h		;442f
-	ld l,(hl)			;4431
-	ld de,0e102h		;4432
+	ld (hl),000h		;442f   ; (0xE004)=0
+	ld l,(hl)			;4431   ; L=0: HL=0xE000
+	ld de,0e102h		;4432   ; DE: uno o dos jugadores
 	ld b,(hl)			;4435   ; fuera de la escena 1, al titulo
-	djnz salta_al_titulo		;4436
-	inc hl			;4438
-	ld b,a			;4439
-	ld a,(hl)			;443a
-	dec hl			;443b
+	djnz salta_al_titulo		;4436   ; escena distinta de 1: al titulo
+	inc hl			;4438   ; 0xE001: el paso
+	ld b,a			;4439   ; lo pulsado, en B
+	ld a,(hl)			;443a   ; el paso...
+	dec hl			;443b   ; HL otra vez en 0xE000
 	cp 009h		;443c   ; en la escena 1, antes del paso 9 tambien
-	ld a,b			;443e
-	jr c,salta_al_titulo		;443f
+	ld a,b			;443e   ; A = lo pulsado
+	jr c,salta_al_titulo		;443f   ; antes del paso 9: al titulo
 	and 030h		;4441   ; bits 4 y 5: el disparo (o el espacio)
-	jr z,cambia_uno_o_dos_jugadores		;4443
+	jr z,cambia_uno_o_dos_jugadores		;4443   ; solo direcciones: cambia la opcion
 	ld a,(de)			;4445   ; (0xE102): uno o dos jugadores
-	or a			;4446
+	or a			;4446   ; 0: un jugador
 	ld a,040h		;4447   ; 0x40: partida; 0x60: partida de dos
-	jr z,L_444D		;4449
-	ld a,060h		;444b
+	jr z,L_444D		;4449   ; 0x40...
+	ld a,060h		;444b   ; ...o 0x60
 L_444D:
-	ld (0e002h),a		;444d
+	ld (0e002h),a		;444d   ; el modo de la partida
 	ld (hl),003h		;4450   ; escena 3, paso 0: el menu de nivel
-	inc hl			;4452
-	ld c,000h		;4453
-	ld (hl),c			;4455
-	dec c			;4456
+	inc hl			;4452   ; 0xE001
+	ld c,000h		;4453   ; paso 0
+	ld (hl),c			;4455   ; guardado
+	dec c			;4456   ; C=0xFF: pinta
 	call pinta_la_mano		;4457   ; las dos lineas con la mano en la buena
-	jp partida_nueva		;445a
+	jp partida_nueva		;445a   ; y los datos de la partida
 salta_al_titulo:
 	ld (hl),001h		;445d   ; escena 1, paso 10
-	inc hl			;445f
-	ld (hl),00ah		;4460
+	inc hl			;445f   ; 0xE001
+	ld (hl),00ah		;4460   ; paso 10
 	ld a,059h		;4462   ; silencio
-	call toca_sonido		;4464
-	jp pinta_el_titulo		;4467
+	call toca_sonido		;4464   ; silencio
+	jp pinta_el_titulo		;4467   ; el titulo
 cambia_uno_o_dos_jugadores:
-	ld a,(de)			;446a
-	xor 001h		;446b
-	ld (de),a			;446d
+	ld a,(de)			;446a   ; uno o dos...
+	xor 001h		;446b   ; ...el otro
+	ld (de),a			;446d   ; guardado
 	ld a,003h		;446e   ; sonido 3, el del cursor
-	call toca_sonido		;4470
-	ret			;4473
+	call toca_sonido		;4470   ; sonido 3
+	ret			;4473   ; vuelta
 gancho_vacio:		; Un `ret` solo; 0x426A lo llama detras del rotulo de STAGE
-	ret			;4474
+	ret			;4474   ; no hace nada
 partida_nueva:		; Borra de 0xE108 a 0xE4FF y pone tres vidas, fase 1 y el umbral de la vida extra
-	ld hl,0e108h		;4475
-	ld bc,003f7h		;4478
-	ld d,h			;447b
+	ld hl,0e108h		;4475   ; desde 0xE108
+	ld bc,003f7h		;4478   ; hasta 0xE4FF
+	ld d,h			;447b   ; DE = HL...
 	ld e,l			;447c
-	inc e			;447d
-	ld (hl),000h		;447e
-	ldir		;4480
+	inc e			;447d   ; ...+ 1
+	ld (hl),000h		;447e   ; el cero
+	ldir		;4480   ; corrido
 	ld a,(0e114h)		;4482   ; (0xE114) acaba de borrarla el `ldir`: este salto no se toma nunca
-	or a			;4485
-	jr nz,fase_del_game_master_muerta		;4486
+	or a			;4485   ; (0xE114), siempre cero aqui
+	jr nz,fase_del_game_master_muerta		;4486   ; nunca salta
 L_4488:
 	ld hl,044b8h		;4488   ; los tres bytes de 0x44B8 a 0xE110
-	ld de,0e110h		;448b
-	ld bc,00003h		;448e
-	ldir		;4491
+	ld de,0e110h		;448b   ; a 0xE110...
+	ld bc,00003h		;448e   ; ...tres bytes
+	ldir		;4491   ; copiados
 	ld a,(0e002h)		;4493   ; con dos jugadores, lo mismo en la copia del segundo
-	and 020h		;4496
-	ret z			;4498
+	and 020h		;4496   ; bit 5: dos jugadores
+	ret z			;4498   ; uno: ya esta
 copia_al_segundo_jugador:
-	ld hl,0e110h		;4499
-	ld de,0e120h		;449c
-	ld bc,00010h		;449f
-	ldir		;44a2
-	ret			;44a4
+	ld hl,0e110h		;4499   ; de 0xE110...
+	ld de,0e120h		;449c   ; ...a 0xE120...
+	ld bc,00010h		;449f   ; ...16 bytes
+	ldir		;44a2   ; copiados
+	ret			;44a4   ; vuelta
 fase_del_game_master_muerta:
 	call bcd_de_a		;44a5   ; CODIGO MUERTO: solo se llega si (0xE114) no es cero justo despues de borrarla. Y si llegara, el `jr` de 0x44B6 no sale nunca
-	cp 050h		;44a8
-	jr c,L_44AE		;44aa
-	ld a,050h		;44ac
+	cp 050h		;44a8   ; como mucho, la 50
+	jr c,L_44AE		;44aa   ; menos: tal cual
+	ld a,050h		;44ac   ; la 50
 L_44AE:
-	ld (0e111h),a		;44ae
-	ld a,001h		;44b1
-	ld (0e112h),a		;44b3
-	jr fase_del_game_master_muerta		;44b6
+	ld (0e111h),a		;44ae   ; la fase
+	ld a,001h		;44b1   ; el umbral de la vida extra...
+	ld (0e112h),a		;44b3   ; ...en 10.000
+	jr fase_del_game_master_muerta		;44b6   ; y otra vez: no sale
 
 ; ----------------------------------------------------------------------
 ; DATOS partida_recien_puesta: Los tres bytes que 0x4488 copia a 0xE110: tres
@@ -773,99 +773,99 @@ DATA_partida_recien_puesta:
 
 
 aplica_la_fase_del_game_master:		; Si el Game Master escribio una fase en (0xE114), la partida empieza en ella (en BCD, y como mucho la 50)
-	ld hl,0e114h		;44bb
-	ld a,(hl)			;44be
-	or a			;44bf
-	ret z			;44c0
-	ld (hl),000h		;44c1
-	call bcd_de_a		;44c3
-	cp 050h		;44c6
-	jr c,L_44CC		;44c8
-	ld a,050h		;44ca
+	ld hl,0e114h		;44bb   ; la fase que escribio el Game Master
+	ld a,(hl)			;44be   ; si...
+	or a			;44bf   ; ...no hay...
+	ret z			;44c0   ; ...nada
+	ld (hl),000h		;44c1   ; se consume
+	call bcd_de_a		;44c3   ; en BCD
+	cp 050h		;44c6   ; como mucho...
+	jr c,L_44CC		;44c8   ; ...la 50
+	ld a,050h		;44ca   ; la 50
 L_44CC:
-	ld (0e111h),a		;44cc
-	ld a,(0e002h)		;44cf
-	and 020h		;44d2
-	ret z			;44d4
-	jp copia_al_segundo_jugador		;44d5
+	ld (0e111h),a		;44cc   ; la fase de la partida
+	ld a,(0e002h)		;44cf   ; el modo
+	and 020h		;44d2   ; dos jugadores...
+	ret z			;44d4   ; ...no: ya esta
+	jp copia_al_segundo_jugador		;44d5   ; si: tambien la del segundo
 esconde_los_sprites:		; Y=0xD0 en el primer sprite: el VDP no pinta ni ese ni los de detras
-	ld hl,03b00h		;44d8
-	ld a,0d0h		;44db
-	call 0004dh		;44dd   ; BIOS WRTVRM - Writes data in VRAM
-	xor a			;44e0
-	ret			;44e1
+	ld hl,03b00h		;44d8   ; el primer sprite
+	ld a,0d0h		;44db   ; 0xD0: fin de la lista
+	call 0004dh		;44dd   ; BIOS WRTVRM - Writes data in VRAM | WRTVRM
+	xor a			;44e0   ; A=0
+	ret			;44e1   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; SUMA PUNTOS. DE en BCD se suma a la puntuacion de 0xE10B (E a las unidades y decenas, D a las centenas y millares): 0x0010 son 10 puntos y 0x5000 son 5.000. Ni en la demostracion ni en el duelo. Cada vez que el byte alto llega al umbral de (0xE112), una vida mas y el umbral sube 5: vidas a los 10.000, 60.000, 110.000...
 ; ----------------------------------------------------------------------
 suma_puntos:
-	ld c,000h		;44e2
+	ld c,000h		;44e2   ; el tercer byte no se toca: C=0
 	ld a,(0e002h)		;44e4   ; sin partida (demostracion), nada
-	or a			;44e7
-	ret z			;44e8
+	or a			;44e7   ; modo 0: la demostracion
+	ret z			;44e8   ; no puntua
 	bit 5,a		;44e9   ; en el duelo, tampoco
-	ret nz			;44eb
-	ld hl,0e10bh		;44ec
-	ld a,(hl)			;44ef
-	add a,e			;44f0
-	daa			;44f1
-	ld (hl),a			;44f2
-	inc l			;44f3
-	ld a,(hl)			;44f4
-	adc a,d			;44f5
-	daa			;44f6
-	ld (hl),a			;44f7
-	inc hl			;44f8
-	ld a,(hl)			;44f9
-	adc a,c			;44fa
-	daa			;44fb
-	ld (hl),a			;44fc
+	ret nz			;44eb   ; duelo: no puntua
+	ld hl,0e10bh		;44ec   ; unidades y decenas
+	ld a,(hl)			;44ef   ; el byte bajo...
+	add a,e			;44f0   ; ...+ E...
+	daa			;44f1   ; ...en BCD
+	ld (hl),a			;44f2   ; guardado
+	inc l			;44f3   ; centenas y millares
+	ld a,(hl)			;44f4   ; el de en medio...
+	adc a,d			;44f5   ; ...+ D y el acarreo...
+	daa			;44f6   ; ...en BCD
+	ld (hl),a			;44f7   ; guardado
+	inc hl			;44f8   ; decenas y centenas de millar
+	ld a,(hl)			;44f9   ; el alto...
+	adc a,c			;44fa   ; ...+ el acarreo...
+	daa			;44fb   ; ...en BCD
+	ld (hl),a			;44fc   ; guardado
 	jr nc,mira_la_vida_extra		;44fd   ; se ha pasado de 999999
 	ld bc,09999h		;44ff   ; el record se queda en 999999
-	ld (0e105h),bc		;4502
-	ld (0e106h),bc		;4506
-	jp pinta_la_puntuacion		;450a
+	ld (0e105h),bc		;4502   ; 0xE105 y 0xE106
+	ld (0e106h),bc		;4506   ; 0xE106 y 0xE107
+	jp pinta_la_puntuacion		;450a   ; la puntuacion en pantalla
 mira_la_vida_extra:
-	ex de,hl			;450d
-	ld hl,0e112h		;450e
+	ex de,hl			;450d   ; DE: el byte alto
+	ld hl,0e112h		;450e   ; el umbral
 	cp (hl)			;4511   ; el byte alto contra el umbral
-	jr c,mira_el_record		;4512
+	jr c,mira_el_record		;4512   ; no llega: al record
 	ld a,(hl)			;4514   ; umbral + 5, en BCD; si se sale, 0xFF y no hay mas
-	add a,005h		;4515
-	daa			;4517
-	jr nc,L_451C		;4518
-	ld a,0ffh		;451a
+	add a,005h		;4515   ; cinco mas...
+	daa			;4517   ; ...en BCD
+	jr nc,L_451C		;4518   ; sin pasarse...
+	ld a,0ffh		;451a   ; ...o 0xFF: ya no hay mas
 L_451C:
-	ld (hl),a			;451c
-	push de			;451d
+	ld (hl),a			;451c   ; el umbral nuevo
+	push de			;451d   ; se guarda DE
 	ld hl,0e110h		;451e   ; y la vida
-	ld a,(hl)			;4521
-	add a,001h		;4522
-	daa			;4524
-	ld (hl),a			;4525
+	ld a,(hl)			;4521   ; las vidas...
+	add a,001h		;4522   ; ...mas una...
+	daa			;4524   ; ...en BCD
+	ld (hl),a			;4525   ; guardadas
 	ld a,011h		;4526   ; sonido 0x11, el de la vida extra
-	call toca_sonido_en_partida		;4528
-	call pinta_las_vidas		;452b
-	pop de			;452e
+	call toca_sonido_en_partida		;4528   ; el sonido de la vida
+	call pinta_las_vidas		;452b   ; en pantalla
+	pop de			;452e   ; DE otra vez
 mira_el_record:
 	ld b,003h		;452f   ; compara la puntuacion con el record de mas a menos significativo
-	ld hl,0e107h		;4531
-	ex de,hl			;4534
-	ld c,l			;4535
+	ld hl,0e107h		;4531   ; el byte alto del record
+	ex de,hl			;4534   ; DE el record, HL la puntuacion
+	ld c,l			;4535   ; C: donde empieza la puntuacion
 L_4536:
-	ld a,(de)			;4536
-	sub (hl)			;4537
-	jr c,L_4541		;4538
-	jp nz,pinta_la_puntuacion		;453a
-	dec l			;453d
-	dec e			;453e
-	djnz L_4536		;453f
+	ld a,(de)			;4536   ; cifra del record...
+	sub (hl)			;4537   ; ...menos la de la puntuacion
+	jr c,L_4541		;4538   ; la puntuacion es mayor: se copia
+	jp nz,pinta_la_puntuacion		;453a   ; menor: solo se pinta
+	dec l			;453d   ; iguales: el byte siguiente
+	dec e			;453e   ; de los dos
+	djnz L_4536		;453f   ; tres bytes
 L_4541:
 	ld l,c			;4541   ; la supera: se copia encima
-	ld bc,00003h		;4542
-	ld e,007h		;4545
-	lddr		;4547
-	jp pinta_la_puntuacion		;4549
+	ld bc,00003h		;4542   ; los tres...
+	ld e,007h		;4545   ; ...hasta 0xE107...
+	lddr		;4547   ; ...de arriba abajo
+	jp pinta_la_puntuacion		;4549   ; y la puntuacion en pantalla
 
 ; ----------------------------------------------------------------------
 ; DATOS ret_suelto: Un `ret` (0xC9) que no ejecuta nadie: detras del `jp` de
@@ -880,36 +880,36 @@ DATA_ret_suelto:
 
 
 pinta_los_marcadores_del_game_over:		; HI-SCORE, REST, STAGE y 1P-SCORE, con sus numeros
-	ld de,07eb0h		;454d
-	call pinta_guion		;4550
-	ld a,(0e002h)		;4553
-	bit 5,a		;4556
-	jr z,L_455E		;4558
-	cpl			;455a
-	call pinta_la_puntuacion_en_hl		;455b
+	ld de,07eb0h		;454d   ; HI-SCORE, REST, STAGE- y 1P-SCORE
+	call pinta_guion		;4550   ; en pantalla
+	ld a,(0e002h)		;4553   ; el modo
+	bit 5,a		;4556   ; el duelo...
+	jr z,L_455E		;4558   ; ...no
+	cpl			;455a   ; A invertido
+	call pinta_la_puntuacion_en_hl		;455b   ; la puntuacion donde se quedo HL
 L_455E:
-	call pinta_las_vidas_del_game_over		;455e
-	call pinta_la_fase_del_game_over		;4561
-	jp pinta_record_y_puntuacion		;4564
+	call pinta_las_vidas_del_game_over		;455e   ; las vidas
+	call pinta_la_fase_del_game_over		;4561   ; la fase
+	jp pinta_record_y_puntuacion		;4564   ; el record y la puntuacion
 pinta_el_marcador:		; La linea de arriba: STAGE-nn SCORE-nnnnnn P-nn
-	ld de,04607h		;4567
-	call pinta_guion		;456a
+	ld de,04607h		;4567   ; STAGE-, SCORE- y P-
+	call pinta_guion		;456a   ; en la fila 0
 	call pinta_la_fase		;456d   ; la fase
 	call pinta_la_puntuacion		;4570   ; la puntuacion
 	jr $+101		;4573   ; y las vidas, en 0x45D8
 pinta_el_marcador_del_duelo:		; 2P- y 1P- con las vidas de cada uno
-	call fila_0_de_ladrillo		;4575
-	ld de,04591h		;4578
-	call pinta_guion		;457b
+	call fila_0_de_ladrillo		;4575   ; la fila 0, toda de ladrillo
+	ld de,04591h		;4578   ; 2P- y 1P-
+	call pinta_guion		;457b   ; en pantalla
 pinta_las_vidas_de_los_dos:
-	ld hl,03805h		;457e
-	ld de,0e120h		;4581
-	call L_458D		;4584
-	ld hl,0381ch		;4587
-	ld de,0e110h		;458a
+	ld hl,03805h		;457e   ; detras de 2P-...
+	ld de,0e120h		;4581   ; ...las vidas del segundo
+	call L_458D		;4584   ; dos cifras
+	ld hl,0381ch		;4587   ; detras de 1P-...
+	ld de,0e110h		;458a   ; ...las del primero
 L_458D:
-	ld b,001h		;458d
-	jr $+83		;458f
+	ld b,001h		;458d   ; un byte
+	jr $+83		;458f   ; a pinta_bcd
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulos_2p_y_1p: Guion de 0x4685: "2P-" en 0x3802 y "1P-" en 0x3819
@@ -925,75 +925,75 @@ DATA_rotulos_2p_y_1p:
 
 
 pinta_record_y_puntuacion:		; En la pantalla del GAME OVER
-	ld hl,03972h		;459d
-	ld de,0e107h		;45a0
-	call pinta_tres_bytes_bcd		;45a3
-	ld hl,03932h		;45a6
+	ld hl,03972h		;459d   ; HI-SCORE...
+	ld de,0e107h		;45a0   ; ...el record, tres bytes
+	call pinta_tres_bytes_bcd		;45a3   ; en pantalla
+	ld hl,03932h		;45a6   ; 1P-SCORE...
 pinta_la_puntuacion_en_hl:
-	ld de,0e10dh		;45a9
+	ld de,0e10dh		;45a9   ; ...la puntuacion
 pinta_tres_bytes_bcd:
-	ld b,003h		;45ac
-	jr pinta_bcd		;45ae
+	ld b,003h		;45ac   ; tres bytes
+	jr pinta_bcd		;45ae   ; seis cifras
 pinta_la_puntuacion:		; Seis cifras en 0x3812
-	ld hl,03812h		;45b0
-	ld de,0e10dh		;45b3
-	ld b,003h		;45b6
-	jr pinta_bcd		;45b8
+	ld hl,03812h		;45b0   ; detras de SCORE-
+	ld de,0e10dh		;45b3   ; desde el byte alto
+	ld b,003h		;45b6   ; tres bytes
+	jr pinta_bcd		;45b8   ; seis cifras
 pinta_la_fase_del_game_over:
-	ld hl,038d2h		;45ba
+	ld hl,038d2h		;45ba   ; detras de STAGE-, en la pantalla del marcador
 pinta_la_fase_en_hl:
-	ld de,0e111h		;45bd
-	ld b,001h		;45c0
-	jr pinta_bcd		;45c2
+	ld de,0e111h		;45bd   ; la fase
+	ld b,001h		;45c0   ; un byte
+	jr pinta_bcd		;45c2   ; dos cifras
 pinta_la_fase:		; Dos cifras en 0x3808
-	ld hl,03808h		;45c4
-	ld de,0e111h		;45c7
-	ld b,001h		;45ca
-	jr pinta_bcd		;45cc
+	ld hl,03808h		;45c4   ; detras de STAGE-
+	ld de,0e111h		;45c7   ; la fase
+	ld b,001h		;45ca   ; un byte
+	jr pinta_bcd		;45cc   ; dos cifras
 pinta_las_vidas_del_game_over:
-	ld hl,039d2h		;45ce
-	ld de,0e110h		;45d1
-	ld b,001h		;45d4
-	jr pinta_bcd		;45d6
+	ld hl,039d2h		;45ce   ; detras de REST
+	ld de,0e110h		;45d1   ; las vidas
+	ld b,001h		;45d4   ; un byte
+	jr pinta_bcd		;45d6   ; dos cifras
 pinta_las_vidas:		; Dos cifras en 0x381C
-	ld hl,0381ch		;45d8
-	ld de,0e110h		;45db
-	ld b,001h		;45de
-	jr pinta_bcd		;45e0
+	ld hl,0381ch		;45d8   ; detras de P-
+	ld de,0e110h		;45db   ; las vidas
+	ld b,001h		;45de   ; un byte
+	jr pinta_bcd		;45e0   ; dos cifras
 
 ; ----------------------------------------------------------------------
 ; PINTA B BYTES EN BCD de DE hacia abajo, dos cifras por byte, en la tabla de nombres desde HL. Las cifras son las casillas 0x10 a 0x19.
 ; ----------------------------------------------------------------------
 pinta_bcd:
 	ld a,(de)			;45e2   ; la cifra alta...
-	rra			;45e3
+	rra			;45e3   ; el nibble alto...
 	rra			;45e4
 	rra			;45e5
 	rra			;45e6
-	and 00fh		;45e7
+	and 00fh		;45e7   ; ...abajo
 	add a,010h		;45e9   ; ...a su casilla
-	call 0004dh		;45eb   ; BIOS WRTVRM - Writes data in VRAM
-	inc hl			;45ee
+	call 0004dh		;45eb   ; BIOS WRTVRM - Writes data in VRAM | WRTVRM
+	inc hl			;45ee   ; la casilla siguiente
 	ld a,(de)			;45ef   ; la baja
-	and 00fh		;45f0
-	add a,010h		;45f2
-	call 0004dh		;45f4   ; BIOS WRTVRM - Writes data in VRAM
+	and 00fh		;45f0   ; el nibble bajo
+	add a,010h		;45f2   ; su casilla
+	call 0004dh		;45f4   ; BIOS WRTVRM - Writes data in VRAM | WRTVRM
 	dec de			;45f7   ; el byte de antes: el mas significativo va primero
-	inc hl			;45f8
-	djnz pinta_bcd		;45f9
-	ret			;45fb
+	inc hl			;45f8   ; y la siguiente
+	djnz pinta_bcd		;45f9   ; B bytes
+	ret			;45fb   ; vuelta
 vuelta_con_partida:		; El `ret` al que vuelven las escenas durante la partida
-	ret			;45fc
+	ret			;45fc   ; y la escena acaba aqui
 intercambia_b_bytes:		; Intercambia B bytes entre (HL) y (DE)
 	ld c,(hl)			;45fd   ; CODIGO HUERFANO: nadie lo llama ni apunta aqui
-	ld a,(de)			;45fe
-	ld (hl),a			;45ff
-	ld a,c			;4600
-	ld (de),a			;4601
-	inc hl			;4602
-	inc de			;4603
-	djnz intercambia_b_bytes		;4604
-	ret			;4606
+	ld a,(de)			;45fe   ; el de (DE)...
+	ld (hl),a			;45ff   ; ...a (HL)...
+	ld a,c			;4600   ; ...y el de (HL)...
+	ld (de),a			;4601   ; ...a (DE)
+	inc hl			;4602   ; los dos punteros...
+	inc de			;4603   ; ...avanzan
+	djnz intercambia_b_bytes		;4604   ; B bytes
+	ret			;4606   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulo_del_marcador: Guion de 0x4685 con la linea de arriba entera
@@ -1013,70 +1013,70 @@ DATA_rotulo_del_marcador:
 
 
 borra_la_pantalla:		; Esconde los sprites y pone a cero la tabla de nombres (0x3800, 768 casillas)
-	call esconde_los_sprites		;462a
-	ld hl,03800h		;462d
-	ld bc,00300h		;4630
-	xor a			;4633
+	call esconde_los_sprites		;462a   ; sin sprites
+	ld hl,03800h		;462d   ; la tabla de nombres...
+	ld bc,00300h		;4630   ; ...768 casillas...
+	xor a			;4633   ; ...a cero
 	jp 00056h		;4634   ; BIOS FILVRM - Fills VRAM with value | FILVRM
 prepara_escritura_de_vram:		; SETWRT en HL y el puerto de datos del VDP (el de 0x0007 de la BIOS) en C' para los `out (c)`
-	ex af,af'			;4637
+	ex af,af'			;4637   ; A a salvo
 	call 00053h		;4638   ; BIOS SETWRT - Enables VDP to write | SETWRT
-	exx			;463b
+	exx			;463b   ; en los registros de reserva...
 	ld a,(00007h)		;463c   ; el puerto de escritura del VDP, tal como lo dice la BIOS
-	ld c,a			;463f
-	exx			;4640
-	ex af,af'			;4641
-	ret			;4642
+	ld c,a			;463f   ; ...C = el puerto
+	exx			;4640   ; y otra vez los normales
+	ex af,af'			;4641   ; A de vuelta
+	ret			;4642   ; vuelta
 prepara_lectura_de_vram:		; La pareja de 0x4637 para leer: SETRD y el puerto de 0x0006
 	call 00050h		;4643   ; BIOS SETRD - Enables VDP to read | CODIGO HUERFANO: nadie lo llama; el juego no lee la VRAM por el puerto
-	exx			;4646
+	exx			;4646   ; en los de reserva...
 	ld a,(00006h)		;4647   ; el puerto de lectura del VDP
-	ld c,a			;464a
-	exx			;464b
-	ret			;464c
+	ld c,a			;464a   ; ...C = el puerto
+	exx			;464b   ; otra vez los normales
+	ret			;464c   ; vuelta
 copia_a_vram:		; BC bytes de (DE) a la VRAM en HL: LDIRVM con los punteros cambiados
-	ex de,hl			;464d
-	jp 0005ch		;464e   ; BIOS LDIRVM - Block transfers to VRAM from memory
+	ex de,hl			;464d   ; HL el origen, DE el destino
+	jp 0005ch		;464e   ; BIOS LDIRVM - Block transfers to VRAM from memory | LDIRVM
 copia_a_los_tres_bancos:		; Lo mismo tres veces, a 0x800 de distancia: los tres tercios de la pantalla
-	exx			;4651
+	exx			;4651   ; B' = 3 tercios
 	ld b,003h		;4652   ; tres tercios
 copia_un_banco:
-	exx			;4654
-	push bc			;4655
-	push de			;4656
-	call copia_a_vram		;4657
+	exx			;4654   ; los normales
+	push bc			;4655   ; BC y DE...
+	push de			;4656   ; ...a salvo
+	call copia_a_vram		;4657   ; un tercio
 	ld de,00800h		;465a   ; el tercio siguiente
-	add hl,de			;465d
-	pop de			;465e
-	pop bc			;465f
-	exx			;4660
-	djnz copia_un_banco		;4661
-	ret			;4663
+	add hl,de			;465d   ; HL + 0x800
+	pop de			;465e   ; DE y BC...
+	pop bc			;465f   ; ...otra vez
+	exx			;4660   ; B' cuenta
+	djnz copia_un_banco		;4661   ; tres veces
+	ret			;4663   ; vuelta
 rellena_los_tres_bancos:		; FILVRM de BC bytes con A, en HL, HL+0x800 y HL+0x1000
-	ld d,003h		;4664
+	ld d,003h		;4664   ; tres tercios
 L_4666:
-	push bc			;4666
-	push de			;4667
+	push bc			;4666   ; BC...
+	push de			;4667   ; ...y DE a salvo
 	call 00056h		;4668   ; BIOS FILVRM - Fills VRAM with value | FILVRM
-	ld de,00800h		;466b
-	add hl,de			;466e
-	pop de			;466f
-	pop bc			;4670
-	dec d			;4671
-	jr nz,L_4666		;4672
-	ret			;4674
+	ld de,00800h		;466b   ; el tercio siguiente...
+	add hl,de			;466e   ; ...0x800 mas alla
+	pop de			;466f   ; DE...
+	pop bc			;4670   ; ...y BC otra vez
+	dec d			;4671   ; uno menos
+	jr nz,L_4666		;4672   ; tres veces
+	ret			;4674   ; vuelta
 guion_rle_en_tres_bancos:		; El guion RLE de DE, tres veces, desde HL, HL+0x800 y HL+0x1000
-	ld b,003h		;4675
+	ld b,003h		;4675   ; tres tercios
 L_4677:
-	push bc			;4677
-	push de			;4678
-	call vuelca_el_guion_con_destino_en_hl		;4679
-	ld de,00800h		;467c
-	add hl,de			;467f
-	pop de			;4680
-	pop bc			;4681
-	djnz L_4677		;4682
-	ret			;4684
+	push bc			;4677   ; B...
+	push de			;4678   ; ...y el guion a salvo
+	call vuelca_el_guion_con_destino_en_hl		;4679   ; un tercio
+	ld de,00800h		;467c   ; el siguiente...
+	add hl,de			;467f   ; ...0x800 mas alla
+	pop de			;4680   ; el guion otra vez desde el principio
+	pop bc			;4681   ; y B
+	djnz L_4677		;4682   ; tres veces
+	ret			;4684   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; EL GUION DE TEXTO. En DE: una direccion de la tabla de nombres y los caracteres detras; 0xFE salta a otra direccion (la que sigue) y 0xFF acaba. Cada caracter se pasa por AND C: con C=0xFF pinta, con C=0 borra el mismo rotulo en su sitio.
@@ -1085,89 +1085,89 @@ pinta_guion:
 	ld c,0ffh		;4685   ; C=0xFF: pinta
 guion_nueva_direccion:
 	ex de,hl			;4687   ; la direccion de destino, los dos primeros bytes
-	ld e,(hl)			;4688
-	inc hl			;4689
-	ld d,(hl)			;468a
-	ex de,hl			;468b
-	inc de			;468c
+	ld e,(hl)			;4688   ; el byte bajo...
+	inc hl			;4689   ; ...y el alto
+	ld d,(hl)			;468a   ; HL = la direccion
+	ex de,hl			;468b   ; DE sigue en el guion
+	inc de			;468c   ; salta el byte alto
 byte_del_guion:
-	ld a,(de)			;468d
-	inc de			;468e
+	ld a,(de)			;468d   ; el caracter
+	inc de			;468e   ; el siguiente
 	ld b,a			;468f   ; 0xFF + 1 = 0: fin
-	inc b			;4690
-	ret z			;4691
+	inc b			;4690   ; 0xFF: B = 0
+	ret z			;4691   ; se acabo
 	inc b			;4692   ; 0xFE + 2 = 0: otra direccion
-	jr z,guion_nueva_direccion		;4693
+	jr z,guion_nueva_direccion		;4693   ; 0xFE: B = 0
 	and c			;4695   ; AND C: el caracter o un cero
 	call 0004dh		;4696   ; BIOS WRTVRM - Writes data in VRAM | WRTVRM
-	inc hl			;4699
-	jr byte_del_guion		;469a
+	inc hl			;4699   ; la casilla siguiente
+	jr byte_del_guion		;469a   ; y el caracter siguiente
 borra_guion:		; El mismo guion con C=0: pone ceros donde iba el texto
-	ld c,000h		;469c
-	jr guion_nueva_direccion		;469e
+	ld c,000h		;469c   ; C=0: borra
+	jr guion_nueva_direccion		;469e   ; y adelante
 
 ; ----------------------------------------------------------------------
 ; EL RLE DE LA VRAM. En DE: la direccion de destino y luego ordenes de un byte: 0x00 acaba, 0x01-0x7F repite el byte siguiente ese numero de veces, 0x81-0xFF copia literales (el numero menos 0x80) y 0x80 cambia de direccion con la palabra que sigue.
 ; ----------------------------------------------------------------------
 guion_rle:
 	ex de,hl			;46a0   ; la direccion, los dos primeros bytes
-	ld e,(hl)			;46a1
-	inc hl			;46a2
-	ld d,(hl)			;46a3
-	ex de,hl			;46a4
-	inc de			;46a5
+	ld e,(hl)			;46a1   ; el byte bajo...
+	inc hl			;46a2   ; ...y el alto
+	ld d,(hl)			;46a3   ; de la direccion
+	ex de,hl			;46a4   ; HL = destino
+	inc de			;46a5   ; DE, detras
 vuelca_el_guion_con_destino_en_hl:
-	call prepara_escritura_de_vram		;46a6
+	call prepara_escritura_de_vram		;46a6   ; SETWRT y el puerto en C'
 orden_del_rle:
-	ld a,(de)			;46a9
+	ld a,(de)			;46a9   ; la orden
 	and a			;46aa   ; 0x00: fin
-	ret z			;46ab
-	inc de			;46ac
-	ld b,a			;46ad
+	ret z			;46ab   ; 0x00: se acabo
+	inc de			;46ac   ; la siguiente
+	ld b,a			;46ad   ; B = la orden
 	and 07fh		;46ae   ; sin el bit 7...
-	cp b			;46b0
+	cp b			;46b0   ; igual: bit 7 a cero
 	jr z,repite_un_byte		;46b1   ; ...es una repeticion
 	and a			;46b3   ; 0x80 a secas: direccion nueva
-	jr z,guion_rle		;46b4
+	jr z,guion_rle		;46b4   ; 0x80: nueva direccion
 	ld b,a			;46b6   ; 0x81-0xFF: tantos literales
 copia_literales:
-	ld a,(de)			;46b7
-	inc de			;46b8
-	exx			;46b9
-	out (c),a		;46ba
-	exx			;46bc
-	djnz copia_literales		;46bd
-	jr orden_del_rle		;46bf
+	ld a,(de)			;46b7   ; el literal
+	inc de			;46b8   ; el siguiente
+	exx			;46b9   ; con el puerto de C'...
+	out (c),a		;46ba   ; ...al VDP
+	exx			;46bc   ; los normales
+	djnz copia_literales		;46bd   ; B literales
+	jr orden_del_rle		;46bf   ; la orden siguiente
 repite_un_byte:
-	ld a,(de)			;46c1
-	inc de			;46c2
+	ld a,(de)			;46c1   ; el byte que se repite
+	inc de			;46c2   ; detras
 L_46C3:
-	exx			;46c3
-	out (c),a		;46c4
-	exx			;46c6
-	djnz L_46C3		;46c7
-	jr orden_del_rle		;46c9
+	exx			;46c3   ; con el puerto de C'...
+	out (c),a		;46c4   ; ...al VDP
+	exx			;46c6   ; los normales
+	djnz L_46C3		;46c7   ; B veces
+	jr orden_del_rle		;46c9   ; la orden siguiente
 apaga_y_borra_la_vram:		; Silencio, toda la VRAM a cero y los registros del VDP de 0x46F0
 	ld a,0bfh		;46cb   ; mezclador del PSG: los seis canales cerrados
-	call escribe_el_mezclador		;46cd
+	call escribe_el_mezclador		;46cd   ; al registro 7
 	ld a,059h		;46d0   ; sonido 0x59: todo en silencio
-	call toca_sonido		;46d2
+	call toca_sonido		;46d2   ; todos los canales libres
 	ld hl,00000h		;46d5   ; los 16 KB de VRAM a cero
-	ld bc,04000h		;46d8
-	xor a			;46db
-	call 00056h		;46dc   ; BIOS FILVRM - Fills VRAM with value
+	ld bc,04000h		;46d8   ; 16 KB...
+	xor a			;46db   ; ...a cero
+	call 00056h		;46dc   ; BIOS FILVRM - Fills VRAM with value | FILVRM
 pon_los_registros_del_vdp:
-	ld hl,046f0h		;46df
-	ld d,008h		;46e2
-	ld c,000h		;46e4
+	ld hl,046f0h		;46df   ; la tabla de 0x46F0
+	ld d,008h		;46e2   ; ocho registros
+	ld c,000h		;46e4   ; desde el 0
 L_46E6:
 	ld b,(hl)			;46e6   ; WRTVDP, registro C con el valor B
-	call 00047h		;46e7   ; BIOS WRTVDP - Writes data in the VDP-register
-	inc hl			;46ea
-	inc c			;46eb
-	dec d			;46ec
-	jr nz,L_46E6		;46ed
-	ret			;46ef
+	call 00047h		;46e7   ; BIOS WRTVDP - Writes data in the VDP-register | WRTVDP
+	inc hl			;46ea   ; el siguiente valor
+	inc c			;46eb   ; el siguiente registro
+	dec d			;46ec   ; ocho
+	jr nz,L_46E6		;46ed   ; veces
+	ret			;46ef   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS registros_del_vdp: Los ocho: SCREEN 2 (0x02); 16 KB, pantalla
@@ -1185,113 +1185,113 @@ DATA_registros_del_vdp:
 
 
 pon_el_fondo:		; Registro 7 con B: el color del fondo
-	ld c,007h		;46f8
-	jp 00047h		;46fa   ; BIOS WRTVDP - Writes data in the VDP-register
+	ld c,007h		;46f8   ; registro 7
+	jp 00047h		;46fa   ; BIOS WRTVDP - Writes data in the VDP-register | WRTVDP con B
 
 ; ----------------------------------------------------------------------
 ; LOS MANDOS, una vez por cuadro. El mando 2 va con la lectura del puerto 2 y las teclas E, S, F, C y CTRL a 0xE330/0xE32F; el mando 1, con el puerto 1, los cursores, el espacio y SELECT, a 0xE009/0xE008. El segundo byte de cada pareja es lo que ACABA de pulsarse. Los bits: 0 arriba, 1 abajo, 2 izquierda, 3 derecha, 4 y 5 los dos disparos.
 ; ----------------------------------------------------------------------
 lee_los_mandos:
 	ld e,0cfh		;46fd   ; puerto 2 del PSG (bit 6 del registro 15 a uno)
-	call lee_el_puerto_en_e		;46ff
+	call lee_el_puerto_en_e		;46ff   ; el puerto 2
 	call lee_las_teclas_del_segundo		;4702   ; y E-S-F-C-CTRL encima
 	ld hl,0e330h		;4705   ; al mando 2
-	call guarda_mando_en_hl		;4708
+	call guarda_mando_en_hl		;4708   ; a 0xE330 y 0xE32F
 	call lee_el_puerto_1		;470b   ; puerto 1 y los cursores
-	call lee_cursores_espacio_y_select		;470e
+	call lee_cursores_espacio_y_select		;470e   ; encima, los cursores, el espacio y SELECT
 guarda_el_mando_1:
-	ld hl,0e009h		;4711
+	ld hl,0e009h		;4711   ; el mando 1
 guarda_mando_en_hl:		; (HL)=lo pulsado y (HL-1)=lo que no lo estaba en la lectura anterior
-	ld c,(hl)			;4714
-	ld (hl),a			;4715
+	ld c,(hl)			;4714   ; C = lo de antes
+	ld (hl),a			;4715   ; lo de ahora, guardado
 	xor c			;4716   ; lo de antes, invertido...
 	and (hl)			;4717   ; ...y con lo de ahora: lo recien pulsado
-	dec hl			;4718
-	ld (hl),a			;4719
-	ret			;471a
+	dec hl			;4718   ; el byte de antes
+	ld (hl),a			;4719   ; lo recien pulsado
+	ret			;471a   ; vuelta
 lee_el_puerto_1:
-	ld e,08fh		;471b
+	ld e,08fh		;471b   ; bit 6 a cero: el puerto 1
 lee_el_puerto_en_e:		; E al registro 15 del PSG (el puerto) y el 14 leido: los seis bits, a uno lo pulsado
-	ld a,00fh		;471d
+	ld a,00fh		;471d   ; registro 15...
 	call 00093h		;471f   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
-	ld a,00eh		;4722
-	di			;4724
+	ld a,00eh		;4722   ; registro 14...
+	di			;4724   ; sin interrupciones...
 	call 00096h		;4725   ; BIOS RDPSG - Reads value from PSG-register | RDPSG
-	ei			;4728
+	ei			;4728   ; ...para leerlo
 	cpl			;4729   ; los botones van a cero: se invierten
-	and 03fh		;472a
-	ret			;472c
+	and 03fh		;472a   ; seis bits
+	ret			;472c   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LOS CURSORES, EL ESPACIO Y SELECT, colocados en los bits del mando: se leen las filas 8 y 7 del teclado y se reordenan a golpe de `rrca`.
 ; ----------------------------------------------------------------------
 lee_cursores_espacio_y_select:
-	push af			;472d
+	push af			;472d   ; lo del puerto, a salvo
 	ld a,007h		;472e   ; fila 7 del teclado
-	call 00141h		;4730   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
-	cpl			;4733
+	call 00141h		;4730   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix | SNSMAT
+	cpl			;4733   ; pulsado a uno
 	rrca			;4734   ; el bit 6 (SELECT) al bit 5
-	and 020h		;4735
-	ld e,a			;4737
+	and 020h		;4735   ; el bit 5
+	ld e,a			;4737   ; en E
 	ld a,008h		;4738   ; fila 8: derecha, abajo, arriba, izquierda... y el espacio en el bit 0
-	call 00141h		;473a   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
-	cpl			;473d
+	call 00141h		;473a   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix | SNSMAT
+	cpl			;473d   ; pulsado a uno
 	rrca			;473e
 	rrca			;473f
-	ld b,a			;4740
+	ld b,a			;4740   ; B, para seguir rotando
 	and 004h		;4741   ; izquierda al bit 2
-	or e			;4743
-	ld c,a			;4744
-	ld a,b			;4745
+	or e			;4743   ; con SELECT
+	ld c,a			;4744   ; en C
+	ld a,b			;4745   ; dos vueltas mas
 	rrca			;4746
 	rrca			;4747
-	ld b,a			;4748
+	ld b,a			;4748   ; en B
 	and 018h		;4749   ; derecha y espacio a los bits 3 y 4
-	or c			;474b
-	ld c,a			;474c
-	ld a,b			;474d
-	rrca			;474e
+	or c			;474b   ; con lo de antes
+	ld c,a			;474c   ; en C
+	ld a,b			;474d   ; una vuelta mas
+	rrca			;474e   ; arriba al bit 0, abajo al 1
 	and 003h		;474f   ; arriba y abajo a los bits 0 y 1
-	or c			;4751
+	or c			;4751   ; todo junto
 	pop bc			;4752   ; y encima de lo que leyo el puerto
-	or b			;4753
-	ret			;4754
+	or b			;4753   ; con lo del puerto
+	ret			;4754   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LAS TECLAS DEL SEGUNDO JUGADOR: E arriba, C abajo, S izquierda y F derecha (un rombo, como las cuatro diagonales del juego), y CTRL de disparo.
 ; ----------------------------------------------------------------------
 lee_las_teclas_del_segundo:
-	push af			;4755
-	ld b,000h		;4756
-	ld a,003h		;4758
+	push af			;4755   ; lo del puerto, a salvo
+	ld b,000h		;4756   ; B: lo pulsado
+	ld a,003h		;4758   ; fila 3
 	call 00141h		;475a   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix | fila 3 del teclado
 	bit 0,a		;475d   ; bit 0: la C, abajo
-	jr nz,L_4763		;475f
-	set 1,b		;4761
+	jr nz,L_4763		;475f   ; no pulsada
+	set 1,b		;4761   ; abajo
 L_4763:
 	bit 2,a		;4763   ; bit 2: la E, arriba
-	jr nz,L_4769		;4765
-	set 0,b		;4767
+	jr nz,L_4769		;4765   ; no pulsada
+	set 0,b		;4767   ; arriba
 L_4769:
 	bit 3,a		;4769   ; bit 3: la F, derecha
-	jr nz,L_476F		;476b
-	set 3,b		;476d
+	jr nz,L_476F		;476b   ; no pulsada
+	set 3,b		;476d   ; derecha
 L_476F:
-	ld a,005h		;476f
+	ld a,005h		;476f   ; fila 5
 	call 00141h		;4771   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix | fila 5, bit 0: la S, izquierda
-	bit 0,a		;4774
-	jr nz,L_477A		;4776
-	set 2,b		;4778
+	bit 0,a		;4774   ; bit 0: la S
+	jr nz,L_477A		;4776   ; no pulsada
+	set 2,b		;4778   ; izquierda
 L_477A:
-	ld a,006h		;477a
+	ld a,006h		;477a   ; fila 6
 	call 00141h		;477c   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix | fila 6, bit 1: CTRL, el disparo
-	bit 1,a		;477f
-	jr nz,L_4785		;4781
-	set 4,b		;4783
+	bit 1,a		;477f   ; bit 1: CTRL
+	jr nz,L_4785		;4781   ; no pulsada
+	set 4,b		;4783   ; el disparo
 L_4785:
-	pop af			;4785
-	or b			;4786
-	ret			;4787
+	pop af			;4785   ; lo del puerto
+	or b			;4786   ; con las teclas
+	ret			;4787   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulos_del_titulo: Guiones de 0x4685: "STAGE" en 0x394C; "(c)KONAMI
@@ -1313,33 +1313,33 @@ DATA_rotulos_del_titulo:
 
 
 monta_la_fuente:		; La fuente RLE de 0x47EF en los tres tercios desde el tile 0x10, y su color, blanco sobre transparente (0xF0)
-	call limpia_la_fuente		;47b7
-	ld de,047efh		;47ba
+	call limpia_la_fuente		;47b7   ; los 16 primeros tiles
+	ld de,047efh		;47ba   ; la fuente de 0x47EF
 	ld hl,02080h		;47bd   ; tile 0x10, el cero
-	call guion_rle_en_tres_bancos		;47c0
+	call guion_rle_en_tres_bancos		;47c0   ; en los tres tercios
 	ld a,0f0h		;47c3   ; blanco sobre transparente...
 	ld hl,00080h		;47c5   ; ...para los tiles 0x10 a 0x3A
-	ld bc,00158h		;47c8
-	jp rellena_los_tres_bancos		;47cb
+	ld bc,00158h		;47c8   ; 43 tiles: 0x158 bytes
+	jp rellena_los_tres_bancos		;47cb   ; en los tres tercios
 limpia_la_fuente:		; Los 16 primeros tiles a cero y su color a 0x00-0x0F: el tile N queda como un bloque de color N
-	ld hl,02000h		;47ce
-	ld bc,00080h		;47d1
-	xor a			;47d4
+	ld hl,02000h		;47ce   ; los patrones de los tiles 0 a 15...
+	ld bc,00080h		;47d1   ; ...128 bytes...
+	xor a			;47d4   ; ...a cero...
 	call rellena_los_tres_bancos		;47d5   ; patrones de los tiles 0 a 15, a cero
-	ld hl,00000h		;47d8
-	ld de,00008h		;47db
+	ld hl,00000h		;47d8   ; el color del tile 0
+	ld de,00008h		;47db   ; de 8 en 8
 	ld b,010h		;47de   ; el color de cada uno es 0x0N: con el patron a cero, el tile N es un bloque macizo de color N
 L_47E0:
-	push bc			;47e0
-	ld bc,00008h		;47e1
-	push hl			;47e4
-	call rellena_los_tres_bancos		;47e5
-	pop hl			;47e8
-	add hl,de			;47e9
-	inc a			;47ea
-	pop bc			;47eb
-	djnz L_47E0		;47ec
-	ret			;47ee
+	push bc			;47e0   ; B, a salvo
+	ld bc,00008h		;47e1   ; un tile
+	push hl			;47e4   ; HL a salvo
+	call rellena_los_tres_bancos		;47e5   ; los tres tercios con A
+	pop hl			;47e8   ; HL otra vez
+	add hl,de			;47e9   ; el tile siguiente
+	inc a			;47ea   ; el color siguiente
+	pop bc			;47eb   ; B otra vez
+	djnz L_47E0		;47ec   ; dieciseis
+	ret			;47ee   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS fuente: La fuente de 43 caracteres (tiles 0x10 a 0x3A: las cifras, el
@@ -1398,66 +1398,66 @@ DATA_fuente:
 ; ----------------------------------------------------------------------
 monta_el_logotipo_de_konami:
 	ld hl,00000h		;4920   ; la cortina empieza en la linea 0, fila 0
-	ld (0e00eh),hl		;4923
+	ld (0e00eh),hl		;4923   ; (0xE00E) y (0xE00F) a cero
 	ld de,04982h		;4926   ; los patrones, con su direccion dentro del guion
-	call guion_rle		;4929
+	call guion_rle		;4929   ; a la VRAM
 	ld hl,00a00h		;492c   ; los colores del logotipo, a cero: aun no se ve
-	ld bc,003f0h		;492f
-	xor a			;4932
-	call 00056h		;4933   ; BIOS FILVRM - Fills VRAM with value
+	ld bc,003f0h		;492f   ; 126 tiles de color...
+	xor a			;4932   ; ...a cero
+	call 00056h		;4933   ; BIOS FILVRM - Fills VRAM with value | FILVRM
 	ld hl,03907h		;4936   ; fila 8, columna 7
 	ld a,040h		;4939   ; tiles 0x40 en adelante, 21 por fila
-	ld c,006h		;493b
-	ld de,0000bh		;493d
+	ld c,006h		;493b   ; seis filas
+	ld de,0000bh		;493d   ; el salto al acabar la fila
 L_4940:
-	ld b,015h		;4940
+	ld b,015h		;4940   ; 21 tiles
 L_4942:
-	call 0004dh		;4942   ; BIOS WRTVRM - Writes data in VRAM
-	inc hl			;4945
-	inc a			;4946
-	djnz L_4942		;4947
+	call 0004dh		;4942   ; BIOS WRTVRM - Writes data in VRAM | WRTVRM
+	inc hl			;4945   ; la casilla siguiente
+	inc a			;4946   ; el tile siguiente
+	djnz L_4942		;4947   ; 21 veces
 	add hl,de			;4949   ; 32 - 21 = 11 para bajar de fila
-	dec c			;494a
-	jr nz,L_4940		;494b
-	ret			;494d
+	dec c			;494a   ; una fila menos
+	jr nz,L_4940		;494b   ; seis
+	ret			;494d   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DESTAPA EL LOGOTIPO: una linea de pixeles cada vez. (0xE00E) es la linea dentro del tile y (0xE00F) la fila de tiles; pone 0xF0 en esa linea de los 21 tiles de la fila. Devuelve Z al acabar la sexta fila.
 ; ----------------------------------------------------------------------
 destapa_una_linea_del_logotipo:
-	ld bc,(0e00eh)		;494e
+	ld bc,(0e00eh)		;494e   ; C: la linea; B: la fila
 	ld a,0ebh		;4952   ; 0xEB + 21 por fila: A acaba en 21*fila (la primera vuelta da 0x100)
-	inc b			;4954
+	inc b			;4954   ; una vuelta mas que la fila
 L_4955:
-	add a,015h		;4955
-	djnz L_4955		;4957
-	ld l,a			;4959
-	ld h,b			;495a
+	add a,015h		;4955   ; + 21...
+	djnz L_4955		;4957   ; ...por fila
+	ld l,a			;4959   ; L = 21 * fila
+	ld h,b			;495a   ; H = 0
 	add hl,hl			;495b   ; por 8: el tile en la tabla de color
-	add hl,hl			;495c
-	add hl,hl			;495d
+	add hl,hl			;495c   ; por 2...
+	add hl,hl			;495d   ; ...por 4...
 	ld de,00a00h		;495e   ; el segundo tercio del color
-	add hl,de			;4961
+	add hl,de			;4961   ; + 0x0A00
 	ld a,c			;4962   ; y la linea dentro del tile
-	call suma_a_a_hl		;4963
-	ld b,015h		;4966
-	ld de,00008h		;4968
+	call suma_a_a_hl		;4963   ; + la linea
+	ld b,015h		;4966   ; 21 tiles
+	ld de,00008h		;4968   ; de 8 en 8 bytes
 	ld a,0f0h		;496b   ; blanco sobre transparente
 L_496D:
-	call 0004dh		;496d   ; BIOS WRTVRM - Writes data in VRAM
-	add hl,de			;4970
-	djnz L_496D		;4971
+	call 0004dh		;496d   ; BIOS WRTVRM - Writes data in VRAM | WRTVRM
+	add hl,de			;4970   ; la misma linea del tile de al lado
+	djnz L_496D		;4971   ; 21 veces
 	ld hl,0e00eh		;4973   ; la linea siguiente...
-	ld a,(hl)			;4976
-	inc a			;4977
-	and 007h		;4978
-	ld (hl),a			;497a
-	ret nz			;497b
+	ld a,(hl)			;4976   ; la linea...
+	inc a			;4977   ; ...mas una...
+	and 007h		;4978   ; ...de 0 a 7
+	ld (hl),a			;497a   ; guardada
+	ret nz			;497b   ; sin dar la vuelta, ya esta
 	inc hl			;497c   ; ...y tras la octava, la fila siguiente
-	inc (hl)			;497d
-	ld a,(hl)			;497e
+	inc (hl)			;497d   ; la fila siguiente
+	ld a,(hl)			;497e   ; la fila
 	cp 006h		;497f   ; Z en la sexta
-	ret			;4981
+	ret			;4981   ; vuelta: Z con la sexta
 
 ; ----------------------------------------------------------------------
 ; DATOS logotipo_de_konami: Los patrones del logotipo en el RLE de 0x46A0, con
@@ -1518,86 +1518,86 @@ DATA_logotipo_de_konami:
 
 fondo_negro:
 	ld b,0e0h		;4ae4   ; registro 7 a 0xE0: fondo negro
-	call pon_el_fondo		;4ae6
-	ret			;4ae9
+	call pon_el_fondo		;4ae6   ; al registro 7
+	ret			;4ae9   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; EL TITULO: el rotulo de Q*bert en su marco, Q*bert en la recreativa, (c)KONAMI 1986 y el menu de uno o dos jugadores. Si la presentacion ya lo ha dibujado (0xE115), solo pone los textos.
 ; ----------------------------------------------------------------------
 pinta_el_titulo:
-	call fondo_negro		;4aea
-	ld hl,0e115h		;4aed
-	ld a,(hl)			;4af0
-	or a			;4af1
-	ld (hl),000h		;4af2
-	jr nz,pinta_los_textos_del_titulo		;4af4
+	call fondo_negro		;4aea   ; fondo negro
+	ld hl,0e115h		;4aed   ; (0xE115): la presentacion ya lo dejo pintado
+	ld a,(hl)			;4af0   ; lo lee...
+	or a			;4af1   ; ...lo mira...
+	ld (hl),000h		;4af2   ; ...y lo borra
+	jr nz,pinta_los_textos_del_titulo		;4af4   ; pintado: solo los textos
 	call borra_la_pantalla		;4af6   ; desde cero: pantalla, fuente...
-	call monta_la_fuente		;4af9
+	call monta_la_fuente		;4af9   ; la fuente
 	call prepara_la_recreativa		;4afc   ; ...la de la recreativa...
 	ld hl,0ed45h		;4aff   ; ...el rotulo en su marco, en la fila 2, columna 5...
-	call pinta_el_rotulo_de_qbert		;4b02
+	call pinta_el_rotulo_de_qbert		;4b02   ; en la copia de la tabla de nombres
 	call sprites_del_titulo		;4b05   ; ...Q*bert y la pantalla de la recreativa...
 	ld a,008h		;4b08   ; ...el color del ultimo sprite...
-	ld (0e22bh),a		;4b0a
+	ld (0e22bh),a		;4b0a   ; en color 8
 	call vuelca_la_pantalla		;4b0d   ; ...la copia de la tabla de nombres a la VRAM...
 	call vuelca_los_sprites_de_la_presentacion		;4b10   ; ...y los sprites
 pinta_los_textos_del_titulo:
 	ld de,04790h		;4b13   ; (c)KONAMI 1986 y 1PLAYER...
-	call pinta_guion		;4b16
+	call pinta_guion		;4b16   ; en pantalla
 	jp pinta_guion		;4b19   ; ...y 2PLAYERS, que viene detras
 parpadea_el_cursor:		; La mano aparece y desaparece cada 8 cuadros
-	ld hl,0e004h		;4b1c
-	bit 3,(hl)		;4b1f
-	ld c,0ffh		;4b21
-	jr nz,pinta_la_mano		;4b23
-	inc c			;4b25
+	ld hl,0e004h		;4b1c   ; la espera: cuenta hacia abajo
+	bit 3,(hl)		;4b1f   ; bit 3: cada 8 cuadros
+	ld c,0ffh		;4b21   ; pinta...
+	jr nz,pinta_la_mano		;4b23   ; ...o...
+	inc c			;4b25   ; ...C=0: borra
 pinta_la_mano:		; La mano con C en la opcion de (0xE102) y borrada en la otra
 	ld hl,0396ah		;4b26   ; las dos lineas del menu
-	ld de,0398ah		;4b29
-	ld a,(0e102h)		;4b2c
-	or a			;4b2f
+	ld de,0398ah		;4b29   ; 2PLAYERS
+	ld a,(0e102h)		;4b2c   ; uno o dos
+	or a			;4b2f   ; uno: la mano en 1PLAYER
 	jr z,L_4B33		;4b30
-	ex de,hl			;4b32
+	ex de,hl			;4b32   ; dos: en 2PLAYERS
 L_4B33:
-	push de			;4b33
-	call pinta_la_mano_en_hl		;4b34
-	pop hl			;4b37
-	ld c,000h		;4b38
+	push de			;4b33   ; la otra, para despues
+	call pinta_la_mano_en_hl		;4b34   ; la mano en la buena
+	pop hl			;4b37   ; la otra...
+	ld c,000h		;4b38   ; ...borrada
 pinta_la_mano_en_hl:
-	ld de,047b4h		;4b3a
-	jp byte_del_guion		;4b3d
+	ld de,047b4h		;4b3a   ; los dos tiles de la mano
+	jp byte_del_guion		;4b3d   ; sin direccion
 pinta_el_rotulo_de_qbert:		; Las ocho filas de 0x4B95 en la copia de la tabla de nombres, desde HL
-	ld c,0ffh		;4b40
-	ld de,04b95h		;4b42
-	call casillas_en_la_copia		;4b45
+	ld c,0ffh		;4b40   ; pinta
+	ld de,04b95h		;4b42   ; la primera fila
+	call casillas_en_la_copia		;4b45   ; en la copia
 	ld a,009h		;4b48   ; 23 casillas y 9 de salto: filas de 32
-	call suma_a_a_hl		;4b4a
-	ld de,04badh		;4b4d
-	call casillas_en_la_copia		;4b50
-	ld a,009h		;4b53
-	call suma_a_a_hl		;4b55
-	ld de,04bc5h		;4b58
-	call casillas_en_la_copia		;4b5b
-	ld a,009h		;4b5e
-	call suma_a_a_hl		;4b60
-	ld de,04bddh		;4b63
-	call casillas_en_la_copia		;4b66
-	ld a,009h		;4b69
-	call suma_a_a_hl		;4b6b
-	ld de,04bf5h		;4b6e
-	call casillas_en_la_copia		;4b71
-	ld a,009h		;4b74
-	call suma_a_a_hl		;4b76
-	ld de,04c0dh		;4b79
-	call casillas_en_la_copia		;4b7c
-	ld a,009h		;4b7f
-	call suma_a_a_hl		;4b81
-	ld de,04c25h		;4b84
-	call casillas_en_la_copia		;4b87
+	call suma_a_a_hl		;4b4a   ; a la fila siguiente
+	ld de,04badh		;4b4d   ; la segunda
+	call casillas_en_la_copia		;4b50   ; en la copia
+	ld a,009h		;4b53   ; nueve mas
+	call suma_a_a_hl		;4b55   ; a la fila siguiente
+	ld de,04bc5h		;4b58   ; la tercera
+	call casillas_en_la_copia		;4b5b   ; en la copia
+	ld a,009h		;4b5e   ; nueve mas
+	call suma_a_a_hl		;4b60   ; a la fila siguiente
+	ld de,04bddh		;4b63   ; la cuarta
+	call casillas_en_la_copia		;4b66   ; en la copia
+	ld a,009h		;4b69   ; nueve mas
+	call suma_a_a_hl		;4b6b   ; a la fila siguiente
+	ld de,04bf5h		;4b6e   ; la quinta
+	call casillas_en_la_copia		;4b71   ; en la copia
+	ld a,009h		;4b74   ; nueve mas
+	call suma_a_a_hl		;4b76   ; a la fila siguiente
+	ld de,04c0dh		;4b79   ; la sexta
+	call casillas_en_la_copia		;4b7c   ; en la copia
+	ld a,009h		;4b7f   ; nueve mas
+	call suma_a_a_hl		;4b81   ; a la fila siguiente
+	ld de,04c25h		;4b84   ; la septima
+	call casillas_en_la_copia		;4b87   ; en la copia
 	ld a,00eh		;4b8a   ; la ultima fila, el pie del marco, va 5 casillas mas a la derecha
-	call suma_a_a_hl		;4b8c
-	ld de,04c3dh		;4b8f
-	jp casillas_en_la_copia		;4b92
+	call suma_a_a_hl		;4b8c   ; 14 mas: 5 columnas a la derecha
+	ld de,04c3dh		;4b8f   ; la octava: el pie
+	jp casillas_en_la_copia		;4b92   ; en la copia
 
 ; ----------------------------------------------------------------------
 ; DATOS rotulo_de_qbert: El rotulo Q*bert con su marco, en ocho guiones de
@@ -1625,558 +1625,558 @@ DATA_rotulo_de_qbert:
 ; TOCA UN SONIDO, pero solo con partida (bit 6 de 0xE002): los efectos de la demostracion no suenan.
 ; ----------------------------------------------------------------------
 toca_sonido_en_partida:
-	di			;4c41
-	push hl			;4c42
-	ld hl,0e002h		;4c43
-	bit 6,(hl)		;4c46
-	jr z,L_4C57		;4c48
-	jr L_4C4E		;4c4a
+	di			;4c41   ; sin interrupciones
+	push hl			;4c42   ; HL a salvo
+	ld hl,0e002h		;4c43   ; el modo
+	bit 6,(hl)		;4c46   ; bit 6: partida de verdad
+	jr z,L_4C57		;4c48   ; sin ella, nada
+	jr L_4C4E		;4c4a   ; con ella, como 0x4C4C
 toca_sonido:		; A: el numero de sonido. Guarda todos los registros
-	di			;4c4c
-	push hl			;4c4d
+	di			;4c4c   ; sin interrupciones: el motor no puede correr a medias
+	push hl			;4c4d   ; todo a salvo
 L_4C4E:
 	push de			;4c4e
 	push bc			;4c4f
 	push af			;4c50
-	call arranca_el_sonido		;4c51
-	pop af			;4c54
+	call arranca_el_sonido		;4c51   ; arranca A
+	pop af			;4c54   ; todo de vuelta
 	pop bc			;4c55
 	pop de			;4c56
 L_4C57:
-	pop hl			;4c57
-	ei			;4c58
-	ret			;4c59
+	pop hl			;4c57   ; HL
+	ei			;4c58   ; interrupciones abiertas
+	ret			;4c59   ; vuelta
 arranca_el_sonido:
 	cp 056h		;4c5a   ; el 0x56 es el de la pausa: antes se guardan los cuatro canales en 0xE090
-	jr nz,L_4C68		;4c5c
-	ld hl,0e010h		;4c5e
-	ld de,0e090h		;4c61
-	call copia_los_canales		;4c64
-	ld a,c			;4c67
+	jr nz,L_4C68		;4c5c   ; no es la pausa
+	ld hl,0e010h		;4c5e   ; los tres canales de musica...
+	ld de,0e090h		;4c61   ; ...a 0xE090
+	call copia_los_canales		;4c64   ; 0x60 bytes
+	ld a,c			;4c67   ; C, que ha devuelto 0x5004
 L_4C68:
-	ld c,a			;4c68
+	ld c,a			;4c68   ; C = el sonido
 	ld hl,0e012h		;4c69   ; de 0x01 a 0x16: un efecto, un canal (el cuarto)
-	ld b,001h		;4c6c
-	ld a,c			;4c6e
-	cp 017h		;4c6f
-	jr c,arranca_un_efecto		;4c71
+	ld b,001h		;4c6c   ; un canal
+	ld a,c			;4c6e   ; el sonido
+	cp 017h		;4c6f   ; por debajo de 0x17...
+	jr c,arranca_un_efecto		;4c71   ; ...efecto
 	cp 056h		;4c73   ; de 0x17 en adelante, musica: tres canales
-	jr nz,L_4C78		;4c75
+	jr nz,L_4C78		;4c75   ; no es la pausa: tres
 	inc b			;4c77   ; y el 0x56, los cuatro
 L_4C78:
-	inc b			;4c78
-	inc b			;4c79
+	inc b			;4c78   ; dos mas: tres canales
+	inc b			;4c79   ; (cuatro con la pausa)
 	cp 02ch		;4c7a   ; una musica calla el efecto que sonara, salvo la 0x2C
-	jr z,L_4C82		;4c7c
-	xor a			;4c7e
-	ld (0e072h),a		;4c7f
+	jr z,L_4C82		;4c7c   ; la 0x2C deja sonar el efecto
+	xor a			;4c7e   ; cualquier otra...
+	ld (0e072h),a		;4c7f   ; ...lo corta
 L_4C82:
-	jr arranca_b_canales		;4c82
+	jr arranca_b_canales		;4c82   ; y adelante
 arranca_un_efecto:
 	ld l,072h		;4c84   ; HL=0xE072: el sonido del canal de efectos
 	ld a,(0e052h)		;4c86   ; con la musica 0x2C o posteriores en el tercer canal, los efectos no suenan
-	cp 02ch		;4c89
-	ret nc			;4c8b
+	cp 02ch		;4c89   ; la musica 0x2C o posterior...
+	ret nc			;4c8b   ; ...manda: no hay efecto
 	ld a,(hl)			;4c8c   ; y un efecto solo corta a otro de numero menor o igual
-	ld e,a			;4c8d
-	ld a,c			;4c8e
-	cp e			;4c8f
-	ret c			;4c90
+	ld e,a			;4c8d   ; E = el efecto que suena
+	ld a,c			;4c8e   ; el nuevo
+	cp e			;4c8f   ; contra el que suena
+	ret c			;4c90   ; menor: no se oye
 arranca_b_canales:
-	ld a,c			;4c91
+	ld a,c			;4c91   ; el sonido...
 	ld de,052e2h		;4c92   ; la tabla de 0x52E2: una entrada por canal, y una musica usa tres seguidas
-	add a,a			;4c95
-	jr nc,L_4C99		;4c96
-	inc d			;4c98
+	add a,a			;4c95   ; ...por dos...
+	jr nc,L_4C99		;4c96   ; ...con acarreo
+	inc d			;4c98   ; al byte alto
 L_4C99:
-	add a,e			;4c99
-	ld e,a			;4c9a
-	jr nc,L_4C9E		;4c9b
-	inc d			;4c9d
+	add a,e			;4c99   ; + 0x52E2
+	ld e,a			;4c9a   ; en E
+	jr nc,L_4C9E		;4c9b   ; con acarreo...
+	inc d			;4c9d   ; ...al alto
 L_4C9E:
-	dec l			;4c9e
+	dec l			;4c9e   ; HL al +0 del canal
 	dec l			;4c9f
 prepara_un_canal:
 	ld (hl),001h		;4ca0   ; +0: la primera nota sale ya
-	inc l			;4ca2
+	inc l			;4ca2   ; +2
 	inc l			;4ca3
 	ld (hl),c			;4ca4   ; +2: el sonido
-	inc l			;4ca5
+	inc l			;4ca5   ; +3
 	ld a,(de)			;4ca6   ; +3/+4: sus datos
-	ld (hl),a			;4ca7
-	inc l			;4ca8
-	inc de			;4ca9
+	ld (hl),a			;4ca7   ; el byte bajo del puntero
+	inc l			;4ca8   ; +4
+	inc de			;4ca9   ; el alto
 	ld a,(de)			;4caa
-	ld (hl),a			;4cab
-	ld a,007h		;4cac
+	ld (hl),a			;4cab   ; guardado
+	ld a,007h		;4cac   ; siete mas...
 	add a,l			;4cae
-	ld l,a			;4caf
-	xor a			;4cb0
+	ld l,a			;4caf   ; ...+0x0B
+	xor a			;4cb0   ; cero
 	ld (hl),a			;4cb1   ; +0B: sin bucle
-	ld a,003h		;4cb2
+	ld a,003h		;4cb2   ; tres mas...
 	add a,l			;4cb4
-	ld l,a			;4cb5
-	ld a,001h		;4cb6
+	ld l,a			;4cb5   ; ...+0x0E
+	ld a,001h		;4cb6   ; uno
 	ld (hl),a			;4cb8   ; +0E: modo musica
-	inc l			;4cb9
-	dec a			;4cba
-	ld (hl),a			;4cbb
-	inc l			;4cbc
+	inc l			;4cb9   ; +0x0F
+	dec a			;4cba   ; cero
+	ld (hl),a			;4cbb   ; guardado
+	inc l			;4cbc   ; +0x10
 	ld (hl),a			;4cbd   ; +0F y +10: afinado y sin instrumento
-	ld a,009h		;4cbe
+	ld a,009h		;4cbe   ; nueve mas...
 	add a,l			;4cc0
-	ld l,a			;4cc1
+	ld l,a			;4cc1   ; ...+0x19
 	ld (hl),000h		;4cc2   ; +19: sin subrutina
-	ld a,007h		;4cc4
+	ld a,007h		;4cc4   ; siete mas...
 	add a,l			;4cc6
-	ld l,a			;4cc7
-	inc de			;4cc8
-	djnz prepara_un_canal		;4cc9
-	ret			;4ccb
+	ld l,a			;4cc7   ; ...el canal siguiente
+	inc de			;4cc8   ; la entrada siguiente de la tabla
+	djnz prepara_un_canal		;4cc9   ; B canales
+	ret			;4ccb   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; EL SONIDO DE CADA CUADRO. Primero el mezclador; si hay que volver de la pausa, se restauran los canales de 0xE090; y luego los cuatro canales, uno detras de otro, con C en el registro de periodo de cada uno (1, 3, 5 y 7).
 ; ----------------------------------------------------------------------
 suena_un_cuadro:
 	ld a,(0e0f0h)		;4ccc   ; el mezclador tal como quedo
-	call escribe_el_mezclador		;4ccf
-	exx			;4cd2
+	call escribe_el_mezclador		;4ccf   ; al registro 7
+	exx			;4cd2   ; en los de reserva...
 	ld b,004h		;4cd3   ; cuatro canales de 0x20 bytes
-	ld de,00020h		;4cd5
-	exx			;4cd8
+	ld de,00020h		;4cd5   ; ...0x20 entre canal y canal
+	exx			;4cd8   ; los normales
 	xor a			;4cd9   ; (0xE0F3): se estan rehaciendo los registros tras la pausa
-	ld (0e0f3h),a		;4cda
-	ld c,001h		;4cdd
-	ld ix,0e010h		;4cdf
+	ld (0e0f3h),a		;4cda   ; (0xE0F3)=0
+	ld c,001h		;4cdd   ; C: el registro de periodo del primer canal
+	ld ix,0e010h		;4cdf   ; IX: el primer canal
 	ld a,(0e0f1h)		;4ce3   ; (0xE0F1): acaba la pausa
-	or a			;4ce6
+	or a			;4ce6   ; no: sigue
 	jr z,L_4CF8		;4ce7
-	ld a,c			;4ce9
+	ld a,c			;4ce9   ; A = C, que 0x5004 devuelve
 	ld hl,0e090h		;4cea   ; los canales guardados vuelven a su sitio
-	ld de,0e010h		;4ced
-	call copia_los_canales		;4cf0
-	ld a,001h		;4cf3
-	ld (0e0f3h),a		;4cf5
+	ld de,0e010h		;4ced   ; de 0xE090 a 0xE010
+	call copia_los_canales		;4cf0   ; los canales guardados, de vuelta
+	ld a,001h		;4cf3   ; (0xE0F3)=1: rehacer los registros...
+	ld (0e0f3h),a		;4cf5   ; ...de los cuatro
 L_4CF8:
-	exx			;4cf8
+	exx			;4cf8   ; B' y DE' listos
 un_canal:
-	exx			;4cf9
+	exx			;4cf9   ; los normales
 	ld a,(ix+002h)		;4cfa   ; +2 a cero: canal libre
-	or a			;4cfd
-	push af			;4cfe
-	call nz,avanza_el_canal		;4cff
-	pop af			;4d02
-	jr nz,L_4D0B		;4d03
+	or a			;4cfd   ; suena algo?
+	push af			;4cfe   ; la respuesta, a salvo
+	call nz,avanza_el_canal		;4cff   ; si: adelante
+	pop af			;4d02   ; la respuesta
+	jr nz,L_4D0B		;4d03   ; sonaba: ya esta
 	ld a,c			;4d05   ; libre y no es el de efectos: se deja en silencio
-	cp 007h		;4d06
-	call nz,fin_del_canal		;4d08
+	cp 007h		;4d06   ; el de efectos no...
+	call nz,fin_del_canal		;4d08   ; ...los demas, en silencio
 L_4D0B:
-	inc c			;4d0b
-	inc c			;4d0c
-	exx			;4d0d
-	add ix,de		;4d0e
-	djnz un_canal		;4d10
-	ret			;4d12
+	inc c			;4d0b   ; el registro de periodo...
+	inc c			;4d0c   ; ...del canal siguiente
+	exx			;4d0d   ; los de reserva
+	add ix,de		;4d0e   ; IX al canal siguiente
+	djnz un_canal		;4d10   ; cuatro
+	ret			;4d12   ; vuelta
 avanza_el_canal:
 	ld a,(0e0f3h)		;4d13   ; tras la pausa, primero el periodo y el volumen que tenia
-	or a			;4d16
-	push af			;4d17
-	call nz,pon_el_periodo		;4d18
-	pop af			;4d1b
-	call nz,pon_el_volumen		;4d1c
+	or a			;4d16   ; tras la pausa?
+	push af			;4d17   ; a salvo
+	call nz,pon_el_periodo		;4d18   ; si: el periodo de antes
+	pop af			;4d1b   ; la respuesta
+	call nz,pon_el_volumen		;4d1c   ; y el volumen de antes
 	ld a,(ix+00eh)		;4d1f   ; modo musica
-	or a			;4d22
-	jp nz,decae_la_nota		;4d23
+	or a			;4d22   ; musica...
+	jp nz,decae_la_nota		;4d23   ; ...su decaimiento
 	ld (ix+010h),a		;4d26   ; modo efecto: sin instrumento
 	dec (ix+000h)		;4d29   ; cuando se acaba la nota...
-	ret nz			;4d2c
+	ret nz			;4d2c   ; no se acabo la nota
 lee_la_siguiente_orden:
-	ld l,(ix+003h)		;4d2d
-	ld h,(ix+004h)		;4d30
+	ld l,(ix+003h)		;4d2d   ; el puntero...
+	ld h,(ix+004h)		;4d30   ; ...de los datos
 	ld a,(hl)			;4d33   ; 0xFE: bucle, subrutina o cambio de modo
-	cp 0feh		;4d34
-	jp z,orden_fe		;4d36
+	cp 0feh		;4d34   ; 0xFE...
+	jp z,orden_fe		;4d36   ; ...orden especial
 	jp nc,fin_del_canal		;4d39   ; 0xFF: fin (o vuelta de la subrutina)
 L_4D3C:
-	ld a,(ix+00eh)		;4d3c
-	or a			;4d3f
-	ld a,(hl)			;4d40
-	jp nz,orden_de_musica		;4d41
+	ld a,(ix+00eh)		;4d3c   ; el modo
+	or a			;4d3f   ; musica?
+	ld a,(hl)			;4d40   ; la orden
+	jp nz,orden_de_musica		;4d41   ; si: en su formato
 orden_de_efecto:
 	and 0f0h		;4d44   ; 0x2X: el tipo del sonido
-	cp 020h		;4d46
-	jr nz,L_4D7D		;4d48
-	ld a,(hl)			;4d4a
-	ld (ix+005h),a		;4d4b
+	cp 020h		;4d46   ; 0x2X?
+	jr nz,L_4D7D		;4d48   ; no: al ruido o a la nota
+	ld a,(hl)			;4d4a   ; el tipo...
+	ld (ix+005h),a		;4d4b   ; ...a +5
 	inc hl			;4d4e   ; y su duracion
-	ld a,(ix+010h)		;4d4f
-	or a			;4d52
-	ld a,(hl)			;4d53
-	jr nz,L_4D59		;4d54
-	ld (ix+001h),a		;4d56
+	ld a,(ix+010h)		;4d4f   ; con instrumento?
+	or a			;4d52   ; A...
+	ld a,(hl)			;4d53   ; ...la duracion
+	jr nz,L_4D59		;4d54   ; con instrumento, a +14
+	ld (ix+001h),a		;4d56   ; sin el, a +1
 L_4D59:
-	ld (ix+014h),a		;4d59
-	inc hl			;4d5c
+	ld (ix+014h),a		;4d59   ; y siempre a +14
+	inc hl			;4d5c   ; el byte siguiente
 	ld a,(ix+005h)		;4d5d   ; 0x20 a secas: un silencio
-	cp 020h		;4d60
-	jr nz,L_4D69		;4d62
-	dec hl			;4d64
-	xor a			;4d65
-	ld b,a			;4d66
-	jr L_4D97		;4d67
+	cp 020h		;4d60   ; 0x20 exacto...
+	jr nz,L_4D69		;4d62   ; ...no
+	dec hl			;4d64   ; un silencio: no hay nota detras
+	xor a			;4d65   ; periodo...
+	ld b,a			;4d66   ; ...y volumen a cero
+	jr L_4D97		;4d67   ; a guardarlo
 L_4D69:
 	bit 3,a		;4d69   ; bit 3: la envolvente del PSG...
-	jr z,L_4D7D		;4d6b
+	jr z,L_4D7D		;4d6b   ; sin envolvente: sigue
 	ld a,(hl)			;4d6d   ; ...con su periodo en los registros 12 y 11
-	ld e,a			;4d6e
-	ld a,00ch		;4d6f
-	call 00093h		;4d71   ; BIOS WRTPSG - Writes data to PSG-register
-	inc hl			;4d74
-	ld a,(hl)			;4d75
-	ld e,a			;4d76
-	ld a,00bh		;4d77
-	call 00093h		;4d79   ; BIOS WRTPSG - Writes data to PSG-register
-	inc hl			;4d7c
+	ld e,a			;4d6e   ; su periodo, byte bajo...
+	ld a,00ch		;4d6f   ; ...al registro 12
+	call 00093h		;4d71   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
+	inc hl			;4d74   ; el siguiente
+	ld a,(hl)			;4d75   ; el alto...
+	ld e,a			;4d76   ; ...en E...
+	ld a,00bh		;4d77   ; ...al registro 11
+	call 00093h		;4d79   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
+	inc hl			;4d7c   ; detras
 L_4D7D:
 	ld a,(hl)			;4d7d   ; 0x1X: el periodo del ruido, X por dos, al registro 6
-	and 0f0h		;4d7e
-	cp 010h		;4d80
-	jr nz,nota_de_efecto		;4d82
-	ld a,(hl)			;4d84
-	and 00fh		;4d85
-	add a,a			;4d87
-	ld e,a			;4d88
-	ld a,006h		;4d89
-	call 00093h		;4d8b   ; BIOS WRTPSG - Writes data to PSG-register
-	inc hl			;4d8e
+	and 0f0h		;4d7e   ; el nibble alto
+	cp 010h		;4d80   ; 0x1X?
+	jr nz,nota_de_efecto		;4d82   ; no: la nota
+	ld a,(hl)			;4d84   ; si: el periodo del ruido
+	and 00fh		;4d85   ; X...
+	add a,a			;4d87   ; ...por dos
+	ld e,a			;4d88   ; en E
+	ld a,006h		;4d89   ; registro 6
+	call 00093h		;4d8b   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
+	inc hl			;4d8e   ; detras
 nota_de_efecto:
 	ld a,(hl)			;4d8f   ; el nibble alto es el volumen; el bajo y el byte siguiente, el periodo de 12 bits tal cual
-	and 0f0h		;4d90
-	ld b,a			;4d92
-	xor (hl)			;4d93
-	ld d,a			;4d94
-	inc hl			;4d95
-	ld e,(hl)			;4d96
+	and 0f0h		;4d90   ; el nibble alto: el volumen
+	ld b,a			;4d92   ; en B
+	xor (hl)			;4d93   ; el bajo...
+	ld d,a			;4d94   ; ...en D: el alto del periodo
+	inc hl			;4d95   ; el siguiente
+	ld e,(hl)			;4d96   ; E: el bajo del periodo
 L_4D97:
-	ld a,(ix+010h)		;4d97
-	or a			;4d9a
-	jp nz,siguiente_paso_del_instrumento		;4d9b
-	call guarda_el_puntero		;4d9e
+	ld a,(ix+010h)		;4d97   ; con instrumento...
+	or a			;4d9a   ; ...?
+	jp nz,siguiente_paso_del_instrumento		;4d9b   ; si: el paso del instrumento
+	call guarda_el_puntero		;4d9e   ; el puntero, detras de la nota
 guarda_el_periodo:
-	ex de,hl			;4da1
-	ld (ix+015h),l		;4da2
-	ld (ix+016h),h		;4da5
-	ld a,(0e0f3h)		;4da8
-	or a			;4dab
-	call z,pon_el_periodo		;4dac
+	ex de,hl			;4da1   ; HL = el periodo
+	ld (ix+015h),l		;4da2   ; a +15...
+	ld (ix+016h),h		;4da5   ; ...y +16
+	ld a,(0e0f3h)		;4da8   ; tras la pausa?
+	or a			;4dab   ; no...
+	call z,pon_el_periodo		;4dac   ; ...al PSG ya
 	ld a,b			;4daf   ; el volumen, del nibble alto
-	rrca			;4db0
+	rrca			;4db0   ; el volumen...
 	rrca			;4db1
 	rrca			;4db2
 	rrca			;4db3
-	ld (ix+017h),a		;4db4
-	ld a,(ix+010h)		;4db7
-	or a			;4dba
-	jr z,repone_la_duracion		;4dbb
-	ld a,(ix+014h)		;4dbd
-	ld (ix+013h),a		;4dc0
-	ld a,(0e0f3h)		;4dc3
-	or a			;4dc6
-	jp z,pon_el_volumen		;4dc7
-	ret			;4dca
+	ld (ix+017h),a		;4db4   ; ...a +17
+	ld a,(ix+010h)		;4db7   ; con instrumento?
+	or a			;4dba   ; no...
+	jr z,repone_la_duracion		;4dbb   ; ...la duracion de la nota
+	ld a,(ix+014h)		;4dbd   ; si: la del paso...
+	ld (ix+013h),a		;4dc0   ; ...a su cuenta
+	ld a,(0e0f3h)		;4dc3   ; tras la pausa?
+	or a			;4dc6   ; no...
+	jp z,pon_el_volumen		;4dc7   ; ...el volumen al PSG
+	ret			;4dca   ; vuelta
 repone_la_duracion:
-	ld a,(ix+001h)		;4dcb
-	ld (ix+000h),a		;4dce
-	ld a,(0e0f3h)		;4dd1
-	or a			;4dd4
-	jp z,pon_el_volumen		;4dd5
-	ret			;4dd8
+	ld a,(ix+001h)		;4dcb   ; la duracion...
+	ld (ix+000h),a		;4dce   ; ...a la cuenta
+	ld a,(0e0f3h)		;4dd1   ; tras la pausa?
+	or a			;4dd4   ; no...
+	jp z,pon_el_volumen		;4dd5   ; ...el volumen al PSG
+	ret			;4dd8   ; vuelta
 decae_la_nota:
 	dec (ix+000h)		;4dd9   ; en modo musica, la nota se va apagando
-	jp z,lee_la_siguiente_orden		;4ddc
-	ld a,(ix+010h)		;4ddf
-	or a			;4de2
-	jp nz,paso_del_instrumento		;4de3
+	jp z,lee_la_siguiente_orden		;4ddc   ; acabada: la siguiente orden
+	ld a,(ix+010h)		;4ddf   ; con instrumento...
+	or a			;4de2   ; ...?
+	jp nz,paso_del_instrumento		;4de3   ; si: el paso del instrumento
 	dec (ix+00ah)		;4de6   ; cada tantos cuadros (+0C)...
-	ld a,(ix+00ah)		;4de9
-	cp (ix+000h)		;4dec
-	jr nz,L_4DF9		;4def
-	ld e,a			;4df1
-	ld a,(ix+00dh)		;4df2
-	cp e			;4df5
-	jr nc,L_4DFC		;4df6
-	ret			;4df8
+	ld a,(ix+00ah)		;4de9   ; la cuenta del decaimiento...
+	cp (ix+000h)		;4dec   ; ...contra la de la nota
+	jr nz,L_4DF9		;4def   ; no coinciden: una menos
+	ld e,a			;4df1   ; E = la cuenta
+	ld a,(ix+00dh)		;4df2   ; el suelo del decaimiento
+	cp e			;4df5   ; por debajo...
+	jr nc,L_4DFC		;4df6   ; ...a bajar el volumen
+	ret			;4df8   ; vuelta
 L_4DF9:
-	dec (ix+00ah)		;4df9
+	dec (ix+00ah)		;4df9   ; una menos
 L_4DFC:
 	ld a,(ix+008h)		;4dfc   ; ...el volumen baja uno, hasta 0
-	dec a			;4dff
-	ret m			;4e00
-	ld (ix+008h),a		;4e01
-	ld (ix+017h),a		;4e04
-	ld a,(0e0f3h)		;4e07
-	or a			;4e0a
-	jp z,pon_el_volumen		;4e0b
-	ret			;4e0e
+	dec a			;4dff   ; el volumen menos uno
+	ret m			;4e00   ; negativo: ya esta en cero
+	ld (ix+008h),a		;4e01   ; el actual...
+	ld (ix+017h),a		;4e04   ; ...y el de salida
+	ld a,(0e0f3h)		;4e07   ; tras la pausa?
+	or a			;4e0a   ; no...
+	jp z,pon_el_volumen		;4e0b   ; ...al PSG
+	ret			;4e0e   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LAS ORDENES DE LA MUSICA. 0xDX: unidad de tiempo X. 0xFX: volumen X+2, y el byte siguiente el ritmo y el suelo del decaimiento. 0xE0-0xE7: octava. 0xE8: desafina (periodo + 1). 0xE9-0xEE: instrumento 1 a 6. 0xEF: sin instrumento. El resto es una nota: nibble alto de 0 a 11 (12 es silencio) y nibble bajo, cuantas unidades dura menos una.
 ; ----------------------------------------------------------------------
 orden_de_musica:
-	ld a,(hl)			;4e0f
-	and 0f0h		;4e10
-	cp 0d0h		;4e12
-	ld a,(hl)			;4e14
-	jr nz,L_4E1E		;4e15
+	ld a,(hl)			;4e0f   ; la orden
+	and 0f0h		;4e10   ; el nibble alto
+	cp 0d0h		;4e12   ; 0xDX?
+	ld a,(hl)			;4e14   ; la orden otra vez
+	jr nz,L_4E1E		;4e15   ; no: sigue
 	and 00fh		;4e17   ; 0xDX: la unidad de tiempo
-	ld (ix+006h),a		;4e19
-	inc hl			;4e1c
-	ld a,(hl)			;4e1d
+	ld (ix+006h),a		;4e19   ; la unidad de tiempo
+	inc hl			;4e1c   ; el byte siguiente
+	ld a,(hl)			;4e1d   ; la orden
 L_4E1E:
 	cp 0f0h		;4e1e   ; 0xFX: el volumen...
-	jr c,L_4E3C		;4e20
-	and 00fh		;4e22
-	inc a			;4e24
+	jr c,L_4E3C		;4e20   ; no es 0xFX
+	and 00fh		;4e22   ; X...
+	inc a			;4e24   ; ...mas dos...
 	inc a			;4e25
-	ld (ix+007h),a		;4e26
-	inc hl			;4e29
+	ld (ix+007h),a		;4e26   ; ...el volumen
+	inc hl			;4e29   ; el byte siguiente
 	ld a,(hl)			;4e2a   ; ...y el decaimiento
-	and 0f0h		;4e2b
+	and 0f0h		;4e2b   ; el nibble alto...
 	rrca			;4e2d
 	rrca			;4e2e
 	rrca			;4e2f
 	rrca			;4e30
-	ld (ix+00ch),a		;4e31
-	ld a,(hl)			;4e34
+	ld (ix+00ch),a		;4e31   ; ...el ritmo del decaimiento
+	ld a,(hl)			;4e34   ; el bajo...
 	and 00fh		;4e35
-	ld (ix+00dh),a		;4e37
-	inc hl			;4e3a
-	ld a,(hl)			;4e3b
+	ld (ix+00dh),a		;4e37   ; ...su suelo
+	inc hl			;4e3a   ; el byte siguiente
+	ld a,(hl)			;4e3b   ; la orden
 L_4E3C:
 	cp 0e0h		;4e3c   ; 0xEX
-	jr c,nota_de_musica		;4e3e
-	and 00fh		;4e40
+	jr c,nota_de_musica		;4e3e   ; no es 0xEX: una nota
+	and 00fh		;4e40   ; X
 	cp 008h		;4e42   ; 0xE0-0xE7: la octava
-	jr c,pon_la_octava		;4e44
-	jr z,desafina		;4e46
+	jr c,pon_la_octava		;4e44   ; 0 a 7
+	jr z,desafina		;4e46   ; 8
 	cp 00fh		;4e48   ; 0xEF: fuera instrumento
-	jr z,quita_el_instrumento		;4e4a
+	jr z,quita_el_instrumento		;4e4a   ; 15
 	sub 008h		;4e4c   ; 0xE9-0xEE: instrumento 1 a 6
-	ld (ix+010h),a		;4e4e
-	jr L_4E66		;4e51
+	ld (ix+010h),a		;4e4e   ; 9 a 14: el instrumento, de 1 a 6
+	jr L_4E66		;4e51   ; y la nota que sigue
 quita_el_instrumento:
-	xor a			;4e53
-	ld (ix+00fh),a		;4e54
-	ld (ix+010h),a		;4e57
-	inc hl			;4e5a
-	jr orden_de_musica		;4e5b
+	xor a			;4e53   ; cero...
+	ld (ix+00fh),a		;4e54   ; ...sin desafinar...
+	ld (ix+010h),a		;4e57   ; ...y sin instrumento
+	inc hl			;4e5a   ; el byte siguiente
+	jr orden_de_musica		;4e5b   ; y otra orden
 desafina:
-	ld (ix+00fh),a		;4e5d
-	inc hl			;4e60
-	jr orden_de_musica		;4e61
+	ld (ix+00fh),a		;4e5d   ; +0F = 8
+	inc hl			;4e60   ; el byte siguiente
+	jr orden_de_musica		;4e61   ; y otra orden
 pon_la_octava:
-	ld (ix+009h),a		;4e63
+	ld (ix+009h),a		;4e63   ; la octava
 L_4E66:
-	inc hl			;4e66
-	ld a,(hl)			;4e67
+	inc hl			;4e66   ; el byte siguiente
+	ld a,(hl)			;4e67   ; la nota
 nota_de_musica:
 	and 00fh		;4e68   ; la duracion: la unidad por (nibble bajo + 1)
-	ld b,a			;4e6a
-	ld a,(ix+006h)		;4e6b
-	jr z,L_4E75		;4e6e
+	ld b,a			;4e6a   ; B = las unidades de mas
+	ld a,(ix+006h)		;4e6b   ; la unidad
+	jr z,L_4E75		;4e6e   ; ninguna de mas
 L_4E70:
-	add a,(ix+006h)		;4e70
-	djnz L_4E70		;4e73
+	add a,(ix+006h)		;4e70   ; una unidad...
+	djnz L_4E70		;4e73   ; ...por cada una de mas
 L_4E75:
-	ld (ix+001h),a		;4e75
-	ld a,(hl)			;4e78
-	call guarda_el_puntero		;4e79
+	ld (ix+001h),a		;4e75   ; la duracion
+	ld a,(hl)			;4e78   ; la nota otra vez
+	call guarda_el_puntero		;4e79   ; el puntero, detras
 	and 0f0h		;4e7c   ; el nibble alto: la nota
-	rrca			;4e7e
+	rrca			;4e7e   ; el nibble alto...
 	rrca			;4e7f
 	rrca			;4e80
 	rrca			;4e81
-	ld b,a			;4e82
-	ld a,(ix+010h)		;4e83
-	or a			;4e86
-	jr nz,arranca_el_instrumento		;4e87
-	ld a,b			;4e89
+	ld b,a			;4e82   ; ...en B: la nota
+	ld a,(ix+010h)		;4e83   ; con instrumento...
+	or a			;4e86   ; ...?
+	jr nz,arranca_el_instrumento		;4e87   ; si: su secuencia para esa nota
+	ld a,b			;4e89   ; la nota
 	sub 00ch		;4e8a   ; la 12 es un silencio: volumen 0
-	jr z,L_4E91		;4e8c
-	ld a,(ix+007h)		;4e8e
+	jr z,L_4E91		;4e8c   ; la 12: volumen cero
+	ld a,(ix+007h)		;4e8e   ; si no, el volumen del canal
 L_4E91:
-	ld (ix+008h),a		;4e91
-	ld (ix+017h),a		;4e94
+	ld (ix+008h),a		;4e91   ; el actual...
+	ld (ix+017h),a		;4e94   ; ...y el de salida
 	ld a,(ix+00fh)		;4e97   ; +0F no pasa de 12
-	cp 00ch		;4e9a
-	jr c,L_4EA2		;4e9c
-	ld (ix+00fh),00ch		;4e9e
+	cp 00ch		;4e9a   ; por debajo de 12...
+	jr c,L_4EA2		;4e9c   ; ...tal cual
+	ld (ix+00fh),00ch		;4e9e   ; si no, 12
 L_4EA2:
-	ld e,(ix+001h)		;4ea2
-	ld (ix+000h),e		;4ea5
-	ld a,(ix+00ch)		;4ea8
-	add a,e			;4eab
-	ld (ix+00ah),a		;4eac
+	ld e,(ix+001h)		;4ea2   ; la duracion...
+	ld (ix+000h),e		;4ea5   ; ...a la cuenta
+	ld a,(ix+00ch)		;4ea8   ; el ritmo del decaimiento...
+	add a,e			;4eab   ; ...mas la duracion...
+	ld (ix+00ah),a		;4eac   ; ...a su cuenta
 	ld a,b			;4eaf   ; el periodo, de la tabla de 0x4FC3...
-	ld hl,04fc3h		;4eb0
-	add a,l			;4eb3
+	ld hl,04fc3h		;4eb0   ; la tabla de periodos
+	add a,l			;4eb3   ; + la nota
 	ld l,a			;4eb4
-	jr nc,L_4EB8		;4eb5
-	inc h			;4eb7
+	jr nc,L_4EB8		;4eb5   ; con acarreo...
+	inc h			;4eb7   ; ...al alto
 L_4EB8:
-	ld l,(hl)			;4eb8
-	ld h,000h		;4eb9
-	ld a,(ix+009h)		;4ebb
-	or a			;4ebe
+	ld l,(hl)			;4eb8   ; el periodo de la octava mas aguda
+	ld h,000h		;4eb9   ; en HL
+	ld a,(ix+009h)		;4ebb   ; la octava
+	or a			;4ebe   ; 0: tal cual
 	jr z,L_4EC5		;4ebf
-	ld b,a			;4ec1
+	ld b,a			;4ec1   ; B veces
 L_4EC2:
 	add hl,hl			;4ec2   ; ...doblado tantas veces como diga la octava
-	djnz L_4EC2		;4ec3
+	djnz L_4EC2		;4ec3   ; el doble: una octava mas grave
 L_4EC5:
-	ld (ix+015h),l		;4ec5
-	ld (ix+016h),h		;4ec8
-	ld a,(0e0f3h)		;4ecb
-	or a			;4ece
-	push af			;4ecf
-	call z,pon_el_periodo		;4ed0
-	pop af			;4ed3
-	jp z,pon_el_volumen		;4ed4
-	ret			;4ed7
+	ld (ix+015h),l		;4ec5   ; el periodo...
+	ld (ix+016h),h		;4ec8   ; ...a +15/+16
+	ld a,(0e0f3h)		;4ecb   ; tras la pausa?
+	or a			;4ece   ; la respuesta
+	push af			;4ecf   ; a salvo
+	call z,pon_el_periodo		;4ed0   ; no: el periodo al PSG
+	pop af			;4ed3   ; la respuesta
+	jp z,pon_el_volumen		;4ed4   ; no: y el volumen
+	ret			;4ed7   ; vuelta
 arranca_el_instrumento:
 	add a,a			;4ed8   ; la tabla de 0x50A4 empieza en el instrumento 1
-	ld de,050a4h		;4ed9
-	add a,e			;4edc
-	ld e,a			;4edd
-	jr nc,L_4EE1		;4ede
-	inc d			;4ee0
+	ld de,050a4h		;4ed9   ; la tabla de instrumentos, menos dos
+	add a,e			;4edc   ; + el instrumento por dos
+	ld e,a			;4edd   ; en E
+	jr nc,L_4EE1		;4ede   ; con acarreo...
+	inc d			;4ee0   ; ...al alto
 L_4EE1:
-	ld a,(de)			;4ee1
-	ld l,a			;4ee2
-	inc de			;4ee3
-	ld a,(de)			;4ee4
-	ld h,a			;4ee5
-	ld a,(ix+001h)		;4ee6
-	ld (ix+000h),a		;4ee9
+	ld a,(de)			;4ee1   ; el puntero de ese instrumento...
+	ld l,a			;4ee2   ; ...byte bajo...
+	inc de			;4ee3   ; ...y...
+	ld a,(de)			;4ee4   ; ...alto
+	ld h,a			;4ee5   ; HL = sus notas
+	ld a,(ix+001h)		;4ee6   ; la duracion...
+	ld (ix+000h),a		;4ee9   ; ...a la cuenta
 	ld a,b			;4eec   ; dentro del instrumento, la nota que toca
-	add a,a			;4eed
-	add a,l			;4eee
-	ld l,a			;4eef
-	jr nc,L_4EF3		;4ef0
-	inc h			;4ef2
+	add a,a			;4eed   ; la nota por dos...
+	add a,l			;4eee   ; ...+ HL
+	ld l,a			;4eef   ; en L
+	jr nc,L_4EF3		;4ef0   ; con acarreo...
+	inc h			;4ef2   ; ...al alto
 L_4EF3:
-	ld e,(hl)			;4ef3
-	ld (ix+011h),e		;4ef4
-	inc hl			;4ef7
-	ld d,(hl)			;4ef8
-	ld (ix+012h),d		;4ef9
-	ex de,hl			;4efc
-	ld a,(hl)			;4efd
-	jp orden_de_efecto		;4efe
+	ld e,(hl)			;4ef3   ; el puntero de la secuencia de la nota...
+	ld (ix+011h),e		;4ef4   ; ...a +11...
+	inc hl			;4ef7   ; ...y...
+	ld d,(hl)			;4ef8   ; ...el alto...
+	ld (ix+012h),d		;4ef9   ; ...a +12
+	ex de,hl			;4efc   ; HL = la secuencia
+	ld a,(hl)			;4efd   ; su primer paso
+	jp orden_de_efecto		;4efe   ; en formato de efecto
 paso_del_instrumento:
-	dec (ix+013h)		;4f01
-	ret nz			;4f04
-	ld l,(ix+011h)		;4f05
-	ld h,(ix+012h)		;4f08
-	ld a,(hl)			;4f0b
+	dec (ix+013h)		;4f01   ; la cuenta del paso
+	ret nz			;4f04   ; sin acabar, nada
+	ld l,(ix+011h)		;4f05   ; el puntero...
+	ld h,(ix+012h)		;4f08   ; ...del instrumento
+	ld a,(hl)			;4f0b   ; el paso siguiente
 	cp 0ffh		;4f0c   ; 0xFF: se acabo el instrumento
-	jr z,calla_el_instrumento		;4f0e
-	jp orden_de_efecto		;4f10
+	jr z,calla_el_instrumento		;4f0e   ; 0xFF: se acabo
+	jp orden_de_efecto		;4f10   ; como un efecto
 siguiente_paso_del_instrumento:
-	inc hl			;4f13
-	ld (ix+011h),l		;4f14
-	ld (ix+012h),h		;4f17
-	jp guarda_el_periodo		;4f1a
+	inc hl			;4f13   ; detras del paso
+	ld (ix+011h),l		;4f14   ; el puntero...
+	ld (ix+012h),h		;4f17   ; ...guardado
+	jp guarda_el_periodo		;4f1a   ; y el periodo
 calla_el_instrumento:
-	xor a			;4f1d
-	ld (ix+005h),a		;4f1e
-	ld (ix+017h),a		;4f21
-	ld a,(0e0f3h)		;4f24
-	or a			;4f27
-	jp z,pon_el_volumen		;4f28
-	ret			;4f2b
+	xor a			;4f1d   ; cero...
+	ld (ix+005h),a		;4f1e   ; ...sin tono ni ruido...
+	ld (ix+017h),a		;4f21   ; ...y sin volumen
+	ld a,(0e0f3h)		;4f24   ; tras la pausa?
+	or a			;4f27   ; no...
+	jp z,pon_el_volumen		;4f28   ; ...el volumen al PSG
+	ret			;4f2b   ; vuelta
 fin_del_canal:
 	ld a,(ix+019h)		;4f2c   ; con una subrutina abierta, se vuelve a ella
-	or a			;4f2f
-	jr z,libera_el_canal		;4f30
-	ld (ix+004h),a		;4f32
-	ld a,(ix+018h)		;4f35
-	ld (ix+003h),a		;4f38
-	ld (ix+019h),000h		;4f3b
-	ld (ix+000h),001h		;4f3f
-	jp avanza_el_canal		;4f43
+	or a			;4f2f   ; abierta?
+	jr z,libera_el_canal		;4f30   ; no: el canal se libera
+	ld (ix+004h),a		;4f32   ; el alto de la vuelta...
+	ld a,(ix+018h)		;4f35   ; ...y el bajo...
+	ld (ix+003h),a		;4f38   ; ...al puntero
+	ld (ix+019h),000h		;4f3b   ; la subrutina, cerrada
+	ld (ix+000h),001h		;4f3f   ; la orden siguiente, ya
+	jp avanza_el_canal		;4f43   ; y adelante
 libera_el_canal:
-	ld d,(ix+002h)		;4f46
-	xor a			;4f49
-	ld (ix+002h),a		;4f4a
-	ld (ix+005h),a		;4f4d
-	ld (ix+00bh),a		;4f50
-	ld (ix+010h),a		;4f53
-	ld (ix+017h),a		;4f56
-	ld (ix+019h),a		;4f59
+	ld d,(ix+002h)		;4f46   ; D = el sonido que acaba
+	xor a			;4f49   ; cero:
+	ld (ix+002h),a		;4f4a   ; canal libre
+	ld (ix+005h),a		;4f4d   ; sin tono ni ruido
+	ld (ix+00bh),a		;4f50   ; sin bucle
+	ld (ix+010h),a		;4f53   ; sin instrumento
+	ld (ix+017h),a		;4f56   ; sin volumen
+	ld (ix+019h),a		;4f59   ; sin subrutina
 	ld a,c			;4f5c   ; los canales de musica se quedan en silencio
-	cp 007h		;4f5d
-	jr nc,acaba_el_efecto		;4f5f
-	ld a,(0e0f3h)		;4f61
-	or a			;4f64
-	jp z,pon_el_volumen		;4f65
-	ret			;4f68
+	cp 007h		;4f5d   ; el de efectos...
+	jr nc,acaba_el_efecto		;4f5f   ; ...va aparte
+	ld a,(0e0f3h)		;4f61   ; tras la pausa?
+	or a			;4f64   ; no...
+	jp z,pon_el_volumen		;4f65   ; ...silencio al PSG
+	ret			;4f68   ; vuelta
 acaba_el_efecto:
 	ld a,d			;4f69   ; el efecto 2 deja sonando el 0x2C
-	cp 002h		;4f6a
-	ld a,02ch		;4f6c
-	call z,toca_sonido		;4f6e
+	cp 002h		;4f6a   ; era el efecto 2?
+	ld a,02ch		;4f6c   ; la musica 0x2C...
+	call z,toca_sonido		;4f6e   ; ...la toca
 	dec c			;4f71   ; y el tercer canal recupera sus registros
-	dec c			;4f72
-	ld a,(0e0f3h)		;4f73
-	or a			;4f76
-	call z,escribe_el_volumen		;4f77
-	ld ix,0e050h		;4f7a
-	jr escribe_el_periodo		;4f7e
+	dec c			;4f72   ; C del tercer canal
+	ld a,(0e0f3h)		;4f73   ; tras la pausa?
+	or a			;4f76   ; no...
+	call z,escribe_el_volumen		;4f77   ; ...el volumen del tercero
+	ld ix,0e050h		;4f7a   ; IX: el tercer canal...
+	jr escribe_el_periodo		;4f7e   ; ...su periodo al PSG
 pon_el_periodo:
 	ld a,(0e072h)		;4f80   ; (0xE072): hay efecto sonando
-	ld e,a			;4f83
+	ld e,a			;4f83   ; E = el efecto que suena
 	ld a,c			;4f84   ; los dos primeros canales, siempre
-	cp 005h		;4f85
-	jr c,escribe_el_periodo		;4f87
+	cp 005h		;4f85   ; los dos primeros canales...
+	jr c,escribe_el_periodo		;4f87   ; ...siempre
 	jr nz,L_4F90		;4f89   ; el tercero solo si no hay efecto
-	ld a,e			;4f8b
-	or a			;4f8c
-	ret nz			;4f8d
-	jr escribe_el_periodo		;4f8e
+	ld a,e			;4f8b   ; el tercero...
+	or a			;4f8c   ; ...con efecto sonando...
+	ret nz			;4f8d   ; ...no toca el PSG
+	jr escribe_el_periodo		;4f8e   ; sin efecto, si
 L_4F90:
 	ld a,e			;4f90   ; y el de efectos solo si lo hay, en los registros del tercero
-	or a			;4f91
-	ret z			;4f92
-	dec c			;4f93
+	or a			;4f91   ; el de efectos, sin efecto...
+	ret z			;4f92   ; ...nada
+	dec c			;4f93   ; con efecto, los registros del tercero
 	dec c			;4f94
-	call escribe_el_periodo		;4f95
-	inc c			;4f98
-	inc c			;4f99
-	ret			;4f9a
+	call escribe_el_periodo		;4f95   ; escritos
+	inc c			;4f98   ; C otra vez...
+	inc c			;4f99   ; ...el suyo
+	ret			;4f9a   ; vuelta
 escribe_el_periodo:
-	ld l,(ix+015h)		;4f9b
-	ld h,(ix+016h)		;4f9e
+	ld l,(ix+015h)		;4f9b   ; el periodo...
+	ld h,(ix+016h)		;4f9e   ; ...del canal
 	ld a,(ix+00fh)		;4fa1   ; desafinado: el periodo + 1, la nota un pelo mas grave
-	cp 008h		;4fa4
-	jr nz,L_4FA9		;4fa6
-	inc hl			;4fa8
+	cp 008h		;4fa4   ; desafinado?
+	jr nz,L_4FA9		;4fa6   ; no
+	inc hl			;4fa8   ; si: uno mas
 L_4FA9:
 	ld a,c			;4fa9   ; registro C: el byte alto
-	ld e,h			;4faa
-	call 00093h		;4fab   ; BIOS WRTPSG - Writes data to PSG-register
+	ld e,h			;4faa   ; el byte alto
+	call 00093h		;4fab   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
 	ld a,c			;4fae   ; registro C-1: el bajo
-	dec a			;4faf
-	ld e,l			;4fb0
-	call 00093h		;4fb1   ; BIOS WRTPSG - Writes data to PSG-register
-	ld a,(ix+010h)		;4fb4
-	or a			;4fb7
-	ret nz			;4fb8
-	ld a,(ix+00eh)		;4fb9
-	or a			;4fbc
-	ret z			;4fbd
+	dec a			;4faf   ; registro C-1...
+	ld e,l			;4fb0   ; ...el bajo
+	call 00093h		;4fb1   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
+	ld a,(ix+010h)		;4fb4   ; con instrumento...
+	or a			;4fb7   ; ...?
+	ret nz			;4fb8   ; si: ya esta
+	ld a,(ix+00eh)		;4fb9   ; el modo
+	or a			;4fbc   ; efecto...
+	ret z			;4fbd   ; ...ya esta
 	ld (ix+005h),002h		;4fbe   ; modo musica sin instrumento: el tipo pasa a tono solo
-	ret			;4fc2
+	ret			;4fc2   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS periodos_de_las_notas: Los doce semitonos de la octava mas aguda, del
@@ -2192,149 +2192,149 @@ DATA_periodos_de_las_notas:
 
 
 pon_el_volumen:
-	ld a,(0e072h)		;4fcf
-	ld e,a			;4fd2
-	ld a,c			;4fd3
-	cp 005h		;4fd4
-	jr c,escribe_el_volumen		;4fd6
-	jr nz,L_4FDF		;4fd8
-	ld a,e			;4fda
-	or a			;4fdb
-	ret nz			;4fdc
-	jr escribe_el_volumen		;4fdd
+	ld a,(0e072h)		;4fcf   ; el efecto que suena
+	ld e,a			;4fd2   ; en E
+	ld a,c			;4fd3   ; el canal
+	cp 005h		;4fd4   ; los dos primeros...
+	jr c,escribe_el_volumen		;4fd6   ; ...siempre
+	jr nz,L_4FDF		;4fd8   ; el de efectos: a 0x4FDF
+	ld a,e			;4fda   ; el tercero con efecto...
+	or a			;4fdb   ; ...sonando...
+	ret nz			;4fdc   ; ...no toca el PSG
+	jr escribe_el_volumen		;4fdd   ; sin efecto, si
 L_4FDF:
-	ld a,e			;4fdf
-	or a			;4fe0
-	ret z			;4fe1
-	dec c			;4fe2
+	ld a,e			;4fdf   ; el de efectos...
+	or a			;4fe0   ; ...sin efecto...
+	ret z			;4fe1   ; ...nada
+	dec c			;4fe2   ; con efecto, el registro del tercero
 	dec c			;4fe3
 escribe_el_volumen:
 	call pon_el_mezclador		;4fe4   ; primero el mezclador
 	ld a,c			;4fe7   ; el registro de volumen: 8, 9 o 10
-	rrca			;4fe8
-	add a,088h		;4fe9
-	ld d,a			;4feb
-	ld h,(ix+017h)		;4fec
-	ld a,(ix+005h)		;4fef
+	rrca			;4fe8   ; 1, 3 o 5 -> 0x80, 0x81 o 0x82...
+	add a,088h		;4fe9   ; ...+ 0x88: 8, 9 o 10 (el acarreo se pierde)
+	ld d,a			;4feb   ; D = el registro
+	ld h,(ix+017h)		;4fec   ; el volumen
+	ld a,(ix+005h)		;4fef   ; el tipo
 	bit 3,a		;4ff2   ; con la envolvente del PSG, su forma al registro 13 y volumen 16
-	jr z,L_4FFF		;4ff4
-	ld e,h			;4ff6
-	ld a,00dh		;4ff7
-	call 00093h		;4ff9   ; BIOS WRTPSG - Writes data to PSG-register
-	ld a,010h		;4ffc
-	ld h,a			;4ffe
+	jr z,L_4FFF		;4ff4   ; sin envolvente
+	ld e,h			;4ff6   ; la forma...
+	ld a,00dh		;4ff7   ; ...al registro 13
+	call 00093h		;4ff9   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
+	ld a,010h		;4ffc   ; 16: volumen de la envolvente
+	ld h,a			;4ffe   ; en H
 L_4FFF:
-	ld a,d			;4fff
-	ld e,h			;5000
-	jp 00093h		;5001   ; BIOS WRTPSG - Writes data to PSG-register
+	ld a,d			;4fff   ; el registro
+	ld e,h			;5000   ; el volumen
+	jp 00093h		;5001   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
 copia_los_canales:		; Los 0x60 bytes de tres canales de HL a DE, y fuera la marca de pausa
-	ld bc,00060h		;5004
-	ldir		;5007
-	ld c,a			;5009
-	xor a			;500a
-	ld (0e0f1h),a		;500b
-	ret			;500e
+	ld bc,00060h		;5004   ; 0x60 bytes
+	ldir		;5007   ; copiados
+	ld c,a			;5009   ; C = A
+	xor a			;500a   ; cero...
+	ld (0e0f1h),a		;500b   ; ...en (0xE0F1)
+	ret			;500e   ; vuelta
 orden_fe:
-	inc hl			;500f
+	inc hl			;500f   ; el byte de detras del 0xFE
 	ld a,(hl)			;5010   ; 0xFE 0x00: cambia de modo
-	or a			;5011
-	jr z,cambia_de_modo		;5012
+	or a			;5011   ; 0x00...
+	jr z,cambia_de_modo		;5012   ; ...cambia de modo
 	inc a			;5014   ; 0xFE 0xFF: subrutina
-	jr z,llama_a_la_subrutina		;5015
+	jr z,llama_a_la_subrutina		;5015   ; 0xFF: subrutina
 	ld a,(ix+00bh)		;5017   ; 0xFE N dir: vuelve a dir hasta N veces
-	inc a			;501a
-	cp (hl)			;501b
-	jr z,acaba_el_bucle		;501c
-	jp m,L_5022		;501e
-	dec a			;5021
+	inc a			;501a   ; la vuelta que toca
+	cp (hl)			;501b   ; se han dado todas?
+	jr z,acaba_el_bucle		;501c   ; si: se acabo el bucle
+	jp m,L_5022		;501e   ; por debajo de N, la cuenta sube
+	dec a			;5021   ; si no, la cuenta se queda como estaba
 L_5022:
-	ld (ix+00bh),a		;5022
-	inc hl			;5025
-	ld a,(hl)			;5026
-	ld (ix+003h),a		;5027
-	inc hl			;502a
+	ld (ix+00bh),a		;5022   ; la cuenta
+	inc hl			;5025   ; la direccion del bucle...
+	ld a,(hl)			;5026   ; ...byte bajo...
+	ld (ix+003h),a		;5027   ; ...al puntero
+	inc hl			;502a   ; ...y alto
 	ld a,(hl)			;502b
-	ld (ix+004h),a		;502c
-	jr L_503A		;502f
+	ld (ix+004h),a		;502c   ; ...al puntero
+	jr L_503A		;502f   ; y adelante
 acaba_el_bucle:
-	inc hl			;5031
+	inc hl			;5031   ; se salta la direccion
 	inc hl			;5032
-	xor a			;5033
-	ld (ix+00bh),a		;5034
+	xor a			;5033   ; cuenta...
+	ld (ix+00bh),a		;5034   ; ...a cero
 salta_la_orden:
-	call guarda_el_puntero		;5037
+	call guarda_el_puntero		;5037   ; el puntero, detras
 L_503A:
-	inc (ix+000h)		;503a
-	jp avanza_el_canal		;503d
+	inc (ix+000h)		;503a   ; la cuenta, sin acabar
+	jp avanza_el_canal		;503d   ; y la orden siguiente
 cambia_de_modo:
-	ld a,(ix+00eh)		;5040
-	or a			;5043
-	jr z,L_504B		;5044
-	dec (ix+00eh)		;5046
-	jr L_504E		;5049
+	ld a,(ix+00eh)		;5040   ; el modo
+	or a			;5043   ; musica?
+	jr z,L_504B		;5044   ; efecto: a musica
+	dec (ix+00eh)		;5046   ; musica: a efecto
+	jr L_504E		;5049   ; y adelante
 L_504B:
-	inc (ix+00eh)		;504b
+	inc (ix+00eh)		;504b   ; a musica
 L_504E:
-	jr salta_la_orden		;504e
+	jr salta_la_orden		;504e   ; y adelante
 llama_a_la_subrutina:
-	inc hl			;5050
-	ld e,(hl)			;5051
-	ld (ix+003h),e		;5052
-	inc hl			;5055
+	inc hl			;5050   ; la direccion de la subrutina...
+	ld e,(hl)			;5051   ; ...byte bajo...
+	ld (ix+003h),e		;5052   ; ...al puntero
+	inc hl			;5055   ; ...alto...
 	ld d,(hl)			;5056
-	ld (ix+004h),d		;5057
-	inc hl			;505a
+	ld (ix+004h),d		;5057   ; ...al puntero
+	inc hl			;505a   ; la vuelta: detras de la direccion
 	ld (ix+018h),l		;505b   ; la vuelta, en +18/+19
-	ld (ix+019h),h		;505e
-	ex de,hl			;5061
-	jp L_4D3C		;5062
+	ld (ix+019h),h		;505e   ; su byte alto
+	ex de,hl			;5061   ; HL = la subrutina
+	jp L_4D3C		;5062   ; y su primera orden
 guarda_el_puntero:
-	inc hl			;5065
-	ld (ix+003h),l		;5066
-	ld (ix+004h),h		;5069
-	ret			;506c
+	inc hl			;5065   ; detras
+	ld (ix+003h),l		;5066   ; el puntero...
+	ld (ix+004h),h		;5069   ; ...guardado
+	ret			;506c   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; EL MEZCLADOR (registro 7 del PSG). Con el tipo del canal: bit 1, su tono; bit 0, su ruido. Un bit a uno en el registro 7 CIERRA el canal, asi que se ponen a uno los que no suenan.
 ; ----------------------------------------------------------------------
 pon_el_mezclador:
-	ld a,(0e0f0h)		;506d
-	ld e,a			;5070
-	ld a,(ix+005h)		;5071
-	and 003h		;5074
-	ld d,a			;5076
+	ld a,(0e0f0h)		;506d   ; el registro 7 que hay
+	ld e,a			;5070   ; en E
+	ld a,(ix+005h)		;5071   ; el tipo del canal
+	and 003h		;5074   ; tono y ruido
+	ld d,a			;5076   ; en D
 	ld a,c			;5077   ; el bit del canal: 1, 2 o 4
-	cp 001h		;5078
+	cp 001h		;5078   ; el primero: bit 1
 	jr z,L_507D		;507a
-	dec a			;507c
+	dec a			;507c   ; los otros: 2 y 4
 L_507D:
-	ld b,a			;507d
+	ld b,a			;507d   ; B = el bit del canal
 	bit 1,d		;507e   ; el tono
-	call z,cierra_el_bit		;5080
-	bit 1,d		;5083
-	call nz,abre_el_bit		;5085
+	call z,cierra_el_bit		;5080   ; sin tono: se cierra
+	bit 1,d		;5083   ; con tono...
+	call nz,abre_el_bit		;5085   ; ...se abre
 	ld a,b			;5088   ; el ruido, tres bits mas arriba
-	rlca			;5089
+	rlca			;5089   ; el bit del ruido, tres mas arriba
 	rlca			;508a
 	rlca			;508b
-	bit 0,d		;508c
-	call z,cierra_el_bit		;508e
-	bit 0,d		;5091
-	call nz,abre_el_bit		;5093
+	bit 0,d		;508c   ; sin ruido...
+	call z,cierra_el_bit		;508e   ; ...se cierra
+	bit 0,d		;5091   ; con ruido...
+	call nz,abre_el_bit		;5093   ; ...se abre
 escribe_el_mezclador:
-	ld (0e0f0h),a		;5096
-	ld e,a			;5099
-	ld a,007h		;509a
-	jp 00093h		;509c   ; BIOS WRTPSG - Writes data to PSG-register
+	ld (0e0f0h),a		;5096   ; guardado
+	ld e,a			;5099   ; en E
+	ld a,007h		;509a   ; registro 7
+	jp 00093h		;509c   ; BIOS WRTPSG - Writes data to PSG-register | WRTPSG
 abre_el_bit:
-	cpl			;509f
-	and e			;50a0
-	ld e,a			;50a1
-	ret			;50a2
+	cpl			;509f   ; el bit, invertido...
+	and e			;50a0   ; ...a cero en el registro
+	ld e,a			;50a1   ; en E
+	ret			;50a2   ; vuelta
 cierra_el_bit:
-	or e			;50a3
-	ld e,a			;50a4
-	ret			;50a5
+	or e			;50a3   ; el bit a uno
+	ld e,a			;50a4   ; en E
+	ret			;50a5   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS instrumentos: Los dos instrumentos que piden las ordenes 0xE9 y 0xEA:
@@ -6538,7 +6538,7 @@ L_7C5D:
 ; DATOS sprite_de_la_cara: Plano 0 en Y 0x8F y X 0x60, patron 0, color 10, y
 ;   0xD0 detras: no se pinta ningun otro
 ;   0x7c8c..0x7c91  (5 bytes)
-DATA_7C8C:
+DATA_sprite_de_la_cara:
 	defb 08fh,060h,000h,00ah,0d0h	; 7c8c
 
 ; ======================================================================
@@ -7095,7 +7095,7 @@ vuelca_17_bytes_de_sprites:		; 0xEC80 a la tabla de sprites
 ; DATOS sprites_del_menu: Cuatro sprites escondidos (Y 0xE0) con los patrones
 ;   0, 4, 8 y 12 en color 10, y 0xD0 de fin
 ;   0x8153..0x8164  (17 bytes)
-DATA_8153:
+DATA_sprites_del_menu:
 	defb 0e0h,000h,000h,00ah	; 8153
 	defb 0e0h,000h,004h,00ah	; 8157
 	defb 0e0h,000h,008h,00ah	; 815b
@@ -8010,7 +8010,7 @@ prepara_el_piedra_papel_tijera:		; El recuadro de ladrillo, los sprites y los do
 	jp vuelca_los_sprites_del_duelo		;89c3
 
 ; ----------------------------------------------------------------------
-; PASO 6: JAN-KEN. LET'S PLAY JAN-KEN y JAN-KEN! con las manos parpadeando mientras suena la musica; cada jugador elige con su mando: abajo, izquierda o arriba.
+; PASO 6: JAN-KEN. LET'S PLAY JAN-KEN y JAN-KEN! con las manos parpadeando mientras suena la musica; cada jugador elige con su mando: abajo papel, izquierda tijera, arriba piedra.
 ; ----------------------------------------------------------------------
 jan_ken:
 	ld hl,0e004h		;89c6
@@ -8092,7 +8092,7 @@ pon:		; Paso 7: las dos manos a la vista
 	call vuelca_los_sprites_del_duelo		;8a81
 	ld a,080h		;8a84
 	jp espera_a_y_sigue		;8a86
-quien_gana:		; Paso 8: la mano A+1 (modulo 3) gana a la A
+quien_gana:		; Paso 8: la mano A+1 (modulo 3) gana a la A: tijera a papel, piedra a tijera y papel a piedra
 	ld a,(0e012h)		;8a89
 	or a			;8a8c
 	ret nz			;8a8d
@@ -8172,7 +8172,7 @@ L_8B03:
 	xor a			;8b26
 	ld (0e001h),a		;8b27
 	ret			;8b2a
-mano_del_mando:		; 0 abajo, 1 izquierda, 2 arriba; sin pulsar, la que habia
+mano_del_mando:		; Abajo, papel (0); izquierda, tijera (1); arriba, piedra (2). Sin pulsar, la que habia
 	ld b,000h		;8b2b
 	bit 1,a		;8b2d
 	jr nz,L_8B3A		;8b2f
@@ -8195,8 +8195,9 @@ pinta_una_mano:		; Una de las seis de 0x8B49: las tres de cada lado
 	jp guion_en_la_copia		;8b46
 
 ; ----------------------------------------------------------------------
-; DATOS manos: Seis punteros a los dibujos de las tres manos, a la izquierda
-;   (0x8E2B, 0x8E35, 0x8E3F) y a la derecha (0x8E49, 0x8E53, 0x8E5D)
+; DATOS manos: Seis punteros a los dibujos de las tres manos (papel, tijera y
+;   piedra), a la izquierda (0x8E2B, 0x8E35, 0x8E3F) y a la derecha (0x8E49,
+;   0x8E53, 0x8E5D)
 ;   0x8b49..0x8b55  (12 bytes)
 DATA_manos:
 	defw 08e2bh,08e35h,08e3fh,08e49h,08e53h,08e5dh	; 8b49
@@ -8958,10 +8959,10 @@ DATA_cero_suelto:
 	defb 000h	; 97ba
 
 ; ----------------------------------------------------------------------
-; DATOS sprite_de_la_cara: Un sprite de 16x16 (32 bytes) que 0x7C68 pone en el
+; DATOS patron_de_la_cara: Un sprite de 16x16 (32 bytes) que 0x7C68 pone en el
 ;   patron 0 para la cara grande del marcador
 ;   0x97bb..0x97db  (32 bytes)
-DATA_97BB:
+DATA_patron_de_la_cara:
 	defb 000h,000h,000h,000h,000h,000h,000h,000h	; 97bb  ........
 	defb 000h,000h,000h,007h,00fh,00fh,00eh,00ch	; 97c3  ........
 	defb 003h,003h,002h,000h,00ch,03ch,078h,070h	; 97cb  .....<xp
@@ -9954,10 +9955,10 @@ DATA_graficos_del_menu:
 	defb 0d0h,000h	; bfa3
 
 ; ----------------------------------------------------------------------
-; DATOS sprites_del_menu: RLE de 0x46A0 con destino 0x1800: cuatro sprites del
-;   menu (128 bytes)
+; DATOS patrones_del_menu: RLE de 0x46A0 con destino 0x1800: cuatro sprites
+;   del menu (128 bytes)
 ;   0xbfa5..0xbfe7  (66 bytes)
-DATA_BFA5:
+DATA_patrones_del_menu:
 	defb 000h,018h,008h,000h,091h,038h,01ch,00ch	; bfa5  .....8..
 	defb 008h,003h,003h,001h,000h,000h,004h,00ch	; bfad  ........
 	defb 00ch,008h,000h,018h,030h,020h,004h,000h	; bfb5  ....0 ..

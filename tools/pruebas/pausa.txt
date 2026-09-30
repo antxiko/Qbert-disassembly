@@ -1,0 +1,10 @@
+10 k 8 0x01
+13 k 8 0x01
+15.5 k 8 0x01
+16 k 8 0x01
+22 k 6 0x20
+23 d pausa
+25 d pausa2
+26 k 6 0x20
+27 d sigue
+28 x

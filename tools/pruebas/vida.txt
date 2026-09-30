@@ -1,0 +1,12 @@
+10 k 8 0x01
+13 k 8 0x01
+15.5 k 8 0x01
+16 k 8 0x01
+22 d antes
+22.1 w 0xE34D 1
+22.1 w 0xE34E 1
+22.1 w 0xE34F 1
+22.3 d sale
+23.5 d cruza
+27 d despues
+28 x

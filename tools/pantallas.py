@@ -303,3 +303,44 @@ def bonificacion(rom, n=3, **k):
     """La fase de bonificacion que sale detras de la fase n (0x79AE): su
     tablero (0xA7AD) con los cubos del estilo de esa fase y BONUS arriba."""
     return fase(rom, n, bonus=True, **k)
+
+
+def graficos_del_duelo(p):
+    """0x8C86 + 0x8CA1(0x3000): sprites, tiles 0x43-0x4B y los 186 del tercer
+    tercio, con los 45 ultimos reflejados 45 tiles mas alla."""
+    rom = p.rom
+    p.rle(0x96BA)
+    p.rle3(0x90A7, 0x2218)
+    p.rle3(0x90DE, 0x0218)
+    p.rle(0x90E3, 0x3000)
+    p.rle(0x95EB, 0x1000)
+    for i in range(0x168):
+        x = p.v[0x3468 + i]
+        p.v[0x35D0 + i] = int("{:08b}".format(x)[::-1], 2)
+        p.v[0x15D0 + i] = p.v[0x1468 + i]
+
+
+def jan_ken(rom, izquierda, derecha):
+    """El PON! del paso 7 (0x8A36): el recuadro, las dos manos (0x8B3C con
+    la de la izquierda, 0-2, y la de la derecha, 3-5) y sus rotulos."""
+    p = Pantalla(rom)
+    p.regs[7] = 0xE0
+    p.monta_la_fuente()
+    graficos_del_duelo(p)
+    p.monta_el_marco()
+    c = p.copia                                     # 0x7E5A
+    for i in range(0x2FF):
+        c[i] = 0xEB
+    for f in range(18):
+        for k in range(30):
+            c[0x61 + 32 * f + k] = 0
+    p.monta_el_marco()
+    p.guion_copia(0x8D3D)                           # 0x8C7D
+    p.guion_copia(0x8C2C)                           # 0x89A8
+    p.guion_copia(0x8DC4)
+    p.guion_copia(w(rom, 0x8B49 + 2 * izquierda))
+    p.guion_copia(w(rom, 0x8B49 + 2 * (derecha + 3)))
+    p.guion_copia(0x8C21)
+    p.vuelca_copia()
+    p.v[SAT] = 0xD0
+    return p

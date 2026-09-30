@@ -1,0 +1,11 @@
+10 k 8 0x01
+13 k 8 0x01
+15.5 k 8 0x01
+16 k 8 0x01
+22 w 0xE110 0
+22 w 0xEC51 1
+30 d gameover
+31 k 7 0x02 1
+34 d tras_f5
+40 d tras_f5b
+41 x
