@@ -26,7 +26,7 @@ import os
 import re
 import sys
 
-MODULOS = ("magicaltree",)
+MODULOS = ("qbert",)
 
 
 def declaraciones(notas):

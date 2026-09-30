@@ -37,3 +37,15 @@
 
 0x640D   # codigo huerfano: min(fase - 1, 9), que no llama nadie
 0x6757   # codigo huerfano: rellena la tabla de nombres con 0, 1, 2... (visor de patrones)
+
+0x705E   # codigo huerfano: guarda el mando 2, lo mismo que 0x4714 con HL=0xE330
+0x7068   # codigo huerfano: las teclas del segundo sin CTRL, copia de 0x4755
+
+0x821A   # codigo huerfano: si a alguno le quedan vidas del duelo; cae en 0x8226
+0x8275   # codigo huerfano: vuelve a poner arriba al Q*bert de (0xE332)
+0x833C   # codigo huerfano: Z si el otro jugador esta cayendo
+
+0x9032   # codigo huerfano: la prueba del objeto de la vida con el segundo sprite de Q*bert
+
+0x722C   # codigo huerfano: el cubo bajo (E,D) y la comparacion con el modelo
+0x77CC   # codigo huerfano: C en catorce objetos seguidos

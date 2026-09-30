@@ -2,7 +2,7 @@
 """Presupuesto del cartucho: ni un byte sin explicar.
 
 Por que este control y no el porcentaje de codigo trazado: buena parte de estos
-16 KB son datos y graficos, asi que un porcentaje de codigo bajo suena a trabajo
+32 KB son datos y graficos, asi que un porcentaje de codigo bajo suena a trabajo
 a medias cuando puede estar entero. Lo que mide el avance de verdad es que cada
 byte sea una de estas dos cosas:
 
@@ -17,7 +17,7 @@ marcan como codigo, el binario reensamblado sigue saliendo identico -los bytes
 no cambian, solo su lectura- y el listado miente igual.
 
 LO QUE AQUI ES MAS FACIL QUE EN UNA CINTA: esto es un cartucho, o sea una sola
-foto de la memoria. Son 16384 bytes mapeados en 0x4000-0x7FFF (la pagina 1),
+foto de la memoria. Son 32768 bytes mapeados en 0x4000-0xBFFF (paginas 1 y 2),
 sin cargador, sin bloques y sin solapes, asi que el presupuesto se hace sobre
 una imagen unica y no hay que ir sumando trozos que en memoria nunca conviven.
 
@@ -28,9 +28,9 @@ import os
 import sys
 
 ORG = 0x4000
-TAM = 0x4000                      # 16 KB exactos, de 0x4000 a 0x7FFF
-TRAZA = "magicaltree.trace.json"
-NOTAS = "magicaltree.notes"
+TAM = 0x8000                      # 32 KB exactos, de 0x4000 a 0xBFFF
+TRAZA = "qbert.trace.json"
+NOTAS = "qbert.notes"
 
 SIN_EXPLICAR, CODIGO, DATOS = 0, 1, 2
 

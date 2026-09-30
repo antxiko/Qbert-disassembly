@@ -751,3 +751,981 @@ C 0x6757 CODIGO HUERFANO: ni el trazado ni ninguna palabra de los 32 KB llegan a
 C 0x675E WRTVRM, casilla a casilla
 L 0x6768 escribe_la_mascara_del_duenio  Escribe en 0xE4FD `and 0x40 / ret`: 0x7341 cambia el 0x40 por 0x20 segun de quien se cuenten los cubos
 L 0x6774 borra_los_marcadores_del_duelo  0xE600-0xE610 a cero
+
+# ======================================================================
+# EL PASO DE LA PARTIDA
+# ======================================================================
+B 0x6782 EL PASO DE LA PARTIDA, segun (0xE001). El paso 0 es el cuadro de juego normal (0x68E6). Del 1 al 4, la fase acabada: Q*bert salta de alegria, el marco cambia de color y el tiempo que sobra se cobra. Del 5 al 8, el piedra-papel-tijera del duelo. La pausa (F1) y la fase de bonificacion se miran antes.
+L 0x6782 paso_de_la_partida
+C 0x6782 F1: pausa
+C 0x6785 en pausa, solo parpadea -PAUSE-
+C 0x678C la fase de bonificacion va por su cuenta
+C 0x6794 paso 1: fase acabada
+L 0x6796 espera_la_musica_de_la_vida
+C 0x6796 si suena la de la vida extra (0x11), se espera a que acabe
+C 0x679D la musica de la fase acabada, 0x47
+C 0x67A2 fuera los bichos
+C 0x67A5 Q*bert en magenta
+C 0x67AA (0xE33A): cual de los dos acaba (el duelo)
+C 0x67B6 su objeto, en (0xE33B)
+C 0x67B9 diez cuadros por salto, seis saltos
+C 0x67C4 el dibujo de la fase acabada en los patrones de ese Q*bert (0x00-0x1F o 0xB0-0xCF)
+C 0x67E8 el segundo sprite, en la X del primero
+C 0x67F4 4 o 0xB4: los patrones del dibujo nuevo
+L 0x6806 esconde_los_bichos        Y=0xD0 en el objeto 4: el VDP no pinta ni ese sprite ni los que van detras
+C 0x680C paso 2: los saltos de alegria
+C 0x680E los cubos que aun giran
+C 0x6811 los sprites
+C 0x6814 el marco cambia de color
+C 0x6817 un cuarto de la pantalla
+C 0x681A cada diez cuadros...
+C 0x6822 ...arriba o abajo...
+C 0x6828 ...y a los seis, al paso siguiente
+C 0x682C 4 o -4: el dibujo cambia con el salto
+L 0x683F pon_el_patron_de_arriba
+C 0x6840 el segundo sprite, 16 patrones mas alla
+L 0x684D mueve_uno_arriba_o_abajo
+C 0x6856 la Y, un pixel...
+C 0x6863 ...y la del segundo sprite
+C 0x686B paso 3: sonido 0x14
+C 0x6878 paso 4: el marco cambia de color mientras suena
+C 0x6888 paso 5
+C 0x6894 con un jugador, cobra el tiempo: 10 puntos por unidad, y vuelve hasta que se acaba
+C 0x689F en el duelo, si ya no quedan partidas, se acabo
+C 0x68A6 fase acabada: la escena 8 lo recoge
+C 0x68B0 pasos 6 a 9: el piedra-papel-tijera del duelo
+C 0x68C4 paso 10: silencio
+C 0x68D0 paso 11: espera y pantalla en negro
+C 0x68DD paso 12: se acabo la partida y al logotipo
+B 0x68E6 EL CUADRO DE JUEGO. Sprites, un cuarto de la pantalla, una de las cuatro comprobaciones del tablero, los mandos de los dos Q*bert, los choques, el movimiento de los 24 objetos y los cubos que giran. Con la bola verde (0xE321) los bichos se quedan quietos; sin ella, salen, deciden y corre el tiempo.
+L 0x68E6 cuadro_de_juego
+C 0x68E6 la tabla de sprites, con los que se turnan
+C 0x68E9 un cuarto de la tabla de nombres a la VRAM
+C 0x68EC una de las cuatro comprobaciones del tablero, por turnos
+C 0x68EF el mando del primero
+C 0x68F2 el del segundo
+C 0x68F5 los choques de Q*bert con los objetos
+C 0x68F8 mueve los 24 objetos
+C 0x68FB los cubos que giran
+C 0x68FE las dos protecciones de la salida
+C 0x6901 Q*bert blanco o normal
+C 0x6904 el parpadeo de la invencibilidad
+C 0x6907 el objeto de la vida extra
+C 0x690A si ninguno de los dos cae (estado 4)...
+C 0x6918 ...el choque entre los dos Q*bert del duelo
+C 0x691B (0xE321): la congelacion de la bola verde
+C 0x6922 mientras no suene un efecto, su tic-tac
+C 0x692D una cuenta cada cuatro cuadros
+C 0x6938 el ultimo tramo, con el sonido 0x0E
+C 0x6940 y al acabar, si los bichos estaban huyendo, el 0x0F
+L 0x694A cuadro_sin_congelar
+C 0x694A salen los bichos que toca
+C 0x694D los que estan quietos deciden hacia donde van
+C 0x6950 y el tiempo
+L 0x6953 cuenta_las_protecciones   (0xE336) y (0xE337): los cuadros que cada Q*bert es intocable despues de entrar
+L 0x6962 parpadeo_de_la_invencibilidad  Mientras (0xE345) o (0xE346) cuentan, el Q*bert de cada uno cambia de color cada cuatro cuadros
+C 0x6965 el color normal del primero, magenta (13)
+C 0x696A cada cuatro cuadros
+C 0x6972 un tramo de cada dos, rojo oscuro (6)
+C 0x6979 al acabar, otra vez magenta
+C 0x6982 el segundo, azul claro (5) y negro
+L 0x699C colores_de_qbert           Blanco (15) con el poder de la bola roja (0xE322/0xE331), y si no amarillo oscuro (10)
+L 0x69B7 vuelca_un_cuarto_de_la_pantalla  Cada cuadro, 160 bytes de la copia de la tabla de nombres desde la fila 2: la pantalla entera cada cuatro cuadros
+C 0x69B7 cual de los cuatro cuartos
+C 0x69BD 5 filas de 32
+C 0x69C3 desde la fila 2
+C 0x69C8 0xB500 + 0x3840 = 0xED40: su sitio en la copia
+B 0x69D4 LA TABLA DE SPRITES. Los segundos sprites de los dos Q*bert van fijos en los planos 0 y 1; el resto se copia a 0xE400 empezando cada cuadro un objeto mas alla (0xE343), para que con mas de cuatro en una linea el que no se ve cambie de un cuadro a otro.
+L 0x69D4 pon_los_sprites
+C 0x69D4 plano 0: el segundo sprite del primero
+C 0x69E0 plano 1: el del segundo
+C 0x69EC (0xE328): una vez, los objetos 19 a 23 a los planos 21 a 25
+L 0x6A17 turna_los_sprites
+C 0x6A1A por donde se empieza este cuadro
+C 0x6A28 el primer sprite de cada Q*bert...
+C 0x6A3B ...y los quince de los objetos 4 a 18
+L 0x6A57 siguiente_hueco_del_turno  El puntero de 0xE400 da la vuelta a los 17 huecos
+L 0x6A69 vuelca_los_sprites        Los 17 de 0xE400 a los planos 2 a 18
+L 0x6A75 vuelca_los_sprites_en_orden  Sin turnos: 19 (o 24) sprites de 0xE204 a 0x3B00 tal cual. Para la fase acabada
+C 0x6A8F WRTVRM de 4 bytes
+B 0x6AA3 LA PAUSA. F1 la pone y la quita, pero solo mientras suena la musica de la fase (sonidos 0x17-0x1C). Al pararse suena el 0x56, que antes guarda los canales; al seguir, 0xE0F1 los devuelve.
+L 0x6AA3 mira_la_pausa
+C 0x6AA9 fuera de la pausa, solo con la musica de la fase
+C 0x6AB2 fila 6 del teclado
+C 0x6ABA sin cambios, nada
+C 0x6ABD bit 5, F1: pulsada va a cero
+C 0x6AC2 cambia la pausa
+C 0x6AC5 al volver, los canales guardados
+C 0x6ACB el sonido de la pausa
+L 0x6AD0 parpadea_la_pausa         -PAUSE- ocho cuadros si y ocho no
+D 0x6ADE 0x6AE8 rotulo_pause  Guion de 0x4685: "-PAUSE-" en 0x394C
+F 0x6ADE 10
+B 0x6AE8 EL MARCO CAMBIA DE COLOR: cada ocho cuadros, uno de los tres juegos de colores de 0x6B08 para los tiles del marco (0xEC-0xF7).
+L 0x6AE8 colores_del_marco
+C 0x6AEE (0xE324) cuenta 3, 2, 1
+C 0x6AF7 su guion RLE...
+C 0x6B01 ...al color del tile 0xEC
+D 0x6B08 0x6B0E colores_del_marco_punteros  Los tres guiones de color, indexados por (0xE324): 0x6B34, 0x6B21 y 0x6B0E
+F 0x6B08 w
+D 0x6B0E 0x6B47 colores_del_marco_rle  Los tres guiones RLE, de 19 bytes y 96 de color cada uno (doce tiles): el mismo dibujo con los tres colores del marco rotados
+F 0x6B0E 19
+B 0x6B47 LA DEMOSTRACION. Se alternan dos: un jugador en la fase 34 y dos a la vez en la 37. Q*bert juega con las pulsaciones de 0x6BBF (y el segundo con las de 0x6BD8), una cada 32 o 48 cuadros.
+L 0x6B47 prepara_la_demostracion
+C 0x6B4A la cuenta de las dos listas de pulsaciones
+C 0x6B53 Q*bert en juego
+C 0x6B58 una vez cada una
+C 0x6B61 un jugador, fase 34
+C 0x6B6C dos jugadores, fase 37
+L 0x6B7F cuadro_de_la_demostracion
+L 0x6B82 pulsaciones_de_la_demostracion
+C 0x6B82 cada 32 cuadros, la siguiente del primero
+C 0x6B94 cada 48, la del segundo
+L 0x6B9E siguiente_pulsacion
+C 0x6BA7 0xFF: se acabo la demostracion
+C 0x6BAF como si viniera del mando 1
+C 0x6BB3 o del mando 2
+D 0x6BBF 0x6BF1 pulsaciones_de_la_demostracion  Las dos listas, acabadas en 0xFF: 24 pulsaciones del primero y 24 del segundo (desde 0x6BD8). Cada una es una diagonal: 0x05 arriba-izquierda, 0x06 abajo-izquierda, 0x09 arriba-derecha y 0x0A abajo-derecha
+F 0x6BBF 25
+# ======================================================================
+# LOS SALTOS DE Q*BERT
+# ======================================================================
+B 0x6BF1 EL MANDO DEL PRIMERO. Si esta quieto (estado 0) y se pulsa una diagonal, salta. Con el poder de la bola roja y el disparo pulsado, el salto es largo. Al aterrizar sobre un cubo, lo gira; si ya estaba acabado, lo apunta para la vida extra.
+L 0x6BF1 mando_del_primero
+C 0x6BF1 (0xE202): el estado; 0 es quieto
+C 0x6BF7 la diagonal pulsada, y el dibujo mirando hacia alli
+C 0x6BFD con el disparo...
+C 0x6C04 ...y el poder de la bola roja, salto largo
+L 0x6C0D salta_el_primero
+C 0x6C10 estado, arco, direccion y dibujo
+C 0x6C17 la casilla de destino
+C 0x6C1A acabada por el primero: cuenta para la vida extra
+C 0x6C23 si no, el cubo gira
+C 0x6C26 el segundo sprite copia al primero
+L 0x6C3A mando_del_segundo         Lo mismo con el mando 2 y el objeto 0xE210, solo en el duelo
+L 0x6C5C salta_el_segundo
+C 0x6C69 los cubos acabados por el segundo no giran
+L 0x6C82 diagonal_del_segundo
+L 0x6C8A diagonal_del_primero
+B 0x6C90 LA DIAGONAL. Solo valen las cuatro combinaciones de dos direcciones, y tienen que pulsarse las dos a la vez: B sale 1 (arriba-izquierda), 2 (abajo-derecha), 4 (abajo-izquierda) u 8 (arriba-derecha), o 0. Y se pone el dibujo de Q*bert mirando hacia alli.
+L 0x6C90 lee_la_diagonal
+C 0x6C92 algo acaba de pulsarse...
+C 0x6C97 ...y lo que esta pulsado
+C 0x6C9D 0x05: arriba-izquierda
+C 0x6CA3 0x0A: abajo-derecha
+C 0x6CA9 0x06: abajo-izquierda
+C 0x6CAF 0x09: arriba-derecha
+L 0x6CB6 mira_a_la_izquierda
+C 0x6CB6 256 bytes de patrones: los dibujos de Q*bert hacia la izquierda
+L 0x6CBB mira_a_la_derecha
+C 0x6CBB los de hacia la derecha
+L 0x6CC7 bit_mas_bajo              B = el bit mas bajo de A
+B 0x6CD0 PONE EL SALTO en el objeto HL: estado 1 (hacia la izquierda) o 2 (hacia la derecha), el arco de 0x6D10 (hacia arriba o hacia abajo) y el dibujo de espaldas o de frente.
+L 0x6CD0 pon_el_salto
+C 0x6CD2 las dos diagonales de la izquierda: estado 1...
+C 0x6CD7 ...si no, 2
+C 0x6CDA el arco: 1 hacia arriba, 3 hacia abajo
+C 0x6CEB el dibujo: 0x0C (de espaldas, subiendo) o 0x04 (de frente, bajando) dentro de su grupo de 16
+L 0x6CFA arco_del_salto
+C 0x6CFA con el salto largo, el arco de antes en la tabla
+C 0x6D01 y su sonido, el 8
+C 0x6D07 donde empieza el arco en 0x6F9E
+D 0x6D10 0x6D14 arcos_de_salto  Donde empieza cada arco en la tabla de 0x6F9E: 0x00 (largo hacia arriba), 0x21 (normal hacia arriba), 0x32 (largo hacia abajo) y 0x53 (normal hacia abajo). El largo, el de la bola roja, cruza dos filas
+F 0x6D10 4
+# ======================================================================
+# EL MOVIMIENTO DE LOS OBJETOS
+# ======================================================================
+B 0x6D14 MUEVE LOS 24 OBJETOS segun su estado (el byte 2): 0 quieto, 1 y 2 saltando, 3 entrando, 4 cayendo por un lado, 5 cayendo de un disco, 6-11 huyendo, 12 y 13 cayendo muertos, 14 nada. Con la bola verde, solo los cuatro primeros: los dos Q*bert.
+L 0x6D14 mueve_los_objetos
+C 0x6D1D congelado: solo Q*bert
+C 0x6D29 8 bytes por objeto
+L 0x6D31 mueve_un_objeto
+C 0x6D32 HL, apilado, es el estado del objeto
+D 0x6D35 0x6D53 estados_de_los_objetos  Quince entradas, una por estado: 0 y 14 nada (0x6D53), 1, 2, 12 y 13 salto (0x6E3B), 3 entra por arriba (0x6DE7), 4 cae por un lado (0x6D55), 5 baja flotando (0x6E26) y 6-11 huye (0x7017)
+F 0x6D35 w
+
+L 0x6D53 estado_quieto
+C 0x6D53 el HL apilado por 0x6D31, y nada mas
+B 0x6D55 ESTADO 4: CAE POR UN LADO. Baja dos pixeles por cuadro agitando los brazos; al salirse por abajo se retira, y si era uno de los Q*bert (lo dice su patron: menos de 0x21 el primero, 0xB0 o mas el segundo) pierde el poder y la velocidad y se apunta que ha caido.
+L 0x6D55 estado_cae_por_un_lado
+C 0x6D58 Y + 2
+C 0x6D5C cada ocho cuadros, el dibujo cambia entre 0 y 4
+C 0x6D72 hasta la Y 0xC8
+C 0x6D78 fuera de la pantalla y quieto
+C 0x6D83 por el patron: el primer Q*bert...
+C 0x6D91 ...el segundo...
+C 0x6D9A ...o un bicho, que ya no vuelve
+C 0x6D9B el segundo, con sus dibujos de la izquierda y sin poderes
+C 0x6DA3 el primero, igual
+C 0x6DA9 en el duelo vuelve a entrar por arriba (estado 3) en su columna
+C 0x6DBD y se apunta que ha caido
+L 0x6DCC cae_el_de_un_jugador
+C 0x6DCC con un jugador, fuera de juego: 0x4291 le quita la vida
+L 0x6DD1 quita_los_poderes_del_primero  Sin salto largo y a la velocidad normal
+L 0x6DDC quita_los_poderes_del_segundo
+B 0x6DE7 ESTADO 3: ENTRA POR ARRIBA. Baja un pixel por cuadro hasta posarse en un cubo. Si es un Q*bert, queda protegido 128 cuadros; y si ninguno de los dos esta cayendo, suena el 0x14.
+L 0x6DE7 estado_entra_por_arriba
+C 0x6DEA Y + 1
+C 0x6DEC solo se para en la altura de una fila (Y = 16n + 12)
+C 0x6DF7 sin cubo debajo, sigue bajando
+C 0x6DFC quieto
+C 0x6E01 el primero (patron por debajo de 0x20)...
+C 0x6E09 ...o el segundo
+C 0x6E0D 128 cuadros intocable
+C 0x6E21 el sonido de la llegada
+B 0x6E26 ESTADO 5: BAJA HASTA LA FILA DE 0xE29C. Un pixel por cuadro hasta la Y del objeto 19; alli desaparece y pide que se vuelvan a pintar los objetos 19 a 23.
+L 0x6E26 estado_baja_a_la_fila
+L 0x6E2F retira_y_repinta_la_fila
+B 0x6E3B ESTADOS 1, 2, 12 Y 13: EL SALTO. Tantos pasos del arco por cuadro como diga la velocidad (el nibble bajo del byte 1, mas uno).
+L 0x6E3B estado_salta
+C 0x6E3C el byte 1: la velocidad
+L 0x6E43 da_b_pasos
+B 0x6E4D UN PASO DEL ARCO. La Y sale de la tabla de 0x6F9E y la X avanza uno y dos pixeles alternos (24 por cada 16 pasos: una columna de cubos). Con 0x80 se acaba el arco: si hay cubo debajo, se posa; si no, o si es la casilla del modelo, cae.
+L 0x6E4D un_paso_del_arco
+C 0x6E4D estado 0 o 4: nada
+C 0x6E54 el byte 3: por donde va el arco
+C 0x6E5E 0x80: fin del arco
+C 0x6E63 los que caen muertos (12 y 13) no se posan
+C 0x6E6E el dibujo de pie: cuatro patrones menos
+C 0x6E79 el golpe al posarse: el sonido 4 el primero...
+C 0x6E80 ...el 5 el segundo, y los bichos, callados
+C 0x6E8A con la invencibilidad, ademas, el 6
+C 0x6E95 la casilla de debajo
+C 0x6E99 el bicho 0x90 (el que persigue) que cae en un cubo que esta girando...
+C 0x6EA6 ...da 1.000 puntos y se cae
+C 0x6EB0 sin cubo, a caer
+C 0x6EB6 y las dos casillas de los modelos, (Y 0x0C, X 0x1C) y (Y 0x0C, X 0x34), tampoco valen
+L 0x6ECA cae_de_la_casilla
+L 0x6ECD pasa_al_estado_4
+L 0x6ECF pon_el_estado
+L 0x6ED3 avanza_el_arco
+C 0x6ED5 la Y, con el paso del arco
+C 0x6ED6 por encima de 0xF0 se ha salido
+C 0x6EDC la X: uno en los pasos impares y dos en los pares
+C 0x6EE4 hacia la izquierda en los estados 1 y 13
+C 0x6EF0 dentro de 5..0xF3
+L 0x6EFA se_sale_por_un_lado
+C 0x6F02 estado 4: cae
+L 0x6F06 cae_por_el_borde
+C 0x6F06 solo los que se salen por los lados (X por debajo de 0x21 o de 0xB0 en adelante)...
+C 0x6F0E ...que son los Q*bert: su dibujo de caer
+C 0x6F16 y el sonido 0x12, el del grito
+L 0x6F1B cae_muerto
+L 0x6F22 dibujo_de_caer_del_primero  Los patrones 0x00-0x0F con los de 0xAF3C y 0xAF7C
+L 0x6F45 dibujo_de_caer_del_segundo  Los 0xB0-0xBF, igual
+L 0x6F68 dibujos_de_la_izquierda_del_primero  Los 0x00-0x0F vuelven a ser los de 0xACBC y 0xAD3C
+L 0x6F83 dibujos_de_la_izquierda_del_segundo
+D 0x6F9E 0x7017 arcos  Los cinco arcos, pasos de Y con signo y 0x80 de fin: 0x00 salto largo hacia arriba (32 pasos, dos filas), 0x21 salto hacia arriba (16 pasos, una fila), 0x32 salto largo hacia abajo, 0x53 salto hacia abajo y 0x64 el de caer muerto (un brinco y abajo)
+F 0x6F9E 16
+B 0x7017 ESTADOS 6 A 11: HUYE. Sube cuatro pixeles y se aparta dos de lado cada 8, 4 o 2 cuadros segun el estado, hasta salirse de la pantalla.
+L 0x7017 estado_huye
+C 0x7018 los pares, hacia la derecha; los impares, hacia la izquierda
+C 0x701F 6 y 7: cada 8 cuadros; 8 y 9: cada 4; 10 y 11: cada 2
+C 0x7030 Y - 4
+C 0x7036 al salirse, fuera
+C 0x7047 a su ritmo
+C 0x704C X + 2...
+C 0x7051 ...o - 2
+L 0x7056 retira_el_objeto
+L 0x705E guarda_el_mando_2        Lo mismo que 0x4714 con HL=0xE330
+C 0x705E CODIGO HUERFANO: 0x4705 hace lo mismo llamando a 0x4714
+L 0x7068 teclas_del_segundo_sin_ctrl  Copia de 0x4755 sin la fila 6: E, S, F y C, sin el disparo
+C 0x7068 CODIGO HUERFANO: nadie lo llama
+# ======================================================================
+# LOS CUBOS QUE GIRAN
+# ======================================================================
+B 0x708E EL CUBO GIRA. Al posarse Q*bert, el cubo de debajo rueda en la direccion del salto: cada cubo es uno de los 24 giros de un cubo con tres caras a la vista, y la tabla de 0x72C0 dice en cual se convierte. Mientras gira ocupa uno de los diez huecos de 0xE2C0 (los cinco primeros para las diagonales 1 y 2, los otros cinco para 4 y 8), con sus nueve tiles de animacion.
+L 0x708E gira_el_cubo
+C 0x708E la casilla, mas uno
+C 0x7094 si ya esta girando, nada
+C 0x70A0 arriba-izquierda o abajo-derecha: huecos 0 a 4...
+C 0x70AC ...las otras dos: huecos 5 a 9
+L 0x70BC ocupa_el_hueco
+C 0x70BC casilla, ocho cuadros y direccion
+C 0x70C7 la casilla, con el bit 7: esta girando
+C 0x70D4 hacia arriba, la animacion ya usa las caras nuevas
+C 0x70DF las tres caras del cubo...
+C 0x70EA ...a 0xE2F1-0xE2F3
+C 0x70FA la plantilla de color de la animacion, segun el grupo de huecos
+L 0x7108 rellena_la_plantilla
+C 0x7108 pares (cuantos, colores); 0 acaba
+C 0x710F cada nibble es 0 (negro) o una de las tres caras
+L 0x712A pinta_la_animacion
+C 0x712A el color de los nueve tiles del hueco, en los tres tercios
+C 0x713E y los tiles 0x91 + 9*hueco en el sitio del cubo
+L 0x715A cubos_que_giran           Cada cuadro, los diez huecos: al acabar los ocho cuadros, la casilla pasa al giro nuevo y se mira si ya es como el modelo
+C 0x7165 hueco ocupado: cuenta
+C 0x716A acabado: se libera
+C 0x7177 el giro nuevo, sin el bit 7
+C 0x7185 como el modelo del primero...
+C 0x7190 ...cubo acabado del primero (bit 6)
+C 0x7198 como el del segundo...
+C 0x71A3 ...acabado del segundo (bit 5)
+C 0x71A9 sonido 9 y 300 puntos
+C 0x71B8 A=1: cubo acabado, para la racha de la vida extra
+C 0x71BC A=0: girado sin acabar
+C 0x71C0 y se pinta como quede
+L 0x71CC color_de_la_plantilla     A = (0xE2F0 + A): el nibble convertido en color
+L 0x71D6 giro_siguiente            A = el giro en que se convierte el cubo A al saltar en la direccion C (un bit)
+C 0x71D6 cuatro direcciones por giro
+C 0x71E5 la direccion es el numero de su bit
+B 0x71EE LA CASILLA DE UNA POSICION: E es la Y y D la X de un sprite; la fila va de 16 en 16 desde 12 y la columna de 24 en 24 desde 24. A = 9 * fila + columna.
+L 0x71EE casilla_de_la_posicion
+L 0x720D sitio_de_la_casilla       HL = 0xED63 + 64 * fila + 3 * columna: la esquina del cubo en la copia de la tabla de nombres
+B 0x722F COINCIDE CON EL MODELO: las tres caras del cubo A contra las del modelo del primero (casilla 0) o del segundo (casilla 1), segun (0xE339). Z si son las mismas.
+L 0x722F coincide_con_el_modelo
+L 0x724E fin_de_la_comparacion
+L 0x7250 caras_del_cubo            A, B y C: los colores de la cara de arriba y las dos de lado del cubo A (las casillas 1, 3 y 5 de sus nueve)
+L 0x7265 casilla_debajo            A = el cubo de la casilla bajo (E,D), o 0xFF si no hay o se sale por abajo
+D 0x727A 0x729F plantilla_de_giro_1  La animacion de los huecos 0-4 (diagonales 1 y 2): pares (cuantos, colores) para los 72 bytes de color de sus nueve tiles; cada nibble es 0 o una de las tres caras (1 arriba, 2 y 3 los lados). 0x00 de fin
+F 0x727A 2
+D 0x729F 0x72C0 plantilla_de_giro_2  La de los huecos 5-9 (diagonales 4 y 8)
+F 0x729F 2
+D 0x72C0 0x7320 giros_de_los_cubos  24 filas de cuatro: en que giro se convierte cada uno al saltarle encima hacia arriba-izquierda, abajo-derecha, abajo-izquierda y arriba-derecha. Son los 24 giros de un cubo: cada columna es una permutacion y cualquiera se alcanza desde cualquiera en cuatro saltos como mucho (medido recorriendo la tabla)
+F 0x72C0 4
+
+# ======================================================================
+# CINCO EN LINEA: cuando se acaba la fase
+# ======================================================================
+B 0x7320 LAS CUATRO COMPROBACIONES DEL TABLERO, una por cuadro: las filas, las columnas y las dos diagonales de la cuadricula de 9x9. Se cuentan las lineas con cinco cubos acabados seguidos del mismo jugador (los huecos sin cubo no cortan). La fase se acaba con una linea (dos de la 31 a la 40 y tres de la 41 a la 50); no hace falta acabar todos los cubos.
+L 0x7320 una_comprobacion_por_turno
+C 0x7320 cual de las cuatro, segun el cuadro
+D 0x7328 0x7330 comprobaciones  Las cuatro: filas (0x7330), columnas (0x7353), diagonales de bajada (0x7369) y de subida con el recuento final (0x737D)
+F 0x7328 w
+L 0x7330 cuenta_las_filas
+C 0x7330 la cuenta de lineas, desde cero en cada vuelta de cuatro cuadros
+C 0x7334 cada vuelta cuenta un jugador distinto
+C 0x733B y la mascara de la rutina de 0xE4FD: bit 6 el primero, bit 5 el segundo
+C 0x7349 nueve casillas de una en una, nueve filas
+L 0x7353 cuenta_las_columnas
+C 0x7358 nueve casillas de nueve en nueve
+C 0x735E y a la columna siguiente: 81 - 80
+L 0x7369 cuenta_las_diagonales_de_bajada  De diez en diez (abajo-derecha), desde la primera fila y desde la primera columna
+L 0x737D cuenta_las_diagonales_de_subida  De ocho en ocho (abajo-izquierda), y luego el recuento
+C 0x7391 una linea basta...
+C 0x739A ...hasta la fase 30; dos hasta la 40...
+C 0x73A2 ...y tres de la 41 a la 50
+C 0x73A7 no llega: sigue la fase
+C 0x73AC el que no ha hecho la linea...
+C 0x73B6 (el otro en el duelo)
+C 0x73BE ...si el ganador aun esta en el aire, se espera
+C 0x73C0 si el otro esta quieto, pone cara de derrota (8 patrones mas alla)
+C 0x73D9 con un jugador, al acabar una decena sube el nivel del rotulo
+C 0x73ED en el duelo, se apunta la partida
+C 0x73F4 y al paso 1 de la partida: fase acabada
+L 0x73F7 cinco_diagonales
+L 0x7405 cuatro_diagonales
+L 0x740F una_diagonal
+C 0x7419 C=1 o 9: la linea empieza una casilla mas alla o mas abajo
+B 0x7421 CUENTA UNA LINEA: B casillas desde HL, de C en C. D cuenta los acabados seguidos del jugador de turno; un cubo que no es suyo lo pone a cero y un hueco (0xFF) no. Con cinco, una linea mas en (0xE320).
+L 0x7421 cuenta_una_linea
+C 0x7423 0xFF: hueco, no corta
+C 0x7428 la rutina de 0xE4FD: `and 0x40` o `and 0x20`
+C 0x742D no es suyo: a cero
+C 0x742F cinco seguidos
+L 0x7433 casilla_siguiente
+L 0x743C una_linea_mas
+# ======================================================================
+# LOS BICHOS
+# ======================================================================
+B 0x7444 SALEN LOS BICHOS. Cada 64 cuadros, a cada uno de los quince le baja la espera (el nibble bajo del byte 0); al llegar a cero y si no esta ya en pantalla, entra por arriba sobre uno de los dos cubos de la cima, al azar. Despues la espera vuelve a 15: sale una y otra vez.
+L 0x7444 salen_los_bichos
+C 0x7444 cada 64 cuadros
+C 0x744A los quince, desde el objeto 4
+L 0x745C sale_un_bicho
+C 0x745C 0x00: este no sale en esta fase
+C 0x7464 la espera
+C 0x746A si esta en pantalla, espera a que se vaya
+C 0x746E la bola gris no sale mientras este el que persigue
+C 0x7479 arriba del todo...
+C 0x747B ...a la X 0x64 o 0x94 segun R
+C 0x7488 estado 3: entra por arriba
+C 0x748C 0xF0 -> 0xFF: la espera vuelve a 15 cuentas
+B 0x7498 LOS BICHOS DECIDEN. Cada dos cuadros, los que estan quietos en pantalla gastan su pausa (el nibble alto del byte 1) y al acabarla saltan: el que persigue, hacia Q*bert; el resto, abajo a la izquierda o a la derecha al azar. Los seis de colores se quedan pegados a un cubo cuya cara de arriba es de su color, y el que gira cubos los gira al saltar.
+L 0x7498 deciden_los_bichos
+C 0x7498 cada dos cuadros
+L 0x74B2 decide_un_bicho
+C 0x74B2 solo los que estan quietos
+C 0x74B7 y en pantalla
+C 0x74BB los seis de colores (objetos 12 a 17)...
+C 0x74C6 ...miran el cubo en el que estan
+C 0x74CE la pausa: 16 por cuadro de decision
+C 0x74D5 la bola que bota se echa una pausa al azar
+C 0x74E2 el que persigue (objeto 11) va aparte
+C 0x74EB la bola que bota cambia de dibujo al saltar
+C 0x74F2 abajo-derecha o...
+C 0x74F9 ...abajo-izquierda
+C 0x7503 el salto
+C 0x7506 el objeto 9 gira el cubo del que sale
+B 0x750D LOS SEIS DE COLORES: si la cara de arriba del cubo en el que estan es de su mismo color, se quedan alli. El bicho se retira, la fila de cinco de 0xE29C corre un puesto y el objeto 23 lo recoge con su color, bajando (estado 5).
+L 0x750D mira_el_color_del_cubo
+C 0x7510 el cubo de debajo; los acabados no cuentan
+C 0x7517 su cara de arriba contra el color del bicho
+C 0x7523 el dibujo, 16 patrones mas alla
+C 0x7527 la fila de cinco de 0xE29C, un puesto
+C 0x753C el bicho se va
+C 0x7542 el objeto 23, en el estado 5...
+C 0x7549 ...16 pixeles mas arriba...
+C 0x7551 ...con el color del bicho
+C 0x7553 y los objetos 19 a 23 se vuelven a pintar dos veces
+B 0x7559 EL QUE PERSIGUE (objeto 11): elige la diagonal que le acerca al primer Q*bert; si alli no hay cubo, cualquiera de las que tienen.
+L 0x7559 persigue_a_qbert
+C 0x755B Q*bert mas abajo: diagonales de bajada (2 y 4); si no, de subida (1 y 8)
+C 0x7567 Q*bert mas a la derecha: 2 y 8; si no, 1 y 4
+C 0x7572 la que acerca en las dos cosas
+C 0x7574 las que tienen cubo
+C 0x7578 si la buena no tiene, cualquiera de las otras
+L 0x7585 diagonales_con_cubo       B: bit 0 arriba-izquierda (casilla - 10), bit 3 arriba-derecha (- 8), bit 2 abajo-izquierda (+ 8), bit 1 abajo-derecha (+ 10)
+# ======================================================================
+# LOS CHOQUES
+# ======================================================================
+B 0x75B6 LOS CHOQUES DE Q*BERT con los quince objetos. Mientras los bichos huyen (0xE329), no se mira nada. Un Q*bert que entra, cae o esta fuera (estados 3, 4 y 14) no choca.
+L 0x75B6 mira_los_choques
+C 0x75B6 huyendo: se espera a que no quede ninguno en los estados 6-11
+L 0x75D5 choques_de_los_dos
+C 0x75D5 el primero
+C 0x75F5 el segundo, en el duelo
+L 0x760A choca_con_los_objetos
+L 0x761E choca_con_un_objeto
+C 0x761E a menos de 10 en Y y de 8 en X
+C 0x7623 y cada objeto hace lo suyo: la tabla va por su numero
+D 0x7628 0x7646 que_hace_cada_objeto  Quince entradas del objeto 18 al 4: invencibilidad (0x76DF), los ocho enemigos que matan (0x76F0), el que gira cubos (0x77D7), la bola roja (0x77A9), frenar (0x778A), acelerar (0x776E), la bola verde (0x775A) y la bola gris (0x77C0)
+F 0x7628 w
+B 0x7646 EL CHOQUE DE LOS DOS Q*BERT DEL DUELO. Si uno esta en el aire y el otro no, el de tierra sale rebotado; si estan los dos quietos, los dos. Diez cuadros sin volver a mirar.
+L 0x7646 choque_entre_los_dos
+C 0x764C la espera entre choques
+C 0x7664 B: bit 0, el primero esta en el aire; bit 1, el segundo
+C 0x767B los dos en el aire: nada
+C 0x767F los dos quietos
+C 0x7681 el que esta en el aire empuja al otro
+L 0x768D como_viene_el_que_salta  (0xE338): bit 0, va hacia la derecha; bit 1, esta en la segunda mitad del arco
+L 0x76AC se_empujan_los_dos
+C 0x76B1 hacia arriba o hacia abajo segun hacia donde miraba cada uno
+L 0x76CC estan_cerca               Acarreo si |E - (HL)| < 10 y |D - (HL+1)| < 8
+L 0x76DF coge_la_invencibilidad    128 cuentas de cuatro cuadros intocable (0xE345 o 0xE346), y 100 puntos
+B 0x76F0 LOS OCHO QUE MATAN. Si Q*bert es invencible, el bicho cae muerto; si acaba de entrar, no pasa nada; y si no, cae Q*bert.
+L 0x76F0 choca_con_un_enemigo
+C 0x76FB invencible
+C 0x7702 el bicho, si no esta ya cayendo muerto, cae
+L 0x7711 mira_la_proteccion
+C 0x771B recien entrado: intocable
+L 0x7730 cae_qbert
+C 0x7730 el que choca, sus dos sprites
+C 0x7748 el sonido 0x13
+L 0x774D cae_muerto_hl              Estado 12 o 13 (hacia un lado u otro segun el cuadro) y el arco de caer, 0x64
+L 0x7755 pon_estado_y_arco_de_caer
+B 0x775A LA BOLA VERDE: 128 cuentas de cuatro cuadros con todo quieto menos los Q*bert, y el sonido 0x0D.
+L 0x775A coge_la_bola_verde
+C 0x7763 HL=0x00BC: 0x6E2F escribe en 0x00BC y 0x00BA, que son la ROM de la BIOS, y no pasa nada. Tiene toda la pinta de que iba a 0xE2BC, el objeto 23 (SUPOSICION: el `ld hl` perdio el 0xE2)
+L 0x776E coge_la_de_acelerar       Un paso mas del arco por cuadro, en los dos sprites
+L 0x778A coge_la_de_frenar         Un paso menos, sin bajar de uno
+L 0x77A9 coge_la_bola_roja         El salto largo (disparo mientras se salta) y Q*bert en blanco
+L 0x77C0 coge_la_bola_gris         Todos los bichos huyen
+L 0x77D7 coge_el_que_gira_cubos    100 puntos y fuera
+L 0x77D8 retira_con_cien_puntos    El objeto fuera de la pantalla y quieto, y 100 puntos
+B 0x77E5 TODOS HUYEN: los trece del objeto 5 al 17 que esten en pantalla pasan a los estados 6-11, mas deprisa cuanto mas abajo esten (Y 0x30 y 0x60 de corte) y hacia el lado donde esten (X 0x80).
+L 0x77E5 huyen_todos
+C 0x77EE fuera de la pantalla: quieto
+C 0x77F2 arriba: 6, cada 8 cuadros
+C 0x77F8 en medio: 8, cada 4
+C 0x77FE abajo: 10, cada 2
+C 0x7800 en la mitad de la derecha, uno mas
+C 0x7806 mientras huyen no hay choques
+# ======================================================================
+# EL TIEMPO
+# ======================================================================
+L 0x7817 tiempo_a_99
+L 0x781E corre_el_tiempo
+C 0x7821 y lo pinta, salvo en el piedra-papel-tijera
+L 0x7829 un_segundo_menos
+C 0x782C cada 64 cuadros
+C 0x7835 a cero: se acabo el tiempo
+C 0x783F el sonido 0x35
+C 0x7848 en el duelo, gana el que tenga mas cubos
+C 0x7850 con uno, Q*bert fuera: 0x4291 vera el tiempo a cero
+L 0x7855 resta_uno_al_tiempo
+C 0x7866 por debajo de 10...
+C 0x7873 ...el aviso, 0x10
+L 0x7878 pinta_el_tiempo           TIME-nn en la fila 2, columna 23 de la copia de la tabla de nombres
+# ======================================================================
+# LA FASE DE BONIFICACION
+# ======================================================================
+B 0x789D LA FASE DE BONIFICACION. Q*bert se queda en cada cubo y los saltos giran el cubo en vez de moverle; al acabarlo pasa al siguiente. Al final, cada cubo acabado se cuenta en pantalla con sus puntos (100, 200, 300...), y con los 27 sale PERFECT 5000 POINT.
+L 0x789D paso_de_la_bonificacion
+C 0x789D paso 1: espera
+C 0x78A4 25 filas por destapar, cada tres cuadros
+C 0x78AE paso 2: se destapa la pantalla de arriba abajo
+C 0x78BE la fila que toca
+C 0x78CB desde la copia de la tabla de nombres
+L 0x78DC empieza_la_bonificacion
+C 0x78DC el marcador, BONUS arriba y su musica, 0x1A
+C 0x78ED paso 3: el juego
+C 0x78F5 el tiempo, de 16 en 16 cuadros
+C 0x78F8 los giros del cubo de Q*bert
+C 0x78FE y al acabarlo, el siguiente
+C 0x7901 paso 4: la cuenta
+C 0x790D busca el siguiente cubo acabado y le pone su numero
+C 0x7916 el numero por cien, en puntos
+C 0x791E y uno mas
+L 0x7924 acaba_la_cuenta
+C 0x7924 28: los 27 cubos
+C 0x7929 PERFECT 5000 POINT
+C 0x793C si no, silencio
+D 0x7949 0x795E rotulo_perfect  Guion de 0x4685: "PERFECT 5000 POINT" en 0x3AC7
+F 0x7949 21
+C 0x795E paso 5: la musica
+C 0x796A paso 6: cobra el tiempo que sobra
+C 0x7973 fase acabada
+C 0x7980 paso 0: la pantalla entera de ladrillo y BONUS en medio
+D 0x7999 0x79AE rotulos_bonus  Guiones de 0x4685: " BONUS " en 0x396C y "BONUS" con tres ladrillos en 0x3802 (el de 0x79A3)
+F 0x7999 10,11
+B 0x79AE TOCA BONIFICACION? Detras de las fases 3, 6 y 10 de cada decena (13, 16, 20...), el bit 0 de 0xE002 se enciende, se carga el tablero de 0xA7AD y la escena 5 corre la bonificacion. Al volver aqui se apaga y sigue la fase normal.
+L 0x79AE mira_la_bonificacion
+C 0x79B1 las unidades de la fase que se acaba, menos una
+C 0x79C4 cambia el bit 0
+C 0x79CA toca: esta llamada no vuelve a 0x43F4
+C 0x79CE el tablero de bonificacion...
+C 0x79D1 ...y a la partida
+B 0x79D7 COBRA EL TIEMPO: un segundo por llamada, 10 puntos cada uno y el sonido 0x15. NZ mientras quede; Z al acabar, con el sonido 0x16.
+L 0x79D7 cobra_el_tiempo
+L 0x79FC acaba_de_cobrar
+L 0x7A04 espera_al_efecto
+C 0x7A04 hasta que calle el canal de efectos
+L 0x7A0B tablero_de_bonificacion   Los 81 bytes de 0xA7AD a 0xEC00
+L 0x7A17 tiempo_de_la_bonificacion
+L 0x7A1D resta_cada_16_cuadros
+L 0x7A2C acaba_el_juego_de_la_bonificacion
+C 0x7A2C la cuenta empieza en 1
+L 0x7A37 gira_el_cubo_de_qbert     La diagonal pulsada gira el cubo sobre el que esta Q*bert, sin moverle
+L 0x7A47 pasa_al_siguiente_cubo
+C 0x7A4A el cubo de Q*bert: si no esta acabado, nada
+L 0x7A53 busca_el_siguiente
+C 0x7A53 tres columnas a la derecha...
+C 0x7A5B ...y al acabar la fila, la siguiente desde la primera columna
+C 0x7A61 no quedan: se acaba el juego
+C 0x7A65 hasta dar con un cubo
+C 0x7A6B Q*bert alli, los dos sprites
+L 0x7A75 posicion_de_qbert         E = su Y, D = su X
+B 0x7A7C CUENTA UN CUBO: busca en la copia de la tabla de nombres el tile 0x88 (la esquina del cubo acabado) y pone encima el numero de la cuenta y dos ceros: los puntos que da. A=1 si no queda ninguno.
+L 0x7A7C cuenta_un_cubo
+C 0x7A93 la fila siguiente
+C 0x7A95 hasta la fila 21
+L 0x7AA0 pone_los_puntos
+C 0x7AA0 la cuenta en BCD: la decena (en blanco si es cero)...
+C 0x7AB1 ...la unidad y 00
+# ======================================================================
+# EL MARCO DE LADRILLO
+# ======================================================================
+B 0x7ABF EL MARCO: los 13 tiles de ladrillo y de pinchos (0xEB-0xF7) con su color, y en la copia de la tabla de nombres las filas de arriba y abajo y las columnas de los lados de ladrillo, con una fila y una columna de pinchos por dentro.
+L 0x7ABF monta_el_marco
+C 0x7ABF los patrones de 0xEB a 0xF7
+C 0x7ACB y sus colores
+C 0x7AD4 la fila 0 y la 23 (0xEFE0), de ladrillo
+C 0x7AE0 la columna 0 y la 31, de la fila 1 a la 22
+C 0x7AEC la fila 1 de pinchos
+C 0x7AF5 y la 22
+C 0x7AFE la columna 1
+C 0x7B07 y la 30
+L 0x7B10 fila_de_pinchos
+L 0x7B15 columna_de_pinchos
+L 0x7B18 copia_los_pinchos
+L 0x7B22 fila_de_ladrillo
+L 0x7B29 columna_de_ladrillo
+L 0x7B2E pon_el_ladrillo
+L 0x7B36 fila_0_de_ladrillo        Directamente en la VRAM
+D 0x7B41 0x7BA5 pinchos_del_marco  Los tiles de las cuatro tiras de pinchos: 30 de la fila de arriba, 30 de la de abajo y 20 de cada columna
+F 0x7B41 10
+D 0x7BA5 0x7C0D patrones_del_marco  Los 13 patrones de 0xEB a 0xF7: el ladrillo y los doce pinchos
+F 0x7BA5 8
+D 0x7C0D 0x7C29 colores_del_marco  El color de esos 13 tiles, en el RLE de 0x4675
+F 0x7C0D 8
+
+# ======================================================================
+# LA PANTALLA DEL MARCADOR (entre fase y fase, TIME OVER y GAME OVER)
+# ======================================================================
+B 0x7C29 LA PANTALLA DEL MARCADOR: el marco, la cara grande de Q*bert (que parpadea) y HI-SCORE, REST, STAGE y 1P-SCORE. Con (0xE324) puesto, la cara lleva ademas un sprite encima. En la escena 7 anade GAME OVER / CONTINUE--F5.
+L 0x7C29 pantalla_del_marcador
+C 0x7C29 en el duelo, si la pantalla ya esta, no se rehace
+C 0x7C36 en negro, y los dibujos grandes en el tercer tercio
+C 0x7C3F el marco limpio
+C 0x7C42 en el duelo, a la pantalla del resultado
+C 0x7C49 en el GAME OVER no suena nada
+C 0x7C50 si se hizo alguna linea, la musica 0x4D; si no, la 0x44
+C 0x7C5D la cara
+C 0x7C60 los numeros
+C 0x7C68 el sprite de la cara: 32 bytes de 0x97BB al patron 0
+C 0x7C74 en el plano 0
+C 0x7C80 y en la escena 7, el rotulo del GAME OVER
+D 0x7C8C 0x7C91 sprite_de_la_cara  Plano 0 en Y 0x8F y X 0x60, patron 0, color 10, y 0xD0 detras: no se pinta ningun otro
+F 0x7C8C 5
+B 0x7C91 EL RESULTADO DEL DUELO: si quedan partidas, la musica 0x4D y nada mas; al acabar, el marcador de partidas con el ganador, 3 o 5 SET MATCH y lo que gano cada uno en cada partida.
+L 0x7C91 pantalla_del_duelo
+L 0x7C9C resultado_del_duelo
+C 0x7C9C los dibujos del piedra-papel-tijera y sus sprites
+C 0x7CA2 quien ha ganado mas partidas
+C 0x7CAC gana el primero: su Q*bert en X 0x60
+C 0x7CB4 gana el segundo: el suyo en X 0x90
+C 0x7CBB (0xE324): quien gana
+C 0x7CC4 --3 SET MATCH-- y las partidas
+C 0x7CCA con 5 partidas, la ultima fila baja
+C 0x7CD6 FINAL SET
+C 0x7CE4 con 5, las dos filas de mas y el 5 del rotulo
+C 0x7CF0 cada partida, el corazon del que la gano (0xFC o 0xFD)
+L 0x7D0B parpadea_el_marcador
+C 0x7D0B con uno, la cara
+C 0x7D15 en el duelo, si quedan partidas, nada
+L 0x7D21 parpadea_el_ganador
+L 0x7D27 cabecera_del_duelo        --3 SET MATCH-- (o 5) y que partida se juega: 1ST, 2ND, 3RD, 4TH o FINAL SET
+C 0x7D2D con 5 partidas, el 5 en el rotulo
+C 0x7D3F la ultima es FINAL SET
+C 0x7D49 si no, la que toca: total menos las que quedan
+D 0x7D5A 0x7DA8 rotulos_de_las_partidas  Cuatro punteros a 1ST, 2ND, 3RD y 4TH SET y los guiones de 0x4685: "--3 SET MATCH--" en 0x38C8, los cuatro en 0x392C y "FINAL SET" en 0x392B
+F 0x7D5A 8
+L 0x7DA8 cara_cada_16_cuadros
+L 0x7DAE pinta_la_cara             Una de las cuatro de 0x7DCA: dos caras (segun 0xE324) con los ojos abiertos o cerrados cada 16 cuadros
+D 0x7DCA 0x7DD2 caras_punteros  Las cuatro caras: 0x7DD2 y 0x7DF6 (la normal, dos pasos), 0x7E1A y 0x7E3A (la otra)
+F 0x7DCA w
+D 0x7DD2 0x7E5A caras  Guiones de 0x4685 con cuatro filas de tiles del tercer tercio desde 0x3A2D: las caras grandes de Q*bert
+F 0x7DD2 12
+L 0x7E5A limpia_el_marco           El marco de ladrillo y todo lo de dentro, de la fila 3 a la 20 y de la columna 1 a la 30, a cero
+C 0x7E66 todo ladrillo...
+C 0x7E6A ...menos el hueco del medio
+C 0x7E7B sin sprites, y a la VRAM
+L 0x7E81 espera_un_rato            Dos vueltas de 65.536: una pausa de reloj, con las interrupciones corriendo
+D 0x7E8E 0x7F1A rotulos_del_marcador  Guiones: "GAME OVER" en 0x38C8 y "CONTINUE--F5" en 0x39CA; HI-SCORE, REST, STAGE- y 1P-SCORE (0x7EB0); "--3 SET MATCH--", 1ST SET y 2ND SET en la copia de la tabla de nombres (0x7ED6, de 0x871C); 3RD SET y 4TH SET (0x7EFC); y "FINAL SET" sin direccion (0x7F10, de 0x8724)
+F 0x7E8E 8
+# ======================================================================
+# LOS MENUS DE NIVEL
+# ======================================================================
+B 0x7F1A EL MENU DE UN JUGADOR: LEVEL 1 a LEVEL 5, el Q*bert del menu y su musica, 0x1D.
+L 0x7F1A menu_de_un_jugador
+B 0x7F2E ELIGE EL NIVEL. Arriba y abajo mueven la mano (dando la vuelta); el disparo elige. Mientras no se elige, el `pop hl` hace que la escena vuelva sin pasar de paso.
+L 0x7F2E elige_el_nivel
+C 0x7F31 el disparo
+C 0x7F3E vuelve de la escena, no de aqui
+L 0x7F40 parpadea_el_nivel_elegido
+C 0x7F43 cuatro cuadros el menu, cuatro sin el nivel elegido
+L 0x7F52 borra_ocho
+L 0x7F5A borra_la_tabla_de_nombres
+L 0x7F64 mueve_la_mano
+C 0x7F6A bit 0: arriba
+C 0x7F6D bit 1: abajo
+L 0x7F71 sube_la_mano
+C 0x7F7A de la 1 a la 5
+L 0x7F7D baja_la_mano
+C 0x7F87 de la 5 a la 1
+L 0x7F8A sonido_del_cursor
+L 0x7F8F parpadea_la_mano
+L 0x7F98 pinta_la_mano_del_nivel
+L 0x7FA7 linea_del_nivel           HL = 0x38AA + 64 * nivel: dos filas por opcion
+L 0x7FB6 borra_las_manos
+L 0x7FB9 borra_b_manos
+D 0x7FCC 0x7FFE menu_de_niveles  Guion de 0x4685: LEVEL 1 a LEVEL 5, de dos en dos filas desde 0x38AD
+F 0x7FCC 10
+B 0x7FFE EL MENU DEL DUELO: LEVEL 1 o LEVEL 2 y 3 SET MATCH o 5 SET MATCH, con los dos Q*bert.
+L 0x7FFE menu_del_duelo
+C 0x7FFE ninguna partida ganada
+C 0x8018 el nivel, 0 o 1
+L 0x8022 pausa_de_la_animacion
+L 0x8028 elige_el_duelo
+C 0x803B vuelve de la escena
+L 0x803D cambia_nivel_o_partidas
+C 0x8040 arriba o abajo: el nivel
+C 0x8048 izquierda o derecha: 3 o 5 partidas
+L 0x8054 parpadean_las_manos
+L 0x8060 pinta_las_dos_manos
+L 0x806D pinta_la_mano_de_la_opcion
+D 0x8083 0x80B3 menu_del_duelo  Guion de 0x4685: LEVEL 1, LEVEL 2, 3 SET MATCH y 5 SET MATCH
+F 0x8083 8
+L 0x80B3 dibujos_del_menu_del_duelo  Los dos Q*bert del menu: el primero en X 0x50 y el segundo en X 0xA0
+L 0x80C7 dibujos_del_menu          El de un jugador: uno solo, en X 0xA0
+L 0x80DD graficos_del_menu         Dos RLE: patrones y colores del Q*bert grande del menu (0xBE63) y sus sprites (0xBFA5)
+L 0x80E9 anima_el_menu             Cada 14 cuadros el Q*bert cambia de postura: otro guion y un sprite que aparece y desaparece
+L 0x8104 postura_b
+L 0x8110 vuelca_los_sprites_del_menu
+L 0x8113 anima_el_segundo_del_menu
+L 0x812C postura_b_del_segundo
+L 0x813B sprites_del_menu          Los 17 bytes de 0x8153 a 0xEC80
+L 0x8147 vuelca_17_bytes_de_sprites  0xEC80 a la tabla de sprites
+D 0x8153 0x8164 sprites_del_menu  Cuatro sprites escondidos (Y 0xE0) con los patrones 0, 4, 8 y 12 en color 10, y 0xD0 de fin
+F 0x8153 4
+D 0x8164 0x81CC posturas_del_menu  Guiones de 0x4685 con las posturas de los Q*bert del menu en el tercer tercio: 0x8164 y 0x8184 los cuerpos, 0x81A4-0x81C2 los trozos que cambian
+F 0x8164 8
+# ======================================================================
+# EL DUELO: rondas, caidas y vidas
+# ======================================================================
+B 0x81CC EL DUELO: CUANDO CAE UNO. Si le quedan vidas, pierde una y vuelve a entrar; si no, se queda fuera (estado 14). Con los dos fuera, se acaba la partida y gana el que tenga mas cubos.
+L 0x81CC vuelve_al_duelo
+C 0x81CC solo en la partida y en su paso 0
+C 0x81D7 el primero fuera...
+C 0x81E3 ...o el segundo
+C 0x81ED y el otro
+L 0x81F5 cae_uno_del_duelo
+C 0x81F5 el primero
+C 0x81FC o el segundo
+C 0x8204 de quien se trata
+C 0x8208 le quedan vidas
+C 0x820D sin vidas: fuera, sus dos sprites
+L 0x821A mira_si_queda_alguien
+C 0x821A CODIGO HUERFANO: nadie salta aqui. Si a alguno le quedan vidas, a quitarle una; si no, a la ronda sin nadie
+L 0x8226 ronda_sin_nadie
+C 0x8226 se acabo la partida por caidas
+L 0x8234 quita_una_vida_del_duelo
+L 0x823D otro_esta_quieto
+L 0x8242 sonido_y_pausa            El sonido 0x35 y la pausa de 0x7E81
+B 0x824D EL REBOTE: B, la diagonal hacia la que sale despedido el Q*bert de (0xE332), segun (0xE338).
+L 0x824D rebota
+L 0x8275 vuelve_a_entrar
+C 0x8275 CODIGO HUERFANO: pone al Q*bert de (0xE332) arriba otra vez, con sus dos sprites. Nadie lo llama
+L 0x82AC gana_la_ronda
+L 0x82B5 gana_el_de_b
+C 0x82BB las vidas de los dos, otra vez
+C 0x82C1 una partida mas para el ganador
+C 0x82CF queda una menos
+C 0x82D6 quedan: la siguiente
+L 0x82DC se_acabaron_las_partidas
+L 0x82E1 fin_del_duelo
+C 0x82E1 escena 6, con la musica del final
+L 0x82E9 se_acabo_el_tiempo_del_duelo
+C 0x82EA quien tiene mas cubos
+C 0x82F3 a la pantalla del resultado
+L 0x82F6 cuenta_los_cubos_de_los_dos  (0xE349) los del primero y (0xE34A) los del segundo; B: 1 si gana el primero, 0 si el segundo, y Z si empatan
+L 0x830E cuenta_los_cubos_de_c     Las 79 casillas del tablero (sin los dos modelos) con los bits 6 y 5 iguales a C
+L 0x8320 vidas_del_de_turno        HL = 0xE110 o 0xE120 segun (0xE333), y Z si no le quedan
+L 0x8330 objeto_del_de_turno       HL = 0xE202 o 0xE212
+L 0x833C cae_el_otro
+C 0x833C CODIGO HUERFANO: Z si el OTRO jugador esta cayendo (estado 4); el `call` de dentro cambia (0xE333) dos veces
+L 0x8345 cambia_de_turno
+L 0x8350 apunta_la_partida         En 0xE602 y siguientes, quien gano cada partida (1 o 2)
+L 0x836A monta_los_corazones       Los tiles 0xFC y 0xFD: un corazon magenta y otro cian, las marcas de partida ganada
+D 0x837F 0x8384 color_de_los_corazones  RLE de 0x4675: ocho 0xD0 (magenta) y ocho 0x70 (cian)
+F 0x837F 5
+D 0x8384 0x8394 corazones  Los dos patrones: el mismo corazon dos veces
+F 0x8384 8
+
+# ======================================================================
+# LA PRESENTACION: Q*bert delante de la recreativa
+# ======================================================================
+B 0x8394 LA PANTALLA DE LA RECREATIVA: sus graficos (un RLE de 6.560 bytes que llena patrones y colores de los tres tercios desde 0x0200), los objetos a cero y los sprites de salida.
+L 0x8394 prepara_la_recreativa
+C 0x8397 el RLE de 0xB09A
+C 0x83A3 0x4D bytes a 0xE200: los 0x2D de la tabla de 0x88D8 y 0x20 del codigo que va detras (0x8905), que nadie usa: 0x8735 solo vuelca los 0x2D primeros
+L 0x83AF empieza_la_presentacion
+C 0x83AF la musica de la presentacion, 0x20
+C 0x83B4 la recreativa y Q*bert en la copia de la tabla de nombres
+C 0x83BA los sprites de Q*bert delante de la maquina
+L 0x83DA presentacion_paso_1       La pantalla de la recreativa se anima mientras dura la espera
+C 0x83E5 el sprite 4 aparece arriba
+L 0x83EE presentacion_paso_2       Cuando calla la musica, el sprite 4 baja hasta la Y 0x75
+C 0x8406 el sonido 1 y el primer guion de movimiento
+L 0x8419 presentacion_paso_3       El sprite 4 sigue el guion de 0x85F9; al acabar, el sonido 2 y Q*bert cambia de postura
+L 0x8455 presentacion_paso_4
+L 0x845F presentacion_paso_5       El rotulo de Q*bert sube fila a fila hasta su sitio
+C 0x8469 la fila que toca
+C 0x8478 se borra la de debajo...
+C 0x847B ...y el rotulo se pinta una fila mas arriba
+L 0x8497 pinta_el_guion_de
+L 0x849A rotulo_en_su_sitio
+C 0x849A el sonido 0x2F
+L 0x84B5 presentacion_paso_6
+C 0x84DB el sonido 0x23
+L 0x84E5 presentacion_paso_7       El rotulo y lo de detras suben otra vez, ahora de dos en dos filas
+L 0x850E presentacion_paso_8_prepara
+C 0x8516 el segundo guion de movimiento, para el sprite de 0xE228
+L 0x8528 presentacion_paso_8
+C 0x8537 al acabar: el titulo ya esta pintado (0xE115) y al paso 9
+L 0x8547 sprites_del_titulo        Q*bert y la pantalla de la recreativa como quedan en el titulo
+L 0x856C borra_una_fila            32 bytes a cero desde HL
+L 0x8577 anima_la_recreativa       Cada 16 cuadros, uno de los tres dibujos de la pantalla de la maquina (0x8631)
+B 0x8596 MUEVE POR GUION el sprite de DE: el guion (0xE33E) son ternas (cuadros, suma a Y, suma a X) y 0x80 lo acaba. (0xE33D) cuenta los cuadros de la terna y vale 0x80 al acabar.
+L 0x8596 mueve_por_guion
+C 0x859D la terna siguiente
+L 0x85B0 suma_la_terna
+C 0x85B9 si se sale por abajo, desaparece
+L 0x85C4 anima_el_bicho_de_la_presentacion  Cada 16 cuadros cambia de dibujo (0x10, 0x1C, 0x28, 0x34) y su segundo sprite le sigue
+D 0x85F9 0x861B guion_de_movimiento_1  Ternas (cuadros, Y, X) con 0x80 de fin (el de 0x861A). 0x8410 apunta tres bytes antes, a 0x85F6: 0x8596 suma tres antes de leer
+F 0x85F9 3
+D 0x861B 0x8631 guion_de_movimiento_2  El segundo, igual; 0x8519 apunta a 0x8618
+F 0x861B 3
+D 0x8631 0x8637 pantallas_de_la_recreativa  Tres punteros a los tres dibujos de la pantalla de la maquina
+F 0x8631 w
+D 0x8637 0x871C guiones_de_la_presentacion  Guiones de 0x871C (en la copia de la tabla de nombres): los tres dibujos de la pantalla de la maquina (0x8637, 0x866A y 0x869D) y los trozos del rotulo que sube (0x86D0, 0x86D6 y 0x86F6)
+F 0x8637 8
+B 0x871C EL GUION EN LA COPIA DE LA TABLA DE NOMBRES: el mismo formato que 0x4685, pero escribiendo en la RAM (la direccion es de 0xED00 en adelante).
+L 0x871C guion_en_la_copia
+L 0x871E guion_en_la_copia_direccion
+L 0x8724 casillas_en_la_copia      Sin direccion: desde HL, hasta el 0xFF
+L 0x8731 borra_guion_en_la_copia
+L 0x8735 vuelca_los_sprites_de_la_presentacion  Los 0x2D bytes de 0xE200 a la tabla de sprites: once sprites y el 0xD0
+D 0x8741 0x88D8 dibujos_de_la_presentacion  Guiones de 0x871C: la recreativa con Q*bert (0x8741), sus cambios de postura (0x87C3 y 0x880F) y como queda en el titulo (0x8849)
+F 0x8741 8
+D 0x88D8 0x8905 sprites_de_la_presentacion  Once sprites de salida (Y, X, patron, color) y el 0xD0 de fin: 45 bytes
+F 0x88D8 4
+
+# ======================================================================
+# EL RESULTADO DEL DUELO Y EL PIEDRA-PAPEL-TIJERA
+# ======================================================================
+B 0x8905 EL FIN DE UNA PARTIDA DEL DUELO. Los dos cubos acabados con cuantos tiene cada uno. Por tiempo (TIME OUT!), gana el que mas cubos tiene (1P WIN! o 2P WIN!); si empatan (DRAWN GAME) o se acabo porque cayeron los dos, se juega al piedra-papel-tijera.
+L 0x8905 resultado_de_la_partida
+C 0x890C los dibujos del piedra-papel-tijera
+C 0x891E (0xE32D): acabo por caidas
+C 0x8924 TIME OUT!
+C 0x892A cuantos cubos tiene cada uno
+C 0x8932 empate: DRAWN GAME
+C 0x8938 mas el primero: 1P WIN!
+C 0x893F mas el segundo: 2P WIN!
+C 0x8949 los dos cubos acabados...
+C 0x894C ...y las dos cuentas
+C 0x8967 con ganador, al paso 8
+L 0x8980 a_piedra_papel_tijera
+C 0x8980 el sonido 0x38
+L 0x8985 manos_por_defecto
+C 0x8985 si nadie pulsa, una mano al azar para cada uno (R y el contador de cuadros)
+C 0x8994 al paso 6 con 128 cuadros
+L 0x89A1 mano_al_azar              A & 3, salvo el 3
+L 0x89A8 prepara_el_piedra_papel_tijera  El recuadro de ladrillo, los sprites y los dos Q*bert
+B 0x89C6 PASO 6: JAN-KEN. LET'S PLAY JAN-KEN y JAN-KEN! con las manos parpadeando mientras suena la musica; cada jugador elige con su mando: abajo, izquierda o arriba.
+L 0x89C6 jan_ken
+C 0x89CF dos musicas alternas: 0x26 y 0x4A
+C 0x89DE el recuadro limpio
+C 0x89F6 la mano del segundo, de su mando
+C 0x89FF la del primero, del suyo
+C 0x8A06 hasta que acaba la musica
+C 0x8A0B el sonido 0x3B y PON!
+L 0x8A36 pon                       Paso 7: las dos manos a la vista
+C 0x8A3B el sonido 0x3E
+L 0x8A89 quien_gana                Paso 8: la mano A+1 (modulo 3) gana a la A
+C 0x8A99 iguales: otra vez
+C 0x8A9C si la del primero es la siguiente a la del segundo, gana el primero
+L 0x8AA7 gana_el_segundo
+L 0x8AAF gana_el_primero
+L 0x8AB5 apunta_quien_gana
+C 0x8AC8 el sonido 0x29
+L 0x8AD2 otra_vez_jan_ken
+L 0x8AE1 despues_del_jan_ken       Paso 9: la partida se la lleva el ganador
+C 0x8AF3 con la partida acabada, el ganador se apunta la partida
+C 0x8B03 si no, el de (0xE332) sale rebotado y se vuelve al tablero
+L 0x8B2B mano_del_mando            0 abajo, 1 izquierda, 2 arriba; sin pulsar, la que habia
+L 0x8B3C pinta_una_mano            Una de las seis de 0x8B49: las tres de cada lado
+D 0x8B49 0x8B55 manos  Seis punteros a los dibujos de las tres manos, a la izquierda (0x8E2B, 0x8E35, 0x8E3F) y a la derecha (0x8E49, 0x8E53, 0x8E5D)
+F 0x8B49 w
+L 0x8B55 parpadea_el_resultado
+L 0x8B5B pinta_el_resultado
+L 0x8B72 pinta_de_la_tabla
+D 0x8B7F 0x8B8F caras_del_resultado  Ocho punteros: la cara de cada Q*bert ganando y perdiendo, con los ojos abiertos y cerrados (0x8E67-0x8F57)
+F 0x8B7F w
+L 0x8B8F parpadean_las_manos_del_jan_ken
+D 0x8BBF 0x8C3A rotulos_del_jan_ken  Guiones de 0x871C: las manos escondidas (0x8BBF) y a la vista (0x8BE0), "LET'S PLAY JAN-KEN" (0x8C01), "JAN-KEN!" (0x8C16), " PON!" (0x8C21) y el ladrillo del recuadro (0x8C2C)
+F 0x8BBF 8
+L 0x8C3A borra_el_recuadro         Cuatro filas de 18 casillas desde 0xEE26
+L 0x8C4F copia_de_vram_a_vram      BC bytes de la VRAM en HL a la VRAM en DE, uno a uno con RDVRM y WRTVRM
+L 0x8C5F copia_de_vram_en_espejo   Lo mismo dando la vuelta a cada byte: el dibujo, reflejado
+L 0x8C72 da_la_vuelta_al_byte
+L 0x8C7D dibujo_del_jan_ken
+B 0x8C86 LOS GRAFICOS DEL DUELO: los sprites (0x96BA), nueve tiles desde el 0x43 (0x90A7 y 0x90DE) y los 186 tiles del tercer tercio (0x90E3 y 0x95EB). Los 45 ultimos se copian reflejados 45 tiles mas alla: las manos de la derecha son las de la izquierda dadas la vuelta.
+L 0x8C86 graficos_del_duelo
+L 0x8CA1 dibujos_grandes_en_hl
+C 0x8CA2 los patrones
+C 0x8CAE y los colores, 0x2000 antes (0xE000 = -0x2000)
+C 0x8CB5 desde el tile 0x8D...
+C 0x8CBA ...al 0xBA, reflejados
+C 0x8CC8 y sus colores, tal cual
+L 0x8CDC sprites_del_duelo         Los 0x35 bytes de 0x8FAA a 0xEC80
+L 0x8CE8 vuelca_los_sprites_del_duelo
+L 0x8CF4 pinta_los_dos_cubos       El cubo acabado del segundo a la izquierda (0xEE27) y el del primero a la derecha (0xEE33)
+L 0x8D03 pinta_3x3
+D 0x8D16 0x8D28 cubos_acabados  Los nueve tiles del cubo acabado del primero (0x88-0x90) y los del segundo (0xE1-0xE9)
+F 0x8D16 9
+L 0x8D28 pinta_dos_cifras          A en binario, en dos cifras
+D 0x8D3D 0x8FAA dibujos_del_duelo  Guiones de 0x871C: el recuadro del piedra-papel-tijera (0x8D3D), las manos (0x8D80, 0x8DC4 y las seis de 0x8E2B), las caras del resultado (0x8E67-0x8F57), "TIME OUT!" (0x8F77), "DRAWN GAME" (0x8F83), "1P WIN!" (0x8F90) y "2P WIN!" (0x8F9D)
+F 0x8D3D 8
+D 0x8FAA 0x8FDF sprites_del_duelo  Trece sprites (Y, X, patron, color) y el 0xD0 de fin: 53 bytes
+F 0x8FAA 4
+# ======================================================================
+# LA VIDA EXTRA ESCONDIDA
+# ======================================================================
+B 0x8FDF LA VIDA EXTRA ESCONDIDA. Con un jugador, si los tres ultimos saltos de Q*bert han acabado un cubo cada uno, y tiene menos de 8 vidas, sale un objeto a la altura de Q*bert (una vez, hasta que se monta otra fase o Q*bert vuelve a salir) que cruza la pantalla de izquierda a derecha. Tocarlo da una vida, con su sonido, 0x11.
+L 0x8FDF vida_extra_escondida
+C 0x8FE5 (0xE34B): 0 sin salir, 1 cruzando, 2 ya salio
+C 0x8FED con 8 vidas o mas, nada
+C 0x8FF3 los tres ultimos saltos: 1, 1 y 1
+C 0x8FFF sale
+C 0x9004 sus dos sprites, de 0x9019
+C 0x900F a la altura de Q*bert
+D 0x9019 0x9021 objeto_de_la_vida  Sus dos sprites: el patron 0xD0 en rojo oscuro (6) y el 0xD4 en blanco (15), en X 0
+F 0x9019 4
+L 0x9021 cruza_el_objeto
+C 0x9021 si toca a Q*bert...
+C 0x902D ...una vida
+L 0x9032 toca_el_segundo_sprite
+C 0x9032 CODIGO HUERFANO: la misma prueba con 0xE20C, el segundo sprite de Q*bert, que no llama nadie
+L 0x9041 da_la_vida
+C 0x9042 el marcador, de uno o del duelo
+C 0x9051 el sonido 0x11
+L 0x9058 avanza_el_objeto
+C 0x905B un pixel a la derecha los dos sprites
+C 0x9063 al llegar a 0xFE, se acabo
+L 0x9069 quita_el_objeto_de_la_vida  Fuera de la pantalla y la racha a cero
+L 0x907E vuelca_el_objeto          Sus dos sprites a los planos 19 y 20
+L 0x908A se_acabo_el_objeto
+L 0x9093 apunta_el_salto           Guarda A en la racha de tres (0xE34D-0xE34F), dando la vuelta: 1 cubo acabado, 0 girado sin acabar, 0x40 salto sobre un cubo ya acabado
+
+L 0x722C casilla_y_modelo
+C 0x722C CODIGO HUERFANO: el cubo bajo (E,D) y, de corrido, la comparacion con el modelo de 0x722F. Nadie lo llama
+L 0x77CC pon_c_en_catorce_objetos
+C 0x77CC CODIGO HUERFANO: C en el mismo byte de catorce objetos seguidos, de 8 en 8. Nadie lo llama
+# ======================================================================
+# LOS GRAFICOS Y LOS TABLEROS (0x90A7-0xBFFF)
+# ======================================================================
+# Cada limite sale de descomprimir o de contar lo que copia el codigo que lo
+# usa: tools/graficos.py recorre los RLE hasta su 0x00 y los tableros son 81
+# bytes por fase.
+D 0x90A7 0x90DE duelo_tiles_43  RLE de 0x4675 para los tiles 0x43-0x4B de los tres tercios (72 bytes): el ladrillo y las letras grandes del recuadro del duelo. Lo pone 0x8C8C
+F 0x90A7 8
+D 0x90DE 0x90E3 duelo_color_43  Su color: un RLE de cinco bytes
+F 0x90DE 5
+D 0x90E3 0x95EB duelo_dibujos  RLE de 0x46A6 con destino 0x3000: 186 tiles del tercer tercio (1.488 bytes), las manos del piedra-papel-tijera y las caras grandes de Q*bert. Los 45 ultimos se copian reflejados (0x8C5F)
+F 0x90E3 8
+D 0x95EB 0x96BA duelo_dibujos_color  El color de esos 186 tiles, a 0x1000
+F 0x95EB 8
+D 0x96BA 0x97BA duelo_sprites  RLE de 0x46A0 con destino 0x1800: los patrones de 13 sprites del duelo (416 bytes)
+F 0x96BA 8
+D 0x97BA 0x97BB cero_suelto  Un 0x00 detras del fin del RLE de 0x96BA, que no lee nadie
+F 0x97BA 1
+D 0x97BB 0x97DB sprite_de_la_cara  Un sprite de 16x16 (32 bytes) que 0x7C68 pone en el patron 0 para la cara grande del marcador
+F 0x97BB 8
+D 0x97DB 0xA7AD tableros  Las 50 fases, 81 bytes cada una: la cuadricula de 9x9 fila a fila. 0xFF es hueco; cualquier otro, el giro de ese cubo (0 a 23). La casilla 0 es el modelo que hay que conseguir, y en las fases 31-50, que son las del duelo, la 1 es el modelo del segundo
+F 0x97DB 9
+D 0xA7AD 0xA7FE tablero_de_bonificacion  Los 81 bytes de la fase de bonificacion: 27 cubos y el modelo 0
+F 0xA7AD 9
+D 0xA7FE 0xAABC cubos  Tres estilos (fases 1-10, 11-20 y 21-50) de 26 cubos de 3x3 casillas, 234 bytes cada uno. Los 24 primeros son los giros: triangulos de arista (0x40-0x87) y caras macizas (los tiles 0-15, que son su propio color); el 24 es el cubo acabado del primero (0x88-0x90) y el 25 el del segundo (0xE1-0xE9)
+F 0xA7FE 9
+D 0xAABC 0xACBC sprites_de_los_bichos  Dieciseis sprites de 16x16 en parejas: 0x30 las bolas (0xAABC), 0x50 (0xAAFC), 0x90 el que persigue (0xAB3C, tambien en 0x98), 0x70 el que gira cubos (0xAB7C), 0xD0 el objeto de la vida (0xABBC), 0xA0 los seis de colores (0xABFC) y los dos pasos de la bola que bota, 0x80 (0xAC3C y 0xAC7C)
+F 0xAABC 16
+D 0xACBC 0xADBC qbert_a_la_izquierda  Ocho sprites: Q*bert mirando a la izquierda, de frente y de espaldas, de pie y en el aire, en sus dos capas (patrones 0x00-0x0F la primera, 0x10-0x1F la segunda)
+F 0xACBC 16
+D 0xADBC 0xAEBC qbert_a_la_derecha  Los mismos ocho mirando a la derecha
+F 0xADBC 16
+D 0xAEBC 0xAF3C qbert_fase_acabada  Q*bert en la fase acabada: 0x67C4 copia 0x80 bytes desde aqui y otros 0x80 desde 0xAEFC, que se pisan con este y con los de caer
+F 0xAEBC 16
+D 0xAF3C 0xAFBC qbert_cayendo  Q*bert cayendo por un lado: 0x6F22 copia 0x40 de 0xAF3C y 0x40 de 0xAF7C
+F 0xAF3C 16
+D 0xAFBC 0xB004 tiles_de_giro_b  Nueve tiles (72 bytes) que 0x626D copia cinco veces desde el tile 0xBE: los huecos 5 a 9 de los cubos que giran
+F 0xAFBC 8
+D 0xB004 0xB04C tiles_de_giro_a  Los otros nueve, cinco veces desde el tile 0x91: los huecos 0 a 4
+F 0xB004 8
+D 0xB04C 0xB094 cubo_acabado  Los nueve patrones del cubo acabado, dos veces: en el tile 0x88 (el del primero) y en el 0xE1 (el del segundo)
+F 0xB04C 8
+D 0xB094 0xB097 cubo_acabado_color_1  Su color en el tile 0x88, RLE de tres bytes
+F 0xB094 3
+D 0xB097 0xB09A cubo_acabado_color_2  Y en el tile 0xE1
+F 0xB097 3
+D 0xB09A 0xBE63 graficos_de_la_recreativa  RLE de 0x46A0 de 6.560 bytes con destino 0x0200 y saltos de direccion: patrones y colores de la presentacion (la maquina recreativa, su pantalla, el rotulo de Q*bert) en los tres tercios
+F 0xB09A 16
+D 0xBE63 0xBFA5 graficos_del_menu  RLE de 0x46A0: el Q*bert grande de los menus de nivel, patrones y colores del tercer tercio (640 bytes)
+F 0xBE63 16
+D 0xBFA5 0xBFE7 sprites_del_menu  RLE de 0x46A0 con destino 0x1800: cuatro sprites del menu (128 bytes)
+F 0xBFA5 8
+D 0xBFE7 0xBFF6 relleno  Un 0x00 y catorce 0xFF hasta la marca
+F 0xBFE7 15
+D 0xBFF6 0xC000 marca_de_konami  La marca oculta de Konami: el titulo en katakana AL REVES, siete caracteres (0x86 0xB2 0xBA 0x99 0xBA 0xB7 0x93 leidos de atras adelante: キューバート, Q*bert), su longitud (7), el RC en BCD (0x46) y 0xAA. Nadie la lee: tools/marca_konami.py
+F 0xBFF6 10

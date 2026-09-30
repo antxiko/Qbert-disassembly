@@ -20,7 +20,7 @@ from estilo_web import ESTILO  # noqa: E402
 
 # Un menu por idioma. La web se publica en ingles en la raiz de docs/ y en
 # castellano bajo docs/es/. Son las siete paginas del contrato por idioma,
-# mas la comparativa de las dos compilaciones y la portada.
+# mas la portada.
 NAV_EN = [("index.html", "Home"), ("GETTING-STARTED.html", "Start"),
           ("THE-GAME.html", "The game"),
           ("THE-CARTRIDGE.html", "The cartridge"),
@@ -50,13 +50,10 @@ for _en, _es in _PAREJAS:
     PAREJA[_en] = _es
     PAREJA[_es] = _en
 
-# El pie va en el idioma de la pagina. El cartucho no lleva la marca oculta que
-# otros de la casa esconden al final de la ROM (tools/busca_marca_konami.py: sin
-# marca en los 16384 bytes). El numero de catalogo sale del catalogo.
-PIE = {
-    "es": "<em>Magical Tree</em> lo publico Konami para MSX en 1984; su numero de catalogo es RC-713 y son 16 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion, y la imagen del cartucho no se distribuye.",
-    "en": "<em>Magical Tree</em> was published by Konami for the MSX in 1984; its catalogue number is RC-713 and it is 16 KB. All rights in the game remain with their holders. This is preservation, study and documentation work, and the cartridge image is not distributed.",
-}
+# El pie va en el idioma de la pagina, y como todo lo que es de este juego
+# sale de tools/contenido_web.py: esta maquinaria no nombra ningun cartucho.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from contenido_web import NOMBRE, ANIO, PIE_LEGAL as PIE        # noqa: E402
 
 
 def enlinea(t):
@@ -89,8 +86,8 @@ def enlinea(t):
 # La web se sirve desde docs/, asi que lo que este fuera de esa carpeta no
 # existe para el navegador: esos enlaces se mandan al repositorio. Se puede
 # cambiar sin tocar el codigo con la variable de entorno.
-REPO = os.environ.get("HYPERRALLY_REPO",
-                      "https://github.com/antxiko/HyperRally-disassembly")
+from contenido_web import REPOSITORIO                              # noqa: E402
+REPO = os.environ.get("REPO_WEB", REPOSITORIO)
 
 
 def ruta(href):
@@ -111,10 +108,11 @@ def ruta(href):
         return f"{REPO}/blob/main/{plano}"
     if h.startswith("../"):
         return h if h.endswith((".html", ".png", ".txt")) else plano
-    h = plano
+    # el ancla (THE-GAME.md#the-vendors) se aparta para cambiar la extension
+    h, almohadilla, ancla_ = plano.partition("#")
     if h.endswith(".md"):
         h = h[:-3] + ".html"
-    return h
+    return h + almohadilla + ancla_
 
 
 def ancla(titulo):
@@ -233,7 +231,7 @@ def main(docdir, idioma="en"):
         dst = os.path.join(docdir, fn[:-3] + ".html")
         texto = open(src, encoding="utf-8").read()
         m = re.search(r"^#\s+(.*)$", texto, re.M)
-        titulo = (m.group(1) if m else fn[:-3]) + " — Magical Tree (Konami, 1984)"
+        titulo = (m.group(1) if m else fn[:-3]) + f" — {NOMBRE} (Konami, {ANIO})"
         open(dst, "w", encoding="utf-8").write(
             convierte(texto, titulo, fn[:-3] + ".html", idioma))
         print(f"  {fn} -> {os.path.basename(dst)}")

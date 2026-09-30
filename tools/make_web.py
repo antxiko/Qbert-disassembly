@@ -1,35 +1,23 @@
 #!/usr/bin/env python3
-"""Genera la portada de la web de Magical Tree, en los dos idiomas.
+"""Genera la portada de la web, en los dos idiomas.
 
-El diseno es el compartido por la serie (tools/estilo_web.py) y la pagina sale
-autocontenida, con las imagenes embebidas como data URI.
-
-Las imagenes NO son ilustraciones ni capturas: las dibujan tools/graficos.py
-(las pantallas, con la cadena de montaje del cartucho escrita en Python) y
-tools/arbol.py (el arbol de cada fase, con su guion y el paso del decorado),
-a partir de los propios bytes de la ROM. Ninguna se ha retocado.
+La maquinaria no nombra ningun juego: el nombre, la cabecera, las cifras, los
+hallazgos y la galeria salen de tools/contenido_web.py. Aqui solo van los
+rotulos de la pagina. El diseno es el compartido por la serie
+(tools/estilo_web.py) y la pagina sale autocontenida, con las imagenes
+embebidas como data URI.
 
 Uso: make_web.py <docs/imagenes> <salida.html> <idioma>
 """
 import base64
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from estilo_web import ESTILO                                   # noqa: E402
-
-# Las cifras salen de contar sobre el listado generado, no de escribirlas a
-# ojo: 16384 = 8537 + 7847, que es lo que imprime tools/presupuesto.py
-# (make sanity). RUTINAS son los bloques con nombre que cuenta densidad.py y
-# DENSIDAD la proporcion de instrucciones comentadas, las dos de
-# tools/densidad.py (make densidad).
-CODIGO = 8537
-DATOS = 7847
-RUTINAS = 628
-INSTRUCCIONES = 4767
-COMENTARIOS = 2258
-DENSIDAD = "47,4"
-DENSIDAD_EN = "47.4"
+from contenido_web import (NOMBRE, PORTADA, HALLAZGOS, GALERIA, LOGOTIPO,  # noqa: E402
+                           CODIGO, DATOS, RUTINAS, densidad)
 
 
 def mil(n, idioma):
@@ -38,58 +26,30 @@ def mil(n, idioma):
 
 TXT = {
     "es": dict(
-        titulo="Magical Tree - desensamblado comentado",
-        aviso="<b>Aqui no hay ninguna captura.</b> Todas las imagenes estan "
-              "<b>dibujadas desde los bytes de la ROM</b>: las pantallas con la "
-              "cadena de montaje del cartucho escrita en Python, y el arbol "
-              "con <b>el guion de cada fase y su paso del decorado</b>, "
-              "cotejado contra openMSX a cero celdas. El listado y las cifras "
-              "se reproducen con <code>make</code>, y el reensamblado devuelve "
-              "la ROM <b>byte a byte</b>.",
-        claim="Un arbol de nueve fases que el cartucho guarda en la VRAM, una "
-              "pantalla que hace de mapa, y las nueve fases dibujadas desde "
-              "las tablas sin una celda distinta del emulador.",
-        ficha=["Konami - <b>(c) Konami 1984</b>",
-               "Cartucho <b>RC-713</b>, 16 KB",
-               "MSX1 - <b>pagina 1</b>", "Volcado <b>a3f3ad0d...</b>"],
         nav=[("#numbers", "Las cifras"), ("#findings", "Hallazgos"),
              ("#screens", "Lo que dibuja")],
         docnav=[("EMPEZAR.html", "Empezar"), ("EL-JUEGO.html", "El juego"),
                 ("EL-CARTUCHO.html", "El cartucho"),
-                ("EL-CODIGO.html", "El codigo"),
+                ("EL-CODIGO.html", "El código"),
                 ("HALLAZGOS.html", "Hallazgos"),
                 ("EN-EL-EMULADOR.html", "En el emulador"),
                 ("PREGUNTAS-ABIERTAS.html", "Preguntas abiertas")],
         otro=("../", "In English"),
-        h_num="El cartucho en cifras", h_find="Lo que aparecio al desmontarlo",
+        h_num="El cartucho en cifras", h_find="Lo que apareció al desmontarlo",
         h_scr="Lo que el cartucho dibuja",
         cifras=[("100 %", "del binario explicado"),
-                (str(RUTINAS), "rutinas con nombre"),
-                (DENSIDAD + " %", "del listado comentado"),
-                (mil(CODIGO, "es"), "bytes de codigo"),
+                (mil(RUTINAS, "es"), "rutinas con nombre"),
+                (densidad("es") + " %", "del listado comentado"),
+                (mil(CODIGO, "es"), "bytes de código"),
                 (mil(DATOS, "es"), "bytes de datos"),
                 ("0", "bytes sin identificar")],
-        nota_scr="Debajo de cada imagen esta de donde sale y que se esta "
-                 "viendo. Las nueve fases enteras estan en El juego.",
-        pie_leg="Esto es trabajo de documentacion y preservacion: el codigo y "
-                "los graficos siguen siendo de sus autores y de Konami, y la "
+        nota_scr="Debajo de cada imagen está de dónde sale y qué se está "
+                 "viendo.",
+        pie_leg="Esto es trabajo de documentación y preservación: el código y "
+                "los gráficos siguen siendo de sus autores y de Konami, y la "
                 "imagen del cartucho no se distribuye.",
     ),
     "en": dict(
-        titulo="Magical Tree - a commented disassembly",
-        aviso="<b>Not one capture here.</b> Every picture is <b>drawn from "
-              "the bytes of the ROM</b>: the screens with the cartridge's own "
-              "set-up chain rewritten in Python, and the tree with <b>each "
-              "stage's script and its scenery step</b>, checked against "
-              "openMSX down to zero cells. The listing and the numbers are "
-              "reproducible with <code>make</code>, and reassembling gives "
-              "back the ROM <b>byte for byte</b>.",
-        claim="A nine-stage tree the cartridge keeps in VRAM, a screen that "
-              "doubles as the map, and all nine stages drawn from the tables "
-              "without one cell differing from the emulator.",
-        ficha=["Konami - <b>(c) Konami 1984</b>",
-               "An <b>RC-713</b> 16 KB cartridge",
-               "MSX1 - <b>page 1</b>", "Dump <b>a3f3ad0d...</b>"],
         nav=[("#numbers", "The numbers"), ("#findings", "What turned up"),
              ("#screens", "What it draws")],
         docnav=[("GETTING-STARTED.html", "Getting started"),
@@ -104,23 +64,17 @@ TXT = {
         h_find="What turned up when we took it apart",
         h_scr="What the cartridge draws",
         cifras=[("100%", "of the binary explained"),
-                (str(RUTINAS), "named routines"),
-                (DENSIDAD_EN + "%", "of the listing commented"),
+                (mil(RUTINAS, "en"), "named routines"),
+                (densidad("en") + "%", "of the listing commented"),
                 (mil(CODIGO, "en"), "bytes of code"),
                 (mil(DATOS, "en"), "bytes of data"),
                 ("0", "bytes unidentified")],
-        nota_scr="Under each picture is where it comes from and what is on "
-                 "it. The nine whole stages are in The game.",
+        nota_scr="Under each picture is where it comes from and what is on it.",
         pie_leg="This is documentation and preservation work: the code and "
                 "artwork still belong to their authors and to Konami, and the "
                 "cartridge image is not distributed.",
     ),
 }
-
-
-# El contenido propio de este cartucho vive aparte, en contenido_web.py:
-# asi el generador no lleva dentro ni un texto del juego anterior.
-from contenido_web import HALLAZGOS, GALERIA        # noqa: E402
 
 
 def img64(ruta):
@@ -133,16 +87,16 @@ def main(argv):
         print(__doc__)
         return 2
     imgdir, salida, idioma = argv[1:4]
-    t = TXT[idioma]
+    t = dict(TXT[idioma], **PORTADA[idioma])
 
-    # El "logotipo" de la cabecera no es un montaje ni una captura: es el rotulo
-    # que el propio cartucho pinta en su pantalla de titulo, dibujado desde la
-    # ROM por graficos.py. Si el PNG no esta, el trabajo NO esta hecho: se cae
-    # al texto, y eso se ve.
-    ruta_logo = os.path.join(imgdir, "rotulo.png")
-    cabecera = (f'<img src="{img64(ruta_logo)}" alt="Magical Tree">'
+    # El "logotipo" de la cabecera no es un montaje ni una captura: es la
+    # pantalla de titulo que pinta el propio cartucho, dibujada desde la ROM
+    # (contenido_web.LOGOTIPO). Si el PNG no esta, el trabajo NO esta hecho: se
+    # cae al texto, y eso se ve.
+    ruta_logo = os.path.join(imgdir, LOGOTIPO)
+    cabecera = (f'<img src="{img64(ruta_logo)}" alt="{NOMBRE}">'
                 if os.path.exists(ruta_logo)
-                else "<h1>Magical Tree</h1>")
+                else f"<h1>{NOMBRE}</h1>")
 
     nav = "".join(f'<a href="{h}">{x}</a>' for h, x in t["nav"])
     nav += "".join(f'<a href="{h}">{x}</a>' for h, x in t["docnav"])
@@ -165,7 +119,8 @@ def main(argv):
             faltan.append(fich)
             continue
         pie = es if idioma == "es" else en
-        imgs += (f'<figure><img src="{img64(ruta)}" alt="{pie}">'
+        alt = re.sub(r"<[^>]+>", "", pie)
+        imgs += (f'<figure><img src="{img64(ruta)}" alt="{alt}">'
                  f'<figcaption>{pie}</figcaption></figure>')
     if faltan:
         print("  (faltan %d imagenes: %s)" % (len(faltan), " ".join(faltan)))
