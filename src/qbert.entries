@@ -1,0 +1,28 @@
+# Puntos de entrada que el trazado NO puede deducir solo.
+#
+# Cada uno lleva escrito POR QUE hace falta. Una entrada sin justificar es una
+# direccion metida a mano para que la cobertura cuadre.
+
+# El arranque: la cabecera del cartucho da INIT en 0x405E.
+0x405E   # INIT, la direccion que trae la cabecera del cartucho
+
+# INIT escribe un `jp` (0xC3) en 0xFD9A y la direccion 0x4025 en 0xFD9B, que
+# es H.KEYI, y se queda en el `jr $` de 0x40C3: todo el juego cuelga de la
+# interrupcion, una vez por cuadro.
+0x4025   # H.KEYI, enganchado por INIT en 0x4098
+
+# 0x40CE/0x40D3 cargan 0x45FC o 0x441E en HL y 0x40DF lo hace `push hl` antes
+# de repartir la escena: el `ret` de la escena salta ahi.
+0x45FC   # vuelta de la escena cuando el bit 6 de (0xE002) esta puesto
+0x441E   # vuelta de la escena con el bit 6 a cero
+
+# ======================================================================
+# LAS TABLAS PEGADAS DETRAS DEL `call` al despachador 0x4054
+# ======================================================================
+# `pop hl / add a,a / hl += a / ld e,(hl) / inc hl / ld d,(hl) / ex de,hl /
+# jp (hl)`: la tabla va pegada detras del `call`. El numero de entradas lo
+# mide tools/encaja_tablas.py: la tabla acaba donde empieza su entrada mas baja.
+!tabla 0x40e3   9   # desde 0x40E0; cierra en 0x40F5
+!tabla 0x6d35  15   # desde 0x6D32; cierra en 0x6D53
+!tabla 0x7328   4   # desde 0x7325; cierra en 0x7330
+!tabla 0x7628  15   # desde 0x7625; cierra en 0x7646, que es rutina (la llaman con `call`)

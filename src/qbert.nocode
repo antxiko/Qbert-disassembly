@@ -1,0 +1,4 @@
+# Zonas que NO son codigo aunque el trazado pueda entrar en ellas.
+
+# Las dos cabeceras.
+0x4000 0x4025

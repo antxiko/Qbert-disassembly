@@ -1,0 +1,5 @@
+# Q*BERT (Konami RC-746, 1986): anotaciones del desensamblado.
+# Formato: ver la cabecera de tools/mkasm.py.
+
+D 0x4000 0x4010 cabecera_del_cartucho  "AB" e INIT
+D 0x4010 0x4025 cabecera_del_game_master  la del Game Master
