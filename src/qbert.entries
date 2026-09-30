@@ -26,3 +26,14 @@
 !tabla 0x6d35  15   # desde 0x6D32; cierra en 0x6D53
 !tabla 0x7328   4   # desde 0x7325; cierra en 0x7330
 !tabla 0x7628  15   # desde 0x7625; cierra en 0x7646, que es rutina (la llaman con `call`)
+
+# ======================================================================
+# CODIGO HUERFANO: el trazado no entra, nadie lo carga con una constante y
+# la palabra de su direccion no aparece en los 32 KB (tools/apunta_a.py).
+# ======================================================================
+0x45FD   # codigo huerfano: intercambia B bytes entre (HL) y (DE)
+
+0x4643   # codigo huerfano: la pareja de 0x4637 para leer la VRAM
+
+0x640D   # codigo huerfano: min(fase - 1, 9), que no llama nadie
+0x6757   # codigo huerfano: rellena la tabla de nombres con 0, 1, 2... (visor de patrones)

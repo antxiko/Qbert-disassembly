@@ -1,5 +1,753 @@
-# Q*BERT (Konami RC-746, 1986): anotaciones del desensamblado.
+# ======================================================================
+# Q*BERT (Konami RC-746, 1986) - anotaciones del desensamblado
+# ======================================================================
 # Formato: ver la cabecera de tools/mkasm.py.
+#
+# Cada directiva D declara un rango de datos con su nombre y con la MEDIDA de
+# la que sale. Ningun limite esta puesto a ojo.
+#
+# El armazon es el de The Goonies (RC-734) y Yie Ar Kung-Fu II (RC-737):
+# tools/porta_nombres.py encuentra aqui, por firma de instrucciones
+# normalizadas, sus rutinas de guion, de RLE y de fuente (0x4651-0x46C9 y
+# 0x47B7). El motor de sonido y todo el juego son de este cartucho.
+#
+# LA RAM, lo que se lee en el listado:
+#   0xE000 escena  0xE001 paso de la escena  0xE002 modo  0xE003 cuadros
+#   0xE004 espera  0xE005 cuadro en curso    0xE008/0xE009 mando 1 (lo que
+#   acaba de pulsarse / lo que esta pulsado)  0xE00D fase acabada
+#   0xE010-0xE06F los tres canales de sonido  0xE0F0 copia del registro 7
+#   0xE100/0xE101 teclas del menu  0xE102 uno o dos jugadores  0xE103 nivel
+#   elegido  0xE104 partidas del duelo  0xE105-0xE107 record  0xE10B-0xE10D
+#   puntuacion  0xE110 vidas  0xE111 fase (BCD)  0xE112 umbral de la vida
+#   extra  0xE113 Q*bert en juego  0xE114 fase del Game Master
+#   0xE120-0xE12F copia de 0xE110 del segundo jugador
+#   0xE200 los 24 objetos de 8 bytes (Q*bert, el segundo Q*bert y los
+#   bichos)  0xE32F/0xE330 mando 2  0xEB00 los cubos de la fase
+#   0xEC00 el tablero de 9x9  0xEC51 el tiempo  0xED00 copia de la tabla de
+#   nombres
+#
+# Y los bits de 0xE002: el 6 es partida de verdad (no demostracion), el 5
+# el duelo de dos jugadores a la vez, y el 0 la fase de bonificacion.
 
-D 0x4000 0x4010 cabecera_del_cartucho  "AB" e INIT
-D 0x4010 0x4025 cabecera_del_game_master  la del Game Master
+# ======================================================================
+# LAS DOS CABECERAS
+# ======================================================================
+D 0x4000 0x4010 cabecera_del_cartucho  "AB" y la direccion de INIT (0x405E); STATEMENT, DEVICE y TEXT a cero, y los seis bytes reservados tambien
+F 0x4000 w
+
+# LA SEGUNDA CABECERA, la del Konami Game Master. El reparto sale del lector
+# del propio Game Master (GAMEMASTER_DISAM, 0x5E92): tras "CD" y el numero de
+# catalogo viene un byte de BANDERAS, y cada bit a CERO dice que el campo
+# viene. Con 0x80 vienen los siete primeros y falta el octavo, y el ultimo
+# acaba justo en 0x4025, donde empieza el codigo.
+D 0x4010 0x4014 cabecera_del_game_master  "CD" 07 46: el 0x07 de los RC-7xx y el 0x46 de RC-746
+F 0x4010 4
+D 0x4014 0x4015 banderas_del_game_master  0x80: vienen todos los campos menos el del bit 7
+F 0x4014 1
+D 0x4015 0x4025 punteros_del_game_master  0xE000 y 0x03 (la variable de escena y la escena del menu de nivel, donde se aplican los trucos), 0xE114 y 0x32 (la fase que elige el Game Master y cuantas hay: cincuenta), 0xE110 (las vidas), 0xE105 (el record), 0xE10B (la puntuacion), 0xE108 (el segundo marcador, que este juego ni lee) y 0xE002 (los bits de modo)
+F 0x4015 w,1,w,1,w5
+
+# ======================================================================
+# EL ARMAZON: la interrupcion y el reparto de escenas
+# ======================================================================
+B 0x4025 EL GANCHO DE H.KEYI. INIT deja aqui un `jp` y todo el juego cuelga de la interrupcion del VDP: el sonido en cada cuadro, y la escena solo si el cuadro anterior ya acabo.
+L 0x4025 cada_cuadro                El gancho de H.KEYI: el juego ENTERO cuelga de aqui
+C 0x4025 lee el registro de estado del VDP, que baja la peticion de interrupcion
+C 0x4029 el sonido va primero y con las interrupciones cortadas: no se salta un cuadro
+C 0x402C (0xE005) a uno: el cuadro anterior sigue a medias
+C 0x4031 si sigue, este cuadro solo suena
+C 0x4033 se marca el cuadro como en curso
+C 0x4034 y se abren las interrupciones: la escena puede durar mas de un cuadro
+C 0x4035 lee los dos mandos y el teclado
+C 0x4038 y hace la escena que toque
+C 0x403B cuadro acabado
+C 0x4040 si mientras tanto llego otra interrupcion (bit 7 del estado)...
+C 0x4045 ...su sonido se hace ahora, para no perderlo
+L 0x404A suma_a_a_hl                HL += A, con el acarreo al alto
+L 0x404F suma_a_a_de                DE += A, igual
+L 0x4054 reparte_por_tabla          El `pop hl` recoge la tabla: es la direccion de retorno
+C 0x4054 la tabla va pegada detras del `call`: su direccion es la de retorno
+C 0x4055 entradas de dos bytes
+C 0x4059 la entrada A de la tabla...
+C 0x405D ...y alli se salta
+B 0x405E INIT. Lo que ejecuta la BIOS al encontrar la "AB". Busca en que ranura esta el cartucho, pone la pagina 2 en esa misma ranura (el juego ocupa 0x4000-0xBFFF), engancha la interrupcion y se queda parado: todo lo demas pasa en 0x4025.
+L 0x405E INIT                       Lo que ejecuta la BIOS al encontrar la "AB" de 0x4000
+C 0x405F RSLREG: las ranuras de las cuatro paginas
+C 0x4062 la de la pagina 1, que es donde corre esto
+C 0x4067 EXPTBL: si esa ranura esta expandida (bit 7)...
+C 0x406C ...se anade el bit de expansion
+C 0x4071 y en SLTTBL, cuatro bytes mas alla, la subranura de la pagina 1
+C 0x4076 bits 2-3: la subranura
+C 0x4079 H=0x80: la pagina 2
+C 0x407B ENASLT: la pagina 2 pasa a la ranura del cartucho
+C 0x407E 1, 2 y 3 a los registros de banco de un mapeador de Konami. En un cartucho de 32 KB sin mapeador no hacen nada: son las escrituras de la casa, las mismas en todos
+C 0x408B de 0xFD00 a 0xFEFF todo `ret`: los ganchos de la BIOS quedan mudos
+C 0x4098 y en H.KEYI (0xFD9A) un `jp 0x4025`
+C 0x40A3 la pila, debajo de 0xEB00
+C 0x40A6 borra de 0xE000 a 0xE3FF
+C 0x40B3 (0xE005)=1 mientras se prepara el VDP: la interrupcion no toca escenas
+C 0x40B8 apaga el sonido, borra la VRAM y pone los registros
+C 0x40BF lee el estado para no arrancar con una interrupcion pendiente
+L 0x40C3 el_bucle_vacio             INIT acaba aqui: a partir de este `jr $` todo pasa en la interrupcion
+L 0x40C5 haz_el_cuadro              Cuenta el cuadro y reparte la escena que toque
+C 0x40C5 (0xE003): el contador de cuadros, que usa medio juego para ir a su ritmo
+C 0x40C9 bit 6 de (0xE002): hay partida de verdad
+C 0x40CE con partida, la escena vuelve a un `ret` y ya esta...
+C 0x40D3 ...sin partida, vuelve a 0x441E, que mira si se pulsa para empezar
+C 0x40D6 C = escena (0xE000), B = su paso (0xE001)
+C 0x40DB la escena 3, el menu de nivel, no mira nada a la vuelta
+C 0x40DF la vuelta se apila: el `ret` de la escena salta ahi
+D 0x40E3 0x40F5 tabla_de_escenas  Nueve entradas; reparte segun (0xE000): el logotipo de Konami, la presentacion, la demostracion, el menu de nivel, el principio de fase, la partida, el fin de partida, el record y la fase acabada
+F 0x40E3 w
+
+# LAS ESCENAS, y como se leen: cada una es una cadena de `djnz` sobre B, que
+# es su paso (0xE001). El paso 1 es el primer bloque, el 2 el segundo... y el
+# paso 0 es el ULTIMO, porque con B=0 el `djnz` da 0xFF y salta siempre. O sea
+# que cada escena empieza por su ultimo bloque, que es el que la prepara.
+B 0x40F5 ESCENA 0: EL LOGOTIPO DE KONAMI. El paso 0 lo monta apagado, el 1 lo destapa linea a linea y el 2 espera, borra y pasa a la presentacion.
+L 0x40F5 escena_logotipo
+C 0x40F5 paso 1: destapar
+C 0x40F7 una linea cada dos cuadros
+C 0x40FC pinta una linea de pixeles del logotipo; Z cuando acaba
+C 0x4100 hecho: espera de 256 cuadros (0xE004=0) y al paso 2
+C 0x4104 paso 2: esperar
+C 0x410B borra la copia de la tabla de nombres
+C 0x410E fondo negro...
+C 0x4113 ...y a la escena 1
+C 0x4116 paso 0: registros del VDP
+C 0x4119 tabla de nombres a cero
+C 0x411C la fuente
+C 0x411F y el logotipo de KONAMI, con los colores a cero
+B 0x4124 ESCENA 1: LA PRESENTACION. Q*bert delante de la maquina recreativa (pasos 1 a 8, en 0x83DA-0x8528), el titulo (paso 9) y el cursor de 1PLAYER/2PLAYERS parpadeando (paso 10). El paso 0 la prepara.
+L 0x4124 escena_presentacion
+C 0x4124 pasos 1 a 8: la presentacion, un bloque por paso
+C 0x414C paso 9: el titulo
+C 0x4154 paso 10: el cursor parpadea 256 cuadros...
+C 0x415A ...y si nadie pulsa, la escena 2, la demostracion
+C 0x4160 paso 0: la pantalla de la recreativa, y a por el paso 1
+B 0x4166 ESCENA 2: LA DEMOSTRACION. El juego de verdad, con las pulsaciones sacadas de 0x6BBF/0x6BD8. Se alternan dos: un jugador en la fase 34 y dos a la vez en la 37.
+L 0x4166 escena_demostracion
+C 0x4166 paso 1: juega un cuadro
+C 0x4168 las pulsaciones grabadas
+C 0x416B el cuadro de partida, el mismo que en el juego
+C 0x416E (0xE113) a cero: el Q*bert de la demostracion ha caido o se acabo el guion
+C 0x4173 sonido 0x14 y 120 cuadros de espera
+C 0x417C paso 2: la espera
+L 0x4183 vuelve_al_logotipo
+C 0x4183 escena 0, el logotipo, con 32 cuadros de espera
+L 0x4184 pon_escena_a
+C 0x418F paso 0: pantalla en negro y a montar la demostracion
+L 0x4197 espera_a_y_sigue          (0xE004)=A y al paso siguiente
+L 0x419A paso_siguiente
+B 0x419F ESCENA 3: EL MENU DE NIVEL. LEVEL 1-5 con un jugador; con dos, dos niveles y la partida a 3 o a 5 duelos. Esta escena no apila vuelta: mientras se elige, 0x441E no mira los mandos.
+L 0x419F escena_menu_de_nivel
+C 0x419F paso 1: dibujar el menu
+C 0x41A1 (0xE102): uno o dos jugadores
+C 0x41B1 paso 2: elegir. Los dos lectores hacen `pop hl` y vuelven de la escena mientras no se pulse el disparo
+C 0x41C1 con el nivel ya elegido, la fase en la que se empieza
+C 0x41C4 y si el Game Master pide otra, esa
+C 0x41C7 sonido 0x41 y 80 cuadros
+C 0x41D0 paso 3: parpadea la opcion elegida mientras dura la espera
+C 0x41E0 y a la escena 4
+C 0x41E2 paso 0: pantalla en negro, la fuente y 80 cuadros
+B 0x41EC ESCENA 4: EL PRINCIPIO DE FASE. El paso 0 descuenta la vida que se va a jugar y pone el rotulo (LEVEL y STAGE al empezar un nivel, READY en el duelo); el paso 1 monta la fase cuando callan el sonido y la espera.
+L 0x41EC escena_principio_de_fase
+C 0x41EC paso 1: montar
+C 0x41F7 espera a que acabe la musica del canal 1
+C 0x41FC sonido 0x17, la musica de la fase
+C 0x4209 la fase entera: tablero, cubos, bichos y marcador
+C 0x420C Q*bert en juego
+C 0x4211 y el segundo Q*bert tambien
+L 0x4216 escena_siguiente           Siguiente escena, con 32 cuadros de espera
+L 0x4218 escena_siguiente_con_espera_a
+L 0x421F al_paso_0
+C 0x4224 paso 0: una vida menos, la que se juega ahora; el marcador de vidas cuenta las de reserva
+C 0x422C y la copia del segundo jugador
+C 0x4232 bit 5 de (0xE002): el duelo
+C 0x4236 marco de ladrillo limpio
+C 0x4239 la cabecera del duelo: cuantas partidas quedan
+C 0x423C READY
+C 0x4242 y no sigue hasta que acaba su musica
+C 0x424A con un jugador, solo en la primera fase de cada nivel (01, 11, 21, 31 y 41)...
+C 0x4254 ...el rotulo: LEVEL n y STAGE nn
+C 0x4260 STAGE, y el numero de fase dos casillas mas alla
+D 0x4275 0x4285 rotulos_ready_y_level  Dos guiones de 0x4685: READY en 0x39AD y LEVEL en 0x390C. Cada uno es la direccion de la tabla de nombres y los caracteres, con 0xFF de fin
+F 0x4275 8
+L 0x4285 pinta_el_numero_de_nivel   El nivel elegido (0xE103, de 0 a 4) mas uno, detras de LEVEL
+C 0x428C los digitos son las casillas 0x10 a 0x19
+
+# ======================================================================
+# ESCENA 5, LA PARTIDA, y las que vienen detras
+# ======================================================================
+B 0x4291 ESCENA 5: LA PARTIDA. Cada cuadro hace el paso que toque (0x6782) y luego mira si la fase se ha acabado o si Q*bert ha caido: si queda tiempo y vidas, lo vuelve a poner arriba; si no, a la escena 6.
+L 0x4291 escena_partida
+C 0x4291 el paso de la partida
+C 0x4299 en el duelo, el Q*bert que cae vuelve a salir
+C 0x429C (0xE00D): fase acabada, a la escena 8
+C 0x42A5 (0xE113) puesto: Q*bert sigue en juego
+C 0x42AA (0xEC51): el tiempo que queda, en BCD
+C 0x42B0 con tiempo, espera a que acabe de caer: estados 4, 12 y 13 de 0xE202
+L 0x42BC vuelve_a_poner_a_qbert
+C 0x42BC Q*bert otra vez en juego, los dos
+C 0x42C4 fuera el objeto de la vida extra
+C 0x42C7 los dos sprites de Q*bert, arriba del todo y cayendo
+C 0x42D2 sin bola verde, sin congelar y sin bichos parados
+C 0x42DC sin tiempo: a la escena 6, TIME OVER
+C 0x42E3 sin vidas: a la escena 6, GAME OVER
+C 0x42EA una vida menos...
+C 0x42EE ...se pinta...
+C 0x42F1 ...y el tiempo vuelve a 99
+D 0x42F7 0x4307 qbert_al_salir  Los dos objetos de Q*bert que 0x42C7 copia a 0xE200: estado 3 (cayendo sobre la piramide), Y 0xE1 y X 0x7C, y los dos sprites de 16x16, el 0 en color 10 y el 0x10 (patrones 16 a 19) en color 13. El `jp z` de 0x42F4 va siempre -viene de un `jr z`-: el trazado entraria aqui por la otra rama si no se declarase
+F 0x42F7 8
+B 0x4307 ESCENA 6: EL FIN DE PARTIDA. El paso 0 separa el TIME OVER (quedaba vida pero no tiempo) del GAME OVER; el 1 espera la musica y, si quedan vidas, vuelve a la escena 4 con la misma fase.
+L 0x4307 escena_fin_de_partida
+C 0x4307 paso 1
+C 0x4309 en el duelo, el marcador de partidas parpadea
+C 0x4311 con vidas, 256 cuadros y al paso 2
+C 0x4318 sin vidas: la musica del GAME OVER, 0x53 (0x50 en el duelo)...
+C 0x4326 ...escena 7, paso 1...
+C 0x432C ...y el rotulo GAME OVER / CONTINUE--F5
+C 0x4332 paso 2
+L 0x4334 vuelve_a_la_fase          Escena 4, paso 0, con 128 cuadros de espera: se repite la fase
+L 0x4340 musica_de_game_over
+C 0x4351 paso 0: si queda tiempo, es que no quedan vidas
+C 0x4357 TIME OVER: la pantalla del marcador
+D 0x436A 0x4377 rotulo_time_over  Guion de 0x4685: "TIME  OVER" en 0x38CB
+F 0x436A 13
+B 0x4377 ESCENA 7: GAME OVER. Con un jugador, F5 durante la espera es el CONTINUE: puntuacion a cero, tres vidas y la misma fase. Sin F5, al logotipo.
+L 0x4377 escena_game_over
+C 0x4377 paso 1
+C 0x4380 fila 7 del teclado: el bit 1 es F5, a cero si esta pulsada
+L 0x4396 continua_la_partida
+C 0x4396 CONTINUE: la puntuacion a cero...
+C 0x43A3 ...tres vidas...
+C 0x43AA ...y el umbral de la vida extra otra vez en 10.000
+C 0x43AF paso 2: se acaba la espera...
+C 0x43B6 ...se quita el bit de partida...
+C 0x43BD ...y al logotipo
+C 0x43C0 paso 0: la pantalla del marcador
+B 0x43CB ESCENA 8: FASE ACABADA. El paso 0 devuelve la vida que se desconto al empezar, sube la fase (de la 50 vuelve a la 1) y monta la siguiente; tras la 3, la 6 y la 10 de cada decena, la fase de bonificacion.
+L 0x43CB escena_fase_acabada
+C 0x43CB paso 1: espera y a la escena 4
+C 0x43E6 paso 0
+C 0x43EF con un jugador...
+C 0x43F1 ...quiza la fase de bonificacion, que no vuelve de aqui
+C 0x43F4 la vida que se desconto al empezar
+C 0x43FC la fase siguiente, en BCD
+C 0x4402 despues de la 50, la 1
+C 0x440A en el duelo, silencio
+C 0x440F el tablero de la fase nueva
+B 0x441E LO QUE MIRA LA VUELTA DE LAS ESCENAS SIN PARTIDA. Cualquier tecla en el logotipo o la demostracion salta al titulo; en el titulo, las direcciones cambian 1PLAYER/2PLAYERS y el disparo empieza.
+L 0x441E mira_si_empiezan
+C 0x441E el mando 1 y el teclado...
+C 0x4424 ...y lo que ACABA de pulsarse, en (0xE100)
+C 0x442C la espera a cero, y HL=0xE000
+C 0x4435 fuera de la escena 1, al titulo
+C 0x443C en la escena 1, antes del paso 9 tambien
+C 0x4441 bits 4 y 5: el disparo (o el espacio)
+C 0x4445 (0xE102): uno o dos jugadores
+C 0x4447 0x40: partida; 0x60: partida de dos
+C 0x4450 escena 3, paso 0: el menu de nivel
+C 0x4457 las dos lineas con la mano en la buena
+L 0x445D salta_al_titulo
+C 0x445D escena 1, paso 10
+C 0x4462 silencio
+L 0x446A cambia_uno_o_dos_jugadores
+C 0x446E sonido 3, el del cursor
+L 0x4474 gancho_vacio             Un `ret` solo; 0x426A lo llama detras del rotulo de STAGE
+L 0x4475 partida_nueva            Borra de 0xE108 a 0xE4FF y pone tres vidas, fase 1 y el umbral de la vida extra
+C 0x4482 (0xE114) acaba de borrarla el `ldir`: este salto no se toma nunca
+C 0x4488 los tres bytes de 0x44B8 a 0xE110
+C 0x4493 con dos jugadores, lo mismo en la copia del segundo
+L 0x4499 copia_al_segundo_jugador
+L 0x44A5 fase_del_game_master_muerta
+C 0x44A5 CODIGO MUERTO: solo se llega si (0xE114) no es cero justo despues de borrarla. Y si llegara, el `jr` de 0x44B6 no sale nunca
+D 0x44B8 0x44BB partida_recien_puesta  Los tres bytes que 0x4488 copia a 0xE110: tres vidas, fase 01 y el umbral de la vida extra en 01 (10.000 puntos: es el byte alto de la puntuacion)
+F 0x44B8 3
+L 0x44BB aplica_la_fase_del_game_master  Si el Game Master escribio una fase en (0xE114), la partida empieza en ella (en BCD, y como mucho la 50)
+L 0x44D8 esconde_los_sprites      Y=0xD0 en el primer sprite: el VDP no pinta ni ese ni los de detras
+B 0x44E2 SUMA PUNTOS. DE en BCD se suma a la puntuacion de 0xE10B (E a las unidades y decenas, D a las centenas y millares): 0x0010 son 10 puntos y 0x5000 son 5.000. Ni en la demostracion ni en el duelo. Cada vez que el byte alto llega al umbral de (0xE112), una vida mas y el umbral sube 5: vidas a los 10.000, 60.000, 110.000...
+L 0x44E2 suma_puntos
+C 0x44E4 sin partida (demostracion), nada
+C 0x44E9 en el duelo, tampoco
+C 0x44FD se ha pasado de 999999
+C 0x44FF el record se queda en 999999
+L 0x450D mira_la_vida_extra
+C 0x4511 el byte alto contra el umbral
+C 0x4514 umbral + 5, en BCD; si se sale, 0xFF y no hay mas
+C 0x451E y la vida
+C 0x4526 sonido 0x11, el de la vida extra
+L 0x452F mira_el_record
+C 0x452F compara la puntuacion con el record de mas a menos significativo
+C 0x4541 la supera: se copia encima
+D 0x454C 0x454D ret_suelto  Un `ret` (0xC9) que no ejecuta nadie: detras del `jp` de 0x4549 y sin ninguna referencia en los 32 KB (tools/apunta_a.py)
+F 0x454C 1
+L 0x454D pinta_los_marcadores_del_game_over  HI-SCORE, REST, STAGE y 1P-SCORE, con sus numeros
+L 0x4567 pinta_el_marcador        La linea de arriba: STAGE-nn SCORE-nnnnnn P-nn
+C 0x456D la fase
+C 0x4570 la puntuacion
+C 0x4573 y las vidas, en 0x45D8
+L 0x4575 pinta_el_marcador_del_duelo  2P- y 1P- con las vidas de cada uno
+L 0x457E pinta_las_vidas_de_los_dos
+D 0x4591 0x459D rotulos_2p_y_1p  Guion de 0x4685: "2P-" en 0x3802 y "1P-" en 0x3819 (0x20 es el guion)
+F 0x4591 6
+L 0x459D pinta_record_y_puntuacion  En la pantalla del GAME OVER
+L 0x45A9 pinta_la_puntuacion_en_hl
+L 0x45AC pinta_tres_bytes_bcd
+L 0x45B0 pinta_la_puntuacion      Seis cifras en 0x3812
+L 0x45BA pinta_la_fase_del_game_over
+L 0x45BD pinta_la_fase_en_hl
+L 0x45C4 pinta_la_fase            Dos cifras en 0x3808
+L 0x45CE pinta_las_vidas_del_game_over
+L 0x45D8 pinta_las_vidas          Dos cifras en 0x381C
+B 0x45E2 PINTA B BYTES EN BCD de DE hacia abajo, dos cifras por byte, en la tabla de nombres desde HL. Las cifras son las casillas 0x10 a 0x19.
+L 0x45E2 pinta_bcd
+C 0x45E2 la cifra alta...
+C 0x45E9 ...a su casilla
+C 0x45EF la baja
+C 0x45F7 el byte de antes: el mas significativo va primero
+L 0x45FC vuelta_con_partida        El `ret` al que vuelven las escenas durante la partida
+L 0x45FD intercambia_b_bytes       Intercambia B bytes entre (HL) y (DE)
+C 0x45FD CODIGO HUERFANO: nadie lo llama ni apunta aqui
+D 0x4607 0x462A rotulo_del_marcador  Guion de 0x4685 con la linea de arriba entera desde 0x3800: STAGE-, SCORE- y P-, con el tile 0xEB (el negro del marco) de separador
+F 0x4607 8
+
+# ======================================================================
+# LA VRAM: borrados, volcados y los guiones
+# ======================================================================
+L 0x462A borra_la_pantalla          Esconde los sprites y pone a cero la tabla de nombres (0x3800, 768 casillas)
+C 0x4634 FILVRM
+L 0x4637 prepara_escritura_de_vram  SETWRT en HL y el puerto de datos del VDP (el de 0x0007 de la BIOS) en C' para los `out (c)`
+C 0x4638 SETWRT
+C 0x463C el puerto de escritura del VDP, tal como lo dice la BIOS
+L 0x4643 prepara_lectura_de_vram    La pareja de 0x4637 para leer: SETRD y el puerto de 0x0006
+C 0x4643 CODIGO HUERFANO: nadie lo llama; el juego no lee la VRAM por el puerto
+C 0x4647 el puerto de lectura del VDP
+L 0x464D copia_a_vram               BC bytes de (DE) a la VRAM en HL: LDIRVM con los punteros cambiados
+L 0x4651 copia_a_los_tres_bancos    Lo mismo tres veces, a 0x800 de distancia: los tres tercios de la pantalla
+C 0x4652 tres tercios
+C 0x465A el tercio siguiente
+L 0x4654 copia_un_banco
+L 0x4664 rellena_los_tres_bancos    FILVRM de BC bytes con A, en HL, HL+0x800 y HL+0x1000
+C 0x4668 FILVRM
+L 0x4675 guion_rle_en_tres_bancos   El guion RLE de DE, tres veces, desde HL, HL+0x800 y HL+0x1000
+B 0x4685 EL GUION DE TEXTO. En DE: una direccion de la tabla de nombres y los caracteres detras; 0xFE salta a otra direccion (la que sigue) y 0xFF acaba. Cada caracter se pasa por AND C: con C=0xFF pinta, con C=0 borra el mismo rotulo en su sitio.
+L 0x4685 pinta_guion
+C 0x4685 C=0xFF: pinta
+L 0x4687 guion_nueva_direccion
+C 0x4687 la direccion de destino, los dos primeros bytes
+L 0x468D byte_del_guion
+C 0x468F 0xFF + 1 = 0: fin
+C 0x4692 0xFE + 2 = 0: otra direccion
+C 0x4695 AND C: el caracter o un cero
+C 0x4696 WRTVRM
+L 0x469C borra_guion                El mismo guion con C=0: pone ceros donde iba el texto
+B 0x46A0 EL RLE DE LA VRAM. En DE: la direccion de destino y luego ordenes de un byte: 0x00 acaba, 0x01-0x7F repite el byte siguiente ese numero de veces, 0x81-0xFF copia literales (el numero menos 0x80) y 0x80 cambia de direccion con la palabra que sigue.
+L 0x46A0 guion_rle
+C 0x46A0 la direccion, los dos primeros bytes
+L 0x46A6 vuelca_el_guion_con_destino_en_hl
+L 0x46A9 orden_del_rle
+C 0x46AA 0x00: fin
+C 0x46AE sin el bit 7...
+C 0x46B1 ...es una repeticion
+C 0x46B3 0x80 a secas: direccion nueva
+C 0x46B6 0x81-0xFF: tantos literales
+L 0x46B7 copia_literales
+L 0x46C1 repite_un_byte
+L 0x46CB apaga_y_borra_la_vram       Silencio, toda la VRAM a cero y los registros del VDP de 0x46F0
+C 0x46CB mezclador del PSG: los seis canales cerrados
+C 0x46D0 sonido 0x59: todo en silencio
+C 0x46D5 los 16 KB de VRAM a cero
+L 0x46DF pon_los_registros_del_vdp
+C 0x46E6 WRTVDP, registro C con el valor B
+D 0x46F0 0x46F8 registros_del_vdp  Los ocho: SCREEN 2 (0x02); 16 KB, pantalla encendida, interrupcion y sprites de 16x16 (0xE2); nombres en 0x3800 (0x0E); color en 0x0000 (0x7F); patrones en 0x2000 (0x07); atributos de sprites en 0x3B00 (0x76); patrones de sprites en 0x1800 (0x03); y fondo azul oscuro con letra gris (0xE4)
+F 0x46F0 8
+L 0x46F8 pon_el_fondo              Registro 7 con B: el color del fondo
+# ======================================================================
+# LOS MANDOS
+# ======================================================================
+B 0x46FD LOS MANDOS, una vez por cuadro. El mando 2 va con la lectura del puerto 2 y las teclas E, S, F, C y CTRL a 0xE330/0xE32F; el mando 1, con el puerto 1, los cursores, el espacio y SELECT, a 0xE009/0xE008. El segundo byte de cada pareja es lo que ACABA de pulsarse. Los bits: 0 arriba, 1 abajo, 2 izquierda, 3 derecha, 4 y 5 los dos disparos.
+L 0x46FD lee_los_mandos
+C 0x46FD puerto 2 del PSG (bit 6 del registro 15 a uno)
+C 0x4702 y E-S-F-C-CTRL encima
+C 0x4705 al mando 2
+C 0x470B puerto 1 y los cursores
+L 0x4711 guarda_el_mando_1
+L 0x4714 guarda_mando_en_hl         (HL)=lo pulsado y (HL-1)=lo que no lo estaba en la lectura anterior
+C 0x4716 lo de antes, invertido...
+C 0x4717 ...y con lo de ahora: lo recien pulsado
+L 0x471B lee_el_puerto_1
+L 0x471D lee_el_puerto_en_e        E al registro 15 del PSG (el puerto) y el 14 leido: los seis bits, a uno lo pulsado
+C 0x471F WRTPSG
+C 0x4725 RDPSG
+C 0x4729 los botones van a cero: se invierten
+B 0x472D LOS CURSORES, EL ESPACIO Y SELECT, colocados en los bits del mando: se leen las filas 8 y 7 del teclado y se reordenan a golpe de `rrca`.
+L 0x472D lee_cursores_espacio_y_select
+C 0x472E fila 7 del teclado
+C 0x4734 el bit 6 (SELECT) al bit 5
+C 0x4738 fila 8: derecha, abajo, arriba, izquierda... y el espacio en el bit 0
+C 0x4741 izquierda al bit 2
+C 0x4749 derecha y espacio a los bits 3 y 4
+C 0x474F arriba y abajo a los bits 0 y 1
+C 0x4752 y encima de lo que leyo el puerto
+B 0x4755 LAS TECLAS DEL SEGUNDO JUGADOR: E arriba, C abajo, S izquierda y F derecha (un rombo, como las cuatro diagonales del juego), y CTRL de disparo.
+L 0x4755 lee_las_teclas_del_segundo
+C 0x475A fila 3 del teclado
+C 0x475D bit 0: la C, abajo
+C 0x4763 bit 2: la E, arriba
+C 0x4769 bit 3: la F, derecha
+C 0x4771 fila 5, bit 0: la S, izquierda
+C 0x477C fila 6, bit 1: CTRL, el disparo
+D 0x4788 0x47B7 rotulos_del_titulo  Guiones de 0x4685: "STAGE" en 0x394C; "(c)KONAMI 1986" en 0x382A y "1PLAYER" en 0x396C (el que empieza en 0x4790); "2PLAYERS" en 0x398C (0x47A9); y en 0x47B4 los dos tiles de la mano del cursor, 0x1B y 0x1C, sin direccion: los pinta 0x4B3A donde diga HL
+F 0x4788 8
+# ======================================================================
+# LA FUENTE Y EL LOGOTIPO DE KONAMI
+# ======================================================================
+L 0x47B7 monta_la_fuente           La fuente RLE de 0x47EF en los tres tercios desde el tile 0x10, y su color, blanco sobre transparente (0xF0)
+C 0x47BD tile 0x10, el cero
+C 0x47C3 blanco sobre transparente...
+C 0x47C5 ...para los tiles 0x10 a 0x3A
+L 0x47CE limpia_la_fuente          Los 16 primeros tiles a cero y su color a 0x00-0x0F: el tile N queda como un bloque de color N
+C 0x47D5 patrones de los tiles 0 a 15, a cero
+C 0x47DE el color de cada uno es 0x0N: con el patron a cero, el tile N es un bloque macizo de color N
+D 0x47EF 0x4920 fuente  La fuente de 43 caracteres (tiles 0x10 a 0x3A: las cifras, el (c), la mano, el guion y la A a la Z) en el RLE de 0x46A6. tools/graficos.py la descomprime y acaba justo en el 0x00 de 0x491F
+F 0x47EF 8
+B 0x4920 EL LOGOTIPO DE KONAMI. Sus patrones van al segundo tercio desde el tile 0x40 con los colores a cero, y la tabla de nombres lleva seis filas de 21 tiles correlativos desde 0x3907.
+L 0x4920 monta_el_logotipo_de_konami
+C 0x4920 la cortina empieza en la linea 0, fila 0
+C 0x4926 los patrones, con su direccion dentro del guion
+C 0x492C los colores del logotipo, a cero: aun no se ve
+C 0x4936 fila 8, columna 7
+C 0x4939 tiles 0x40 en adelante, 21 por fila
+C 0x4949 32 - 21 = 11 para bajar de fila
+B 0x494E DESTAPA EL LOGOTIPO: una linea de pixeles cada vez. (0xE00E) es la linea dentro del tile y (0xE00F) la fila de tiles; pone 0xF0 en esa linea de los 21 tiles de la fila. Devuelve Z al acabar la sexta fila.
+L 0x494E destapa_una_linea_del_logotipo
+C 0x4952 0xEB + 21 por fila: A acaba en 21*fila (la primera vuelta da 0x100)
+C 0x495B por 8: el tile en la tabla de color
+C 0x495E el segundo tercio del color
+C 0x4962 y la linea dentro del tile
+C 0x496B blanco sobre transparente
+C 0x4973 la linea siguiente...
+C 0x497C ...y tras la octava, la fila siguiente
+C 0x497F Z en la sexta
+D 0x4982 0x4AE4 logotipo_de_konami  Los patrones del logotipo en el RLE de 0x46A0, con destino 0x2A00 (tile 0x40 del segundo tercio): 126 tiles, las seis filas de 21. Se descomprime hasta el 0x00 de 0x4AE3
+F 0x4982 8
+# ======================================================================
+# EL TITULO
+# ======================================================================
+L 0x4AE4 fondo_negro
+C 0x4AE4 registro 7 a 0xE0: fondo negro
+B 0x4AEA EL TITULO: el rotulo de Q*bert en su marco, Q*bert en la recreativa, (c)KONAMI 1986 y el menu de uno o dos jugadores. Si la presentacion ya lo ha dibujado (0xE115), solo pone los textos.
+L 0x4AEA pinta_el_titulo
+C 0x4AF6 desde cero: pantalla, fuente...
+C 0x4AFC ...la de la recreativa...
+C 0x4AFF ...el rotulo en su marco, en la fila 2, columna 5...
+C 0x4B05 ...Q*bert y la pantalla de la recreativa...
+C 0x4B08 ...el color del ultimo sprite...
+C 0x4B0D ...la copia de la tabla de nombres a la VRAM...
+C 0x4B10 ...y los sprites
+L 0x4B13 pinta_los_textos_del_titulo
+C 0x4B13 (c)KONAMI 1986 y 1PLAYER...
+C 0x4B19 ...y 2PLAYERS, que viene detras
+L 0x4B1C parpadea_el_cursor       La mano aparece y desaparece cada 8 cuadros
+L 0x4B26 pinta_la_mano             La mano con C en la opcion de (0xE102) y borrada en la otra
+C 0x4B26 las dos lineas del menu
+L 0x4B3A pinta_la_mano_en_hl
+L 0x4B40 pinta_el_rotulo_de_qbert  Las ocho filas de 0x4B95 en la copia de la tabla de nombres, desde HL
+C 0x4B48 23 casillas y 9 de salto: filas de 32
+C 0x4B8A la ultima fila, el pie del marco, va 5 casillas mas a la derecha
+D 0x4B95 0x4C41 rotulo_de_qbert  El rotulo Q*bert con su marco, en ocho guiones de 0x8724 (casillas con 0xFF de fin) que 0x4B40 pone uno por fila: siete de 23 casillas y la ultima, de tres, desplazada. 0x63 es el marco, 0x40 el fondo, 0x70-0x88 la Q con la estrella y 0x41-0x62 "bert" y la TM
+F 0x4B95 24
+
+# ======================================================================
+# EL MOTOR DE SONIDO
+# ======================================================================
+# Cuatro canales de 0x20 bytes en 0xE010, 0xE030, 0xE050 y 0xE070: los tres
+# primeros son los tres del PSG y el cuarto es el de efectos, que cuando suena
+# le quita al tercero sus registros. Los campos de cada canal (IX):
+#   +0 cuenta de la nota  +1 duracion  +2 sonido que suena (0 = libre)
+#   +3/+4 puntero a los datos  +5 tipo: bit 1 tono, bit 0 ruido, bit 3 la
+#   envolvente del PSG  +6 unidad de tiempo  +7 volumen  +8 volumen actual
+#   +9 octava (cuantas veces se dobla el periodo)  +0A cuenta del decaimiento
+#   +0B vueltas del bucle  +0C/+0D ritmo y suelo del decaimiento  +0E modo
+#   (0 efecto, 1 musica)  +0F desafinado (con 8, periodo + 1)  +10 instrumento
+#   +11/+12 puntero del instrumento  +13 su cuenta  +14 su duracion
+#   +15/+16 periodo  +17 volumen de salida  +18/+19 vuelta de la subrutina
+B 0x4C41 TOCA UN SONIDO, pero solo con partida (bit 6 de 0xE002): los efectos de la demostracion no suenan.
+L 0x4C41 toca_sonido_en_partida
+L 0x4C4C toca_sonido               A: el numero de sonido. Guarda todos los registros
+L 0x4C5A arranca_el_sonido
+C 0x4C5A el 0x56 es el de la pausa: antes se guardan los cuatro canales en 0xE090
+C 0x4C69 de 0x01 a 0x16: un efecto, un canal (el cuarto)
+C 0x4C73 de 0x17 en adelante, musica: tres canales
+C 0x4C77 y el 0x56, los cuatro
+C 0x4C7A una musica calla el efecto que sonara, salvo la 0x2C
+L 0x4C84 arranca_un_efecto
+C 0x4C84 HL=0xE072: el sonido del canal de efectos
+C 0x4C86 con la musica 0x2C o posteriores en el tercer canal, los efectos no suenan
+C 0x4C8C y un efecto solo corta a otro de numero menor o igual
+L 0x4C91 arranca_b_canales
+C 0x4C92 la tabla de 0x52E2: una entrada por canal, y una musica usa tres seguidas
+L 0x4CA0 prepara_un_canal
+C 0x4CA0 +0: la primera nota sale ya
+C 0x4CA4 +2: el sonido
+C 0x4CA6 +3/+4: sus datos
+C 0x4CB1 +0B: sin bucle
+C 0x4CB8 +0E: modo musica
+C 0x4CBD +0F y +10: afinado y sin instrumento
+C 0x4CC2 +19: sin subrutina
+B 0x4CCC EL SONIDO DE CADA CUADRO. Primero el mezclador; si hay que volver de la pausa, se restauran los canales de 0xE090; y luego los cuatro canales, uno detras de otro, con C en el registro de periodo de cada uno (1, 3, 5 y 7).
+L 0x4CCC suena_un_cuadro
+C 0x4CCC el mezclador tal como quedo
+C 0x4CD3 cuatro canales de 0x20 bytes
+C 0x4CD9 (0xE0F3): se estan rehaciendo los registros tras la pausa
+C 0x4CE3 (0xE0F1): acaba la pausa
+C 0x4CEA los canales guardados vuelven a su sitio
+L 0x4CF9 un_canal
+C 0x4CFA +2 a cero: canal libre
+C 0x4D05 libre y no es el de efectos: se deja en silencio
+L 0x4D13 avanza_el_canal
+C 0x4D13 tras la pausa, primero el periodo y el volumen que tenia
+C 0x4D1F modo musica
+C 0x4D26 modo efecto: sin instrumento
+C 0x4D29 cuando se acaba la nota...
+L 0x4D2D lee_la_siguiente_orden
+C 0x4D33 0xFE: bucle, subrutina o cambio de modo
+C 0x4D39 0xFF: fin (o vuelta de la subrutina)
+L 0x4D44 orden_de_efecto
+C 0x4D44 0x2X: el tipo del sonido
+C 0x4D4E y su duracion
+C 0x4D5D 0x20 a secas: un silencio
+C 0x4D69 bit 3: la envolvente del PSG...
+C 0x4D6D ...con su periodo en los registros 12 y 11
+C 0x4D7D 0x1X: el periodo del ruido, X por dos, al registro 6
+L 0x4D8F nota_de_efecto
+C 0x4D8F el nibble alto es el volumen; el bajo y el byte siguiente, el periodo de 12 bits tal cual
+L 0x4DA1 guarda_el_periodo
+C 0x4DAF el volumen, del nibble alto
+L 0x4DCB repone_la_duracion
+L 0x4DD9 decae_la_nota
+C 0x4DD9 en modo musica, la nota se va apagando
+C 0x4DE6 cada tantos cuadros (+0C)...
+C 0x4DFC ...el volumen baja uno, hasta 0
+B 0x4E0F LAS ORDENES DE LA MUSICA. 0xDX: unidad de tiempo X. 0xFX: volumen X+2, y el byte siguiente el ritmo y el suelo del decaimiento. 0xE0-0xE7: octava. 0xE8: desafina (periodo + 1). 0xE9-0xEE: instrumento 1 a 6. 0xEF: sin instrumento. El resto es una nota: nibble alto de 0 a 11 (12 es silencio) y nibble bajo, cuantas unidades dura menos una.
+L 0x4E0F orden_de_musica
+C 0x4E17 0xDX: la unidad de tiempo
+C 0x4E1E 0xFX: el volumen...
+C 0x4E2A ...y el decaimiento
+C 0x4E3C 0xEX
+C 0x4E42 0xE0-0xE7: la octava
+C 0x4E48 0xEF: fuera instrumento
+C 0x4E4C 0xE9-0xEE: instrumento 1 a 6
+L 0x4E53 quita_el_instrumento
+L 0x4E5D desafina
+L 0x4E63 pon_la_octava
+L 0x4E68 nota_de_musica
+C 0x4E68 la duracion: la unidad por (nibble bajo + 1)
+C 0x4E7C el nibble alto: la nota
+C 0x4E8A la 12 es un silencio: volumen 0
+C 0x4E97 +0F no pasa de 12
+C 0x4EAF el periodo, de la tabla de 0x4FC3...
+C 0x4EC2 ...doblado tantas veces como diga la octava
+L 0x4ED8 arranca_el_instrumento
+C 0x4ED8 la tabla de 0x50A4 empieza en el instrumento 1
+C 0x4EEC dentro del instrumento, la nota que toca
+L 0x4F01 paso_del_instrumento
+C 0x4F0C 0xFF: se acabo el instrumento
+L 0x4F13 siguiente_paso_del_instrumento
+L 0x4F1D calla_el_instrumento
+L 0x4F2C fin_del_canal
+C 0x4F2C con una subrutina abierta, se vuelve a ella
+L 0x4F46 libera_el_canal
+C 0x4F5C los canales de musica se quedan en silencio
+L 0x4F69 acaba_el_efecto
+C 0x4F69 el efecto 2 deja sonando el 0x2C
+C 0x4F71 y el tercer canal recupera sus registros
+L 0x4F80 pon_el_periodo
+C 0x4F80 (0xE072): hay efecto sonando
+C 0x4F84 los dos primeros canales, siempre
+C 0x4F89 el tercero solo si no hay efecto
+C 0x4F90 y el de efectos solo si lo hay, en los registros del tercero
+L 0x4F9B escribe_el_periodo
+C 0x4FA1 desafinado: el periodo + 1, la nota un pelo mas grave
+C 0x4FA9 registro C: el byte alto
+C 0x4FAE registro C-1: el bajo
+C 0x4FBE modo musica sin instrumento: el tipo pasa a tono solo
+D 0x4FC3 0x4FCF periodos_de_las_notas  Los doce semitonos de la octava mas aguda, del do al si: 107, 101, 95, 90, 85, 80, 76, 71, 67, 64, 60 y 57. El resto de octavas se sacan doblando el periodo
+F 0x4FC3 12
+L 0x4FCF pon_el_volumen
+L 0x4FE4 escribe_el_volumen
+C 0x4FE4 primero el mezclador
+C 0x4FE7 el registro de volumen: 8, 9 o 10
+C 0x4FF2 con la envolvente del PSG, su forma al registro 13 y volumen 16
+L 0x5004 copia_los_canales        Los 0x60 bytes de tres canales de HL a DE, y fuera la marca de pausa
+L 0x500F orden_fe
+C 0x5010 0xFE 0x00: cambia de modo
+C 0x5014 0xFE 0xFF: subrutina
+C 0x5017 0xFE N dir: vuelve a dir hasta N veces
+L 0x5031 acaba_el_bucle
+L 0x5037 salta_la_orden
+L 0x5040 cambia_de_modo
+L 0x5050 llama_a_la_subrutina
+C 0x505B la vuelta, en +18/+19
+L 0x5065 guarda_el_puntero
+B 0x506D EL MEZCLADOR (registro 7 del PSG). Con el tipo del canal: bit 1, su tono; bit 0, su ruido. Un bit a uno en el registro 7 CIERRA el canal, asi que se ponen a uno los que no suenan.
+L 0x506D pon_el_mezclador
+C 0x5077 el bit del canal: 1, 2 o 4
+C 0x507E el tono
+C 0x5088 el ruido, tres bits mas arriba
+L 0x5096 escribe_el_mezclador
+L 0x509F abre_el_bit
+L 0x50A3 cierra_el_bit
+
+# ======================================================================
+# LOS DATOS DE SONIDO (0x50A6-0x61DD), recorridos enteros por tools/sonido.py
+# sin un byte fuera: 4.407 bytes.
+# ======================================================================
+D 0x50A6 0x50AA instrumentos  Los dos instrumentos que piden las ordenes 0xE9 y 0xEA: 0x4ED8 indexa desde 0x50A4, asi que el 1 esta en 0x50A6
+F 0x50A6 w
+D 0x50AA 0x50C2 notas_del_instrumento_1  Doce punteros, uno por nota (del do al si): la tabla acaba donde empieza la primera secuencia
+F 0x50AA w
+D 0x50C2 0x51E5 pasos_del_instrumento_1  Las doce secuencias del instrumento 1, en formato de efecto (volumen y periodo por paso) y cada una con su 0xFF
+F 0x50C2 8
+D 0x51E5 0x51FF notas_del_instrumento_2  Trece punteros: este tiene tambien la nota 12, que sin instrumento seria un silencio
+F 0x51E5 w
+D 0x51FF 0x52E4 pasos_del_instrumento_2  Sus trece secuencias. La ultima acaba en 0x52E3, dentro de lo que seria la entrada 0 de la tabla de 0x52E2, que no se usa porque los sonidos empiezan en el 1
+F 0x51FF 8
+D 0x52E4 0x539E tabla_de_sonidos  93 punteros, del sonido 1 al 0x5D. Un efecto (0x01-0x16) usa una entrada; una musica (de 0x17 en adelante, de tres en tres) usa tres seguidas, una por canal; y el 0x56, la pausa, cuatro
+F 0x52E4 w
+D 0x539E 0x61DD secuencias_de_sonido  Los canales de todos los sonidos, uno detras de otro. Formato en 0x4D2D (efecto) y 0x4E0F (musica); 0xFE lleva los bucles, las subrutinas y el cambio de modo, y 0xFF acaba
+F 0x539E 16
+
+# ======================================================================
+# MONTAR LA FASE
+# ======================================================================
+B 0x61DD MONTA LA FASE: el tablero de 9x9 de la fase (0x97DB + 81 por fase) a 0xEC00, los graficos de los cubos segun la decena, el marco de ladrillo, los 24 objetos en su sitio de salida y el marcador. La fase de bonificacion entra por 0x61E0 con su propio tablero ya puesto.
+L 0x61DD monta_la_fase
+C 0x61DD el tablero de la fase (0xE111) a 0xEC00
+L 0x61E0 monta_la_fase_con_el_tablero_puesto
+C 0x61E0 fuera el objeto de la vida extra
+C 0x61E3 el tiempo a 99
+C 0x61E6 los 24 objetos a cero
+C 0x61EC en 0xE4FD, una rutina de tres bytes: `and 0x40 / ret`
+C 0x61F2 los graficos de los cubos, las animaciones y los sprites
+C 0x61F5 B: el estilo de cubos, 0 (fases 1-10), 1 (11-20) o 2 (21-50)
+C 0x61F8 cada estilo, 26 cubos de 9 casillas: 234 bytes
+C 0x61FE desde 0xA7FE...
+C 0x6202 ...a 0xEB00
+C 0x620A el tablero en la copia de la tabla de nombres
+C 0x620D el marco de ladrillo
+C 0x6210 cada objeto en su sitio de salida, segun la dificultad
+C 0x6213 (0xE328): volcar una vez los sprites de los objetos 19 a 23
+C 0x621B la copia de la tabla de nombres a la VRAM
+C 0x621E los corazones de los tiles 0xFC y 0xFD
+C 0x6224 el marcador: de uno o del duelo
+C 0x6230 sin bonificacion, el tiempo otra vez a 99
+L 0x6238 borra_los_objetos         0xE200-0xE500 a cero
+L 0x6246 vuelca_la_pantalla        La copia de 0xED20 a 0x3820: las filas 1 a 23 de la tabla de nombres
+L 0x6252 estilo_de_la_fase         B = 0, 1 o 2 segun la decena de la fase
+C 0x6255 decena 0: estilo 0; 1: estilo 1; el resto, estilo 2
+L 0x625F decena_de_la_fase         B = la decena de (0xE111) - 1: 0 para las fases 1-10, 4 para las 41-50
+C 0x6262 menos uno, en BCD
+C 0x6265 la cifra alta
+L 0x626D copia_cinco_veces         Los 0x48 bytes de DE, cinco veces seguidas desde HL, en los tres tercios
+C 0x6270 nueve tiles
+C 0x627A el siguiente juego de nueve
+D 0x6283 0x6286 tres_bytes_sueltos  0x10, 0x20 y 0x50, que no lee nadie: ninguna instruccion los carga y su direccion no aparece en los 32 KB (tools/apunta_a.py)
+F 0x6283 3
+D 0x6286 0x628E triangulo  El patron de los 72 tiles 0x40-0x87: un triangulo que llena la esquina de arriba a la izquierda (0xFE, 0xFC... 0x00). Con dos colores distintos, cada tile es una arista del cubo
+F 0x6286 8
+D 0x628E 0x6366 colores_de_las_aristas  Tres juegos de 72 colores (0x48 bytes), uno por estilo: el color de los tiles 0x40-0x87, tinta arriba a la izquierda y fondo abajo a la derecha. 0x6642 los pone en 0x0200 con un RLE fabricado en 0xE500 (ocho veces cada color)
+F 0x628E 24
+B 0x6366 DIBUJA EL TABLERO en la copia de la tabla de nombres: nueve filas de nueve cubos desde la fila 3, columna 3, cada cubo de 3x3 casillas, de 3 en 3 columnas y de 2 en 2 filas. La casilla 0 es el cubo MODELO, el que hay que conseguir, y se pinta tal cual; en el duelo, tambien la 1, la del segundo.
+L 0x6366 dibuja_el_tablero
+C 0x6369 fila 3, columna 3
+C 0x636F (0xE32D) a uno: la primera casilla es el modelo
+C 0x6374 nueve filas...
+C 0x6376 ...de nueve casillas
+C 0x637D tres columnas por cubo
+C 0x6382 de la segunda casilla en adelante, ya no son modelo
+C 0x638C 27 + 37 = 64: dos filas mas abajo
+C 0x6394 en el duelo...
+C 0x639A ...1P y 2P encima de los dos modelos
+L 0x63AA dibuja_un_cubo            El cubo A en HL; si ya coincide con el modelo, se marca y se pinta el cubo acabado
+C 0x63AA 0xFF: no hay cubo
+C 0x63AD los cinco bits bajos: cual de los 24
+C 0x63B3 el modelo, tal cual
+C 0x63BA contra el modelo del primero
+C 0x63C4 coincide: bit 6 (es del primero)...
+C 0x63C8 ...y se pinta el cubo 24, el acabado del primero
+C 0x63CC contra el del segundo
+C 0x63D7 bit 5 y el cubo 25, el acabado del segundo
+L 0x63DE pinta_el_cubo_a
+C 0x63DE nueve casillas por cubo en 0xEB00
+C 0x63E9 tres filas de tres
+C 0x63F3 32 - 3: la fila siguiente
+L 0x63FF borra_la_copia_de_nombres  0xED00-0xEFFF a cero
+L 0x640D fase_menos_una_hasta_9    min((0xE111) - 1, 9) en BCD
+C 0x640D CODIGO HUERFANO: nadie lo llama ni apunta aqui
+L 0x6419 fase_en_binario           (0xE111) - 1 en binario: el numero de la fase desde cero
+C 0x641E cuenta hacia abajo en BCD
+L 0x6427 bcd_de_a                  A en binario a BCD
+L 0x6432 multiplica                A = A * B (con B=0, cero)
+L 0x643B multiplica_hl             HL = HL * B
+L 0x644C divide                    A / B: el cociente en A y el resto en B
+B 0x6456 LOS OBJETOS EN SU SITIO DE SALIDA. Cinco tablas de 24 bytes, uno por objeto: el primer byte de cada uno sale de una de las siete filas de 0x64DB segun la dificultad (la decena de la fase; en el duelo, 5 o 6 segun el nivel), y la Y, la X, el patron y el color de 0x6583, 0x659B, 0x65B3 y 0x65CB. Luego Q*bert baja hasta el primer cubo de su columna.
+L 0x6456 prepara_los_objetos
+C 0x6456 la decena de la fase
+C 0x6460 en el duelo, 5 mas el nivel
+C 0x6467 24 bytes por fila
+C 0x6475 byte 0: la espera de cada bicho
+C 0x647E byte 4: la Y
+C 0x6487 byte 5: la X
+C 0x6490 byte 6: el patron
+C 0x6499 byte 7: el color
+C 0x649C Q*bert, hasta el primer cubo de su columna...
+C 0x64A7 ...y su segundo sprite en el mismo sitio
+C 0x64B1 el segundo Q*bert empieza en Y=0x0C
+L 0x64C3 baja_hasta_un_cubo        Baja E de 16 en 16 hasta que (E,D) cae en una casilla con cubo
+L 0x64CE copia_un_byte_de_cada_objeto  24 bytes de HL a DE, DE de 8 en 8
+D 0x64DB 0x6583 esperas_de_los_objetos  Siete filas de 24 bytes (las dificultades 0-4 de un jugador y los dos niveles del duelo), un byte por objeto: 0x00, el objeto no sale; 0xFn, sale tras n cuentas de 64 cuadros (0x7444). Los cuatro primeros son los dos Q*bert
+F 0x64DB 24
+D 0x6583 0x659B y_de_salida  La Y de cada objeto: los dos Q*bert arriba (0x0C) y el resto fuera de la pantalla (0xE0)
+F 0x6583 24
+D 0x659B 0x65B3 x_de_salida  La X: 0x7C el primero y 0xAC el segundo
+F 0x659B 24
+D 0x65B3 0x65CB patrones_de_salida  El patron de cada sprite (el numero de su primer 8x8): 0x00 y 0x10 Q*bert, 0xB0 y 0xC0 el segundo, y los bichos 0x30, 0x50, 0x70, 0x80, 0x90 y 0xA0
+F 0x65B3 24
+D 0x65CB 0x65E3 colores_de_salida  El color de cada sprite: es lo que distingue a los que comparten dibujo (los 0x30 y los 0xA0)
+F 0x65CB 24
+L 0x65E3 empieza_en_el_nivel_elegido  La fase 01, 11, 21, 31 o 41 segun (0xE103), y en el duelo 3 o 5 partidas
+C 0x65E6 el nivel por 16: la decena en BCD
+C 0x65EF mas uno
+C 0x65F3 (0xE104): partida a 3 o a 5
+L 0x6600 carga_el_tablero_siguiente
+C 0x6600 en el duelo, una fase al azar
+C 0x6607 R entre 6, mas 31: de la 31 a la 50
+L 0x661C carga_el_tablero
+C 0x661F los 81 bytes a 0xEC00
+C 0x662A con un jugador no hay segundo modelo
+L 0x6630 tablero_de_la_fase        HL = 0x97DB + 81 * (fase - 1), BC = 81
+B 0x6642 LOS GRAFICOS DE LA FASE: los 72 tiles de arista con los colores del estilo, los tiles de las diez animaciones de cubo que giran, las caras, y los patrones de sprite de Q*bert y de los bichos.
+L 0x6642 monta_los_graficos_de_la_fase
+C 0x6642 tile 0x40
+C 0x6648 72 veces el triangulo
+C 0x665D los colores del estilo
+C 0x666D un RLE hecho a mano en 0xE500: 8 veces cada color
+C 0x6679 y su 0x00 de fin
+C 0x667C a 0x0200: el color del tile 0x40
+C 0x6685 tile 0x91: cinco juegos de nueve para los cubos que giran
+C 0x668E tile 0xBE: otros cinco
+C 0x6697 tile 0x88: el cubo acabado del primero
+C 0x66A3 tile 0xE1: el del segundo
+C 0x66AF y sus colores
+C 0x66C1 los patrones de sprite de Q*bert (0x00-0x1F)...
+C 0x66CD ...y los mismos para el segundo (0xB0-0xCF)
+C 0x66D9 y los bichos
+L 0x6739 pon_el_paso_a_del_bicho_80  Patrones 0x80-0x87 desde 0xAC3C
+L 0x6748 pon_el_paso_b_del_bicho_80  Patrones 0x80-0x87 desde 0xAC7C: el otro paso de la animacion
+L 0x6757 rellena_la_tabla_de_nombres  Pone en cada casilla de la tabla de nombres el byte bajo de su direccion: 0, 1, 2... Un visor de patrones de desarrollo
+C 0x6757 CODIGO HUERFANO: ni el trazado ni ninguna palabra de los 32 KB llegan aqui
+C 0x675E WRTVRM, casilla a casilla
+L 0x6768 escribe_la_mascara_del_duenio  Escribe en 0xE4FD `and 0x40 / ret`: 0x7341 cambia el 0x40 por 0x20 segun de quien se cuenten los cubos
+L 0x6774 borra_los_marcadores_del_duelo  0xE600-0xE610 a cero

@@ -2,3 +2,6 @@
 
 # Las dos cabeceras.
 0x4000 0x4025
+
+# Los dos objetos de Q*bert al salir: el `jp z` de 0x42F4 siempre salta.
+0x42F7 0x4307
