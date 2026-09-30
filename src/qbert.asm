@@ -4163,408 +4163,408 @@ DATA_estados_de_los_objetos:
 
 estado_quieto:
 	pop hl			;6d53   ; el HL apilado por 0x6D31, y nada mas
-	ret			;6d54
+	ret			;6d54   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; ESTADO 4: CAE POR UN LADO. Baja dos pixeles por cuadro agitando los brazos; al salirse por abajo se retira, y si era uno de los Q*bert (lo dice su patron: menos de 0x21 el primero, 0xB0 o mas el segundo) pierde el poder y la velocidad y se apunta que ha caido.
 ; ----------------------------------------------------------------------
 estado_cae_por_un_lado:
-	pop hl			;6d55
-	inc hl			;6d56
-	inc hl			;6d57
+	pop hl			;6d55   ; HL = el estado
+	inc hl			;6d56   ; al byte 4...
+	inc hl			;6d57   ; ...la Y
 	inc (hl)			;6d58   ; Y + 2
-	inc (hl)			;6d59
-	inc hl			;6d5a
-	inc hl			;6d5b
+	inc (hl)			;6d59   ; dos pixeles mas abajo
+	inc hl			;6d5a   ; al byte 6...
+	inc hl			;6d5b   ; ...el patron
 	ld a,(0e003h)		;6d5c   ; cada ocho cuadros, el dibujo cambia entre 0 y 4
-	and 007h		;6d5f
-	jr nz,L_6D72		;6d61
-	ld a,(hl)			;6d63
-	and 00fh		;6d64
-	or a			;6d66
-	ld b,004h		;6d67
+	and 007h		;6d5f   ; cada ocho cuadros
+	jr nz,L_6D72		;6d61   ; si no, sin cambiar de dibujo
+	ld a,(hl)			;6d63   ; el patron
+	and 00fh		;6d64   ; su nibble bajo
+	or a			;6d66   ; 0?
+	ld b,004h		;6d67   ; pasa a 4...
 	jr z,L_6D6D		;6d69
-	ld b,000h		;6d6b
+	ld b,000h		;6d6b   ; ...o a 0
 L_6D6D:
-	ld a,(hl)			;6d6d
+	ld a,(hl)			;6d6d   ; el grupo del patron...
 	and 0f0h		;6d6e
-	add a,b			;6d70
-	ld (hl),a			;6d71
+	add a,b			;6d70   ; ...con el dibujo nuevo
+	ld (hl),a			;6d71   ; guardado
 L_6D72:
 	dec hl			;6d72   ; hasta la Y 0xC8
-	dec hl			;6d73
+	dec hl			;6d73   ; la Y
 	ld a,(hl)			;6d74
-	cp 0c8h		;6d75
-	ret c			;6d77
+	cp 0c8h		;6d75   ; por encima de 0xC8...
+	ret c			;6d77   ; ...sigue cayendo
 	ld (hl),0e0h		;6d78   ; fuera de la pantalla y quieto
-	inc hl			;6d7a
+	inc hl			;6d7a   ; el byte 6
 	inc hl			;6d7b
-	ld d,(hl)			;6d7c
-	dec hl			;6d7d
+	ld d,(hl)			;6d7c   ; D = el patron
+	dec hl			;6d7d   ; al byte 2
 	dec hl			;6d7e
 	dec hl			;6d7f
 	dec hl			;6d80
-	ld (hl),000h		;6d81
+	ld (hl),000h		;6d81   ; estado 0
 	ld a,d			;6d83   ; por el patron: el primer Q*bert...
-	cp 021h		;6d84
-	ld b,07ch		;6d86
-	ld c,a			;6d88
-	ld a,000h		;6d89
-	ld (0e333h),a		;6d8b
-	ld a,c			;6d8e
-	jr c,L_6DA3		;6d8f
+	cp 021h		;6d84   ; por debajo de 0x21: el primero
+	ld b,07ch		;6d86   ; su X de salida
+	ld c,a			;6d88   ; a salvo
+	ld a,000h		;6d89   ; (0xE333)=0...
+	ld (0e333h),a		;6d8b   ; ...el primero
+	ld a,c			;6d8e   ; el patron
+	jr c,L_6DA3		;6d8f   ; el primero
 	ld b,0ach		;6d91   ; ...el segundo...
-	cp 0b0h		;6d93
-	ld a,001h		;6d95
-	ld (0e333h),a		;6d97
+	cp 0b0h		;6d93   ; 0xB0 o mas: el segundo
+	ld a,001h		;6d95   ; (0xE333)=1...
+	ld (0e333h),a		;6d97   ; ...el segundo
 	ret c			;6d9a   ; ...o un bicho, que ya no vuelve
 	call dibujos_de_la_izquierda_del_segundo		;6d9b   ; el segundo, con sus dibujos de la izquierda y sin poderes
-	call quita_los_poderes_del_segundo		;6d9e
-	jr L_6DA9		;6da1
+	call quita_los_poderes_del_segundo		;6d9e   ; sin poderes
+	jr L_6DA9		;6da1   ; y sigue
 L_6DA3:
 	call dibujos_de_la_izquierda_del_primero		;6da3   ; el primero, igual
-	call quita_los_poderes_del_primero		;6da6
+	call quita_los_poderes_del_primero		;6da6   ; sin poderes
 L_6DA9:
 	ld a,(0e002h)		;6da9   ; en el duelo vuelve a entrar por arriba (estado 3) en su columna
-	bit 5,a		;6dac
-	jr z,cae_el_de_un_jugador		;6dae
-	ld (hl),003h		;6db0
-	inc hl			;6db2
+	bit 5,a		;6dac   ; el duelo?
+	jr z,cae_el_de_un_jugador		;6dae   ; no: fuera de juego
+	ld (hl),003h		;6db0   ; estado 3: entra por arriba
+	inc hl			;6db2   ; al byte 4
 	inc hl			;6db3
-	ld (hl),0e1h		;6db4
-	inc hl			;6db6
-	ld (hl),b			;6db7
-	inc hl			;6db8
+	ld (hl),0e1h		;6db4   ; Y = 0xE1
+	inc hl			;6db6   ; el byte 5...
+	ld (hl),b			;6db7   ; ...la X de salida
+	inc hl			;6db8   ; el patron
 	ld a,(hl)			;6db9
-	and 0f0h		;6dba
-	ld (hl),a			;6dbc
+	and 0f0h		;6dba   ; el primero de su grupo
+	ld (hl),a			;6dbc   ; guardado
 	ld a,(0e333h)		;6dbd   ; y se apunta que ha caido
-	or a			;6dc0
-	ld hl,0e113h		;6dc1
+	or a			;6dc0   ; el primero?
+	ld hl,0e113h		;6dc1   ; su bandera
 	jr z,L_6DC9		;6dc4
-	ld hl,0e35ch		;6dc6
+	ld hl,0e35ch		;6dc6   ; la del segundo
 L_6DC9:
-	ld (hl),000h		;6dc9
-	ret			;6dcb
+	ld (hl),000h		;6dc9   ; a cero: ha caido
+	ret			;6dcb   ; vuelta
 cae_el_de_un_jugador:
 	xor a			;6dcc   ; con un jugador, fuera de juego: 0x4291 le quita la vida
-	ld (0e113h),a		;6dcd
-	ret			;6dd0
+	ld (0e113h),a		;6dcd   ; A=0 aqui: Q*bert fuera de juego
+	ret			;6dd0   ; vuelta
 quita_los_poderes_del_primero:		; Sin salto largo y a la velocidad normal
-	xor a			;6dd1
-	ld (0e322h),a		;6dd2
-	ld (0e201h),a		;6dd5
-	ld (0e209h),a		;6dd8
-	ret			;6ddb
+	xor a			;6dd1   ; cero
+	ld (0e322h),a		;6dd2   ; sin salto largo
+	ld (0e201h),a		;6dd5   ; velocidad normal
+	ld (0e209h),a		;6dd8   ; en los dos sprites
+	ret			;6ddb   ; vuelta
 quita_los_poderes_del_segundo:
-	xor a			;6ddc
-	ld (0e331h),a		;6ddd
-	ld (0e211h),a		;6de0
-	ld (0e219h),a		;6de3
-	ret			;6de6
+	xor a			;6ddc   ; cero
+	ld (0e331h),a		;6ddd   ; sin salto largo
+	ld (0e211h),a		;6de0   ; velocidad normal
+	ld (0e219h),a		;6de3   ; en los dos sprites
+	ret			;6de6   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; ESTADO 3: ENTRA POR ARRIBA. Baja un pixel por cuadro hasta posarse en un cubo. Si es un Q*bert, queda protegido 128 cuadros; y si ninguno de los dos esta cayendo, suena el 0x14.
 ; ----------------------------------------------------------------------
 estado_entra_por_arriba:
-	pop hl			;6de7
-	inc hl			;6de8
-	inc hl			;6de9
+	pop hl			;6de7   ; HL = el estado
+	inc hl			;6de8   ; al byte 4...
+	inc hl			;6de9   ; ...la Y
 	inc (hl)			;6dea   ; Y + 1
-	ld a,(hl)			;6deb
+	ld a,(hl)			;6deb   ; la Y
 	and 00fh		;6dec   ; solo se para en la altura de una fila (Y = 16n + 12)
-	cp 00ch		;6dee
-	ret nz			;6df0
-	ld e,(hl)			;6df1
-	inc hl			;6df2
-	ld d,(hl)			;6df3
-	inc hl			;6df4
-	ld c,(hl)			;6df5
-	dec hl			;6df6
+	cp 00ch		;6dee   ; las filas caen en Y = 16n + 12
+	ret nz			;6df0   ; entre fila y fila, sigue
+	ld e,(hl)			;6df1   ; E = la Y
+	inc hl			;6df2   ; la X...
+	ld d,(hl)			;6df3   ; ...en D
+	inc hl			;6df4   ; el patron...
+	ld c,(hl)			;6df5   ; ...en C
+	dec hl			;6df6   ; HL a la X
 	call casilla_debajo		;6df7   ; sin cubo debajo, sigue bajando
-	inc a			;6dfa
-	ret z			;6dfb
+	inc a			;6dfa   ; 0xFF + 1: no hay cubo...
+	ret z			;6dfb   ; ...sigue bajando
 	dec hl			;6dfc   ; quieto
-	dec hl			;6dfd
+	dec hl			;6dfd   ; al byte 2
 	dec hl			;6dfe
-	ld (hl),000h		;6dff
+	ld (hl),000h		;6dff   ; quieto
 	ld a,c			;6e01   ; el primero (patron por debajo de 0x20)...
-	cp 020h		;6e02
-	ld hl,0e336h		;6e04
+	cp 020h		;6e02   ; el primero?
+	ld hl,0e336h		;6e04   ; su proteccion
 	jr c,L_6E0D		;6e07
 	inc hl			;6e09   ; ...o el segundo
-	cp 0b0h		;6e0a
-	ret c			;6e0c
+	cp 0b0h		;6e0a   ; 0xB0 o mas: el segundo
+	ret c			;6e0c   ; un bicho: nada mas
 L_6E0D:
 	ld (hl),080h		;6e0d   ; 128 cuadros intocable
-	ld a,(0e202h)		;6e0f
-	cp 003h		;6e12
+	ld a,(0e202h)		;6e0f   ; si alguno de los dos...
+	cp 003h		;6e12   ; ...entra...
 	ret z			;6e14
-	cp 004h		;6e15
+	cp 004h		;6e15   ; ...o cae...
 	ret z			;6e17
 	ld a,(0e212h)		;6e18
 	cp 003h		;6e1b
 	ret z			;6e1d
 	cp 004h		;6e1e
-	ret z			;6e20
+	ret z			;6e20   ; ...no suena
 	ld a,014h		;6e21   ; el sonido de la llegada
-	jp toca_sonido		;6e23
+	jp toca_sonido		;6e23   ; el 0x14
 
 ; ----------------------------------------------------------------------
 ; ESTADO 5: BAJA HASTA LA FILA DE 0xE29C. Un pixel por cuadro hasta la Y del objeto 19; alli desaparece y pide que se vuelvan a pintar los objetos 19 a 23.
 ; ----------------------------------------------------------------------
 estado_baja_a_la_fila:
-	pop hl			;6e26
-	inc hl			;6e27
-	inc hl			;6e28
-	inc (hl)			;6e29
-	ld a,(0e29ch)		;6e2a
-	cp (hl)			;6e2d
-	ret nz			;6e2e
+	pop hl			;6e26   ; HL = el estado
+	inc hl			;6e27   ; al byte 4...
+	inc hl			;6e28   ; ...la Y
+	inc (hl)			;6e29   ; un pixel mas abajo
+	ld a,(0e29ch)		;6e2a   ; la Y del objeto 19
+	cp (hl)			;6e2d   ; la alcanza?
+	ret nz			;6e2e   ; no: sigue
 retira_y_repinta_la_fila:
-	ld (hl),0e0h		;6e2f
-	dec hl			;6e31
+	ld (hl),0e0h		;6e2f   ; fuera de la pantalla
+	dec hl			;6e31   ; al byte 2
 	dec hl			;6e32
-	ld (hl),000h		;6e33
-	ld a,001h		;6e35
-	ld (0e328h),a		;6e37
-	ret			;6e3a
+	ld (hl),000h		;6e33   ; quieto
+	ld a,001h		;6e35   ; los objetos 19 a 23...
+	ld (0e328h),a		;6e37   ; ...se vuelven a pintar
+	ret			;6e3a   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; ESTADOS 1, 2, 12 Y 13: EL SALTO. Tantos pasos del arco por cuadro como diga la velocidad (el nibble bajo del byte 1, mas uno).
 ; ----------------------------------------------------------------------
 estado_salta:
-	pop hl			;6e3b
+	pop hl			;6e3b   ; HL = el estado
 	dec hl			;6e3c   ; el byte 1: la velocidad
-	ld a,(hl)			;6e3d
-	and 00fh		;6e3e
-	ld b,a			;6e40
-	inc b			;6e41
-	inc hl			;6e42
+	ld a,(hl)			;6e3d   ; el byte 1
+	and 00fh		;6e3e   ; la velocidad
+	ld b,a			;6e40   ; en B...
+	inc b			;6e41   ; ...mas uno
+	inc hl			;6e42   ; HL al estado
 da_b_pasos:
-	push hl			;6e43
-	push bc			;6e44
-	call un_paso_del_arco		;6e45
-	pop bc			;6e48
-	pop hl			;6e49
-	djnz da_b_pasos		;6e4a
-	ret			;6e4c
+	push hl			;6e43   ; HL...
+	push bc			;6e44   ; ...y B a salvo
+	call un_paso_del_arco		;6e45   ; un paso
+	pop bc			;6e48   ; B...
+	pop hl			;6e49   ; ...y HL
+	djnz da_b_pasos		;6e4a   ; B pasos
+	ret			;6e4c   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; UN PASO DEL ARCO. La Y sale de la tabla de 0x6F9E y la X avanza uno y dos pixeles alternos (24 por cada 16 pasos: una columna de cubos). Con 0x80 se acaba el arco: si hay cubo debajo, se posa; si no, o si es la casilla del modelo, cae.
 ; ----------------------------------------------------------------------
 un_paso_del_arco:
 	ld a,(hl)			;6e4d   ; estado 0 o 4: nada
-	or a			;6e4e
-	ret z			;6e4f
-	cp 004h		;6e50
-	ret z			;6e52
-	ld c,a			;6e53
+	or a			;6e4e   ; 0: quieto
+	ret z			;6e4f   ; nada
+	cp 004h		;6e50   ; 4: cayendo
+	ret z			;6e52   ; nada
+	ld c,a			;6e53   ; C = el estado
 	inc hl			;6e54   ; el byte 3: por donde va el arco
-	ld a,(hl)			;6e55
-	ld b,a			;6e56
-	ld de,06f9eh		;6e57
-	call suma_a_a_de		;6e5a
-	ld a,(de)			;6e5d
+	ld a,(hl)			;6e55   ; el paso...
+	ld b,a			;6e56   ; ...en B
+	ld de,06f9eh		;6e57   ; la tabla de arcos
+	call suma_a_a_de		;6e5a   ; + el paso
+	ld a,(de)			;6e5d   ; la Y de este paso
 	cp 080h		;6e5e   ; 0x80: fin del arco
-	jr nz,avanza_el_arco		;6e60
-	inc hl			;6e62
+	jr nz,avanza_el_arco		;6e60   ; no es el fin: se avanza
+	inc hl			;6e62   ; al byte 4
 	ld a,c			;6e63   ; los que caen muertos (12 y 13) no se posan
-	cp 00ch		;6e64
-	jp z,cae_muerto		;6e66
-	cp 00dh		;6e69
-	jp z,cae_muerto		;6e6b
+	cp 00ch		;6e64   ; 12...
+	jp z,cae_muerto		;6e66   ; ...muerto
+	cp 00dh		;6e69   ; 13...
+	jp z,cae_muerto		;6e6b   ; ...muerto
 	inc hl			;6e6e   ; el dibujo de pie: cuatro patrones menos
-	inc hl			;6e6f
-	ld a,(hl)			;6e70
-	sub 004h		;6e71
-	ld (hl),a			;6e73
-	ld c,a			;6e74
-	dec hl			;6e75
-	ld d,(hl)			;6e76
-	dec hl			;6e77
-	ld e,(hl)			;6e78
+	inc hl			;6e6f   ; al byte 6
+	ld a,(hl)			;6e70   ; el patron...
+	sub 004h		;6e71   ; ...de pie: cuatro menos
+	ld (hl),a			;6e73   ; guardado
+	ld c,a			;6e74   ; C = el patron
+	dec hl			;6e75   ; la X...
+	ld d,(hl)			;6e76   ; ...en D
+	dec hl			;6e77   ; la Y...
+	ld e,(hl)			;6e78   ; ...en E
 	ld a,c			;6e79   ; el golpe al posarse: el sonido 4 el primero...
-	cp 021h		;6e7a
+	cp 021h		;6e7a   ; el primero: el sonido 4
 	ld a,004h		;6e7c
 	jr c,L_6E87		;6e7e
 	ld a,c			;6e80   ; ...el 5 el segundo, y los bichos, callados
-	cp 0b0h		;6e81
+	cp 0b0h		;6e81   ; 0xB0 o mas: el segundo, el 5
 	ld a,005h		;6e83
-	jr c,L_6E95		;6e85
+	jr c,L_6E95		;6e85   ; un bicho: sin sonido
 L_6E87:
-	call toca_sonido		;6e87
+	call toca_sonido		;6e87   ; suena
 	ld a,(0e345h)		;6e8a   ; con la invencibilidad, ademas, el 6
-	or a			;6e8d
-	jr z,L_6E95		;6e8e
-	ld a,006h		;6e90
-	call toca_sonido_en_partida		;6e92
+	or a			;6e8d   ; invencible?
+	jr z,L_6E95		;6e8e   ; no
+	ld a,006h		;6e90   ; si: el 6 ademas
+	call toca_sonido_en_partida		;6e92   ; suena
 L_6E95:
 	call casilla_debajo		;6e95   ; la casilla de debajo
-	ld b,a			;6e98
+	ld b,a			;6e98   ; B = el cubo
 	ld a,c			;6e99   ; el bicho 0x90 (el que persigue) que cae en un cubo que esta girando...
-	cp 090h		;6e9a
+	cp 090h		;6e9a   ; el patron: entre 0x90...
 	jr c,L_6EB0		;6e9c
-	cp 0a0h		;6e9e
+	cp 0a0h		;6e9e   ; ...y 0x9F
 	jr nc,L_6EB0		;6ea0
-	ld a,b			;6ea2
-	rlca			;6ea3
-	jr nc,L_6EB0		;6ea4
+	ld a,b			;6ea2   ; el cubo
+	rlca			;6ea3   ; bit 7: girando
+	jr nc,L_6EB0		;6ea4   ; no
 	push hl			;6ea6   ; ...da 1.000 puntos y se cae
-	ld de,01000h		;6ea7
+	ld de,01000h		;6ea7   ; 1.000 puntos
 	call suma_puntos		;6eaa
-	pop hl			;6ead
-	jr pasa_al_estado_4		;6eae
+	pop hl			;6ead   ; HL
+	jr pasa_al_estado_4		;6eae   ; y a caer
 L_6EB0:
 	ld a,b			;6eb0   ; sin cubo, a caer
-	inc a			;6eb1
-	ld a,000h		;6eb2
-	jr z,cae_de_la_casilla		;6eb4
+	inc a			;6eb1   ; 0xFF + 1 = 0: hueco
+	ld a,000h		;6eb2   ; estado 0, sin tocar la bandera
+	jr z,cae_de_la_casilla		;6eb4   ; hueco: cae
 	push hl			;6eb6   ; y las dos casillas de los modelos, (Y 0x0C, X 0x1C) y (Y 0x0C, X 0x34), tampoco valen
-	ld hl,01c0ch		;6eb7
-	or a			;6eba
+	ld hl,01c0ch		;6eb7   ; la casilla del primer modelo
+	or a			;6eba   ; contra DE
 	sbc hl,de		;6ebb
-	pop hl			;6ebd
-	jr z,cae_de_la_casilla		;6ebe
-	push hl			;6ec0
-	ld hl,0340ch		;6ec1
-	or a			;6ec4
+	pop hl			;6ebd   ; HL
+	jr z,cae_de_la_casilla		;6ebe   ; es ella: cae
+	push hl			;6ec0   ; HL a salvo
+	ld hl,0340ch		;6ec1   ; la del segundo modelo
+	or a			;6ec4   ; contra DE
 	sbc hl,de		;6ec5
-	pop hl			;6ec7
-	jr nz,pon_el_estado		;6ec8
+	pop hl			;6ec7   ; HL
+	jr nz,pon_el_estado		;6ec8   ; no: se queda (estado 0)
 cae_de_la_casilla:
-	call cae_por_el_borde		;6eca
+	call cae_por_el_borde		;6eca   ; la caida, si es por un lado
 pasa_al_estado_4:
-	ld a,004h		;6ecd
+	ld a,004h		;6ecd   ; estado 4
 pon_el_estado:
-	dec hl			;6ecf
+	dec hl			;6ecf   ; al byte 2
 	dec hl			;6ed0
-	ld (hl),a			;6ed1
-	ret			;6ed2
+	ld (hl),a			;6ed1   ; el estado
+	ret			;6ed2   ; vuelta
 avanza_el_arco:
-	inc (hl)			;6ed3
-	inc hl			;6ed4
+	inc (hl)			;6ed3   ; el paso siguiente
+	inc hl			;6ed4   ; al byte 4
 	add a,(hl)			;6ed5   ; la Y, con el paso del arco
 	cp 0f0h		;6ed6   ; por encima de 0xF0 se ha salido
-	jr nc,L_6EFB		;6ed8
-	ld (hl),a			;6eda
-	inc hl			;6edb
+	jr nc,L_6EFB		;6ed8   ; por arriba: se sale
+	ld (hl),a			;6eda   ; la Y nueva
+	inc hl			;6edb   ; al byte 5
 	ld a,b			;6edc   ; la X: uno en los pasos impares y dos en los pares
-	rrca			;6edd
-	ld a,001h		;6ede
-	jr c,L_6EE3		;6ee0
-	inc a			;6ee2
+	rrca			;6edd   ; el paso: par o impar
+	ld a,001h		;6ede   ; 1...
+	jr c,L_6EE3		;6ee0   ; ...en los impares
+	inc a			;6ee2   ; 2 en los pares
 L_6EE3:
-	ld d,a			;6ee3
+	ld d,a			;6ee3   ; en D
 	ld a,c			;6ee4   ; hacia la izquierda en los estados 1 y 13
-	cp 00dh		;6ee5
-	ld a,d			;6ee7
-	jr z,L_6EED		;6ee8
-	dec c			;6eea
-	jr nz,L_6EEF		;6eeb
+	cp 00dh		;6ee5   ; el 13...
+	ld a,d			;6ee7   ; D
+	jr z,L_6EED		;6ee8   ; ...a la izquierda
+	dec c			;6eea   ; el 1...
+	jr nz,L_6EEF		;6eeb   ; ...tambien
 L_6EED:
-	neg		;6eed
+	neg		;6eed   ; a la izquierda: negativo
 L_6EEF:
-	add a,(hl)			;6eef
+	add a,(hl)			;6eef   ; la X nueva
 	cp 005h		;6ef0   ; dentro de 5..0xF3
-	jr c,se_sale_por_un_lado		;6ef2
-	cp 0f4h		;6ef4
-	jr nc,se_sale_por_un_lado		;6ef6
-	ld (hl),a			;6ef8
-	ret			;6ef9
+	jr c,se_sale_por_un_lado		;6ef2   ; por la izquierda: se sale
+	cp 0f4h		;6ef4   ; por la derecha...
+	jr nc,se_sale_por_un_lado		;6ef6   ; ...tambien
+	ld (hl),a			;6ef8   ; guardada
+	ret			;6ef9   ; vuelta
 se_sale_por_un_lado:
-	dec hl			;6efa
+	dec hl			;6efa   ; al byte 4
 L_6EFB:
-	inc hl			;6efb
+	inc hl			;6efb   ; al byte 6...
 	inc hl			;6efc
-	ld c,(hl)			;6efd
-	dec hl			;6efe
+	ld c,(hl)			;6efd   ; C = el patron
+	dec hl			;6efe   ; al byte 2
 	dec hl			;6eff
 	dec hl			;6f00
 	dec hl			;6f01
 	ld (hl),004h		;6f02   ; estado 4: cae
-	inc hl			;6f04
+	inc hl			;6f04   ; al byte 4
 	inc hl			;6f05
 cae_por_el_borde:
 	ld a,c			;6f06   ; solo los que se salen por los lados (X por debajo de 0x21 o de 0xB0 en adelante)...
-	cp 021h		;6f07
+	cp 021h		;6f07   ; el primero?
 	jr c,L_6F13		;6f09
-	cp 0b0h		;6f0b
-	ret c			;6f0d
+	cp 0b0h		;6f0b   ; el segundo?
+	ret c			;6f0d   ; un bicho: nada
 	call dibujo_de_caer_del_segundo		;6f0e   ; ...que son los Q*bert: su dibujo de caer
-	jr L_6F16		;6f11
+	jr L_6F16		;6f11   ; y el grito
 L_6F13:
-	call dibujo_de_caer_del_primero		;6f13
+	call dibujo_de_caer_del_primero		;6f13   ; el dibujo de caer
 L_6F16:
 	ld a,012h		;6f16   ; y el sonido 0x12, el del grito
-	jp toca_sonido_en_partida		;6f18
+	jp toca_sonido_en_partida		;6f18   ; suena
 cae_muerto:
-	inc hl			;6f1b
+	inc hl			;6f1b   ; al byte 6
 	inc hl			;6f1c
-	ld c,(hl)			;6f1d
-	dec hl			;6f1e
+	ld c,(hl)			;6f1d   ; C = el patron
+	dec hl			;6f1e   ; al byte 4
 	dec hl			;6f1f
-	jr cae_de_la_casilla		;6f20
+	jr cae_de_la_casilla		;6f20   ; y a caer
 dibujo_de_caer_del_primero:		; Los patrones 0x00-0x0F con los de 0xAF3C y 0xAF7C
-	push hl			;6f22
-	inc hl			;6f23
+	push hl			;6f22   ; HL a salvo
+	inc hl			;6f23   ; al byte 6
 	inc hl			;6f24
-	ld a,(hl)			;6f25
-	and 0f0h		;6f26
-	add a,004h		;6f28
-	ld (hl),a			;6f2a
-	ld hl,01800h		;6f2b
-	ld de,0af3ch		;6f2e
-	ld bc,00040h		;6f31
-	call copia_a_vram		;6f34
-	ld hl,01880h		;6f37
-	ld de,0af7ch		;6f3a
-	ld bc,00040h		;6f3d
-	call copia_a_vram		;6f40
-	pop hl			;6f43
-	ret			;6f44
+	ld a,(hl)			;6f25   ; el patron
+	and 0f0h		;6f26   ; su grupo...
+	add a,004h		;6f28   ; ...el dibujo 4
+	ld (hl),a			;6f2a   ; guardado
+	ld hl,01800h		;6f2b   ; los patrones 0x00-0x07...
+	ld de,0af3ch		;6f2e   ; ...de 0xAF3C
+	ld bc,00040h		;6f31   ; 64 bytes
+	call copia_a_vram		;6f34   ; LDIRVM
+	ld hl,01880h		;6f37   ; los 0x10-0x17...
+	ld de,0af7ch		;6f3a   ; ...de 0xAF7C
+	ld bc,00040h		;6f3d   ; 64 bytes
+	call copia_a_vram		;6f40   ; LDIRVM
+	pop hl			;6f43   ; HL
+	ret			;6f44   ; vuelta
 dibujo_de_caer_del_segundo:		; Los 0xB0-0xBF, igual
-	push hl			;6f45
-	inc hl			;6f46
+	push hl			;6f45   ; HL a salvo
+	inc hl			;6f46   ; al byte 6
 	inc hl			;6f47
-	ld a,(hl)			;6f48
-	and 0f0h		;6f49
-	add a,004h		;6f4b
-	ld (hl),a			;6f4d
-	ld hl,01d80h		;6f4e
-	ld de,0af3ch		;6f51
-	ld bc,00040h		;6f54
-	call copia_a_vram		;6f57
-	ld hl,01e00h		;6f5a
-	ld de,0af7ch		;6f5d
-	ld bc,00040h		;6f60
-	call copia_a_vram		;6f63
-	pop hl			;6f66
-	ret			;6f67
+	ld a,(hl)			;6f48   ; el patron
+	and 0f0h		;6f49   ; su grupo...
+	add a,004h		;6f4b   ; ...el dibujo 4
+	ld (hl),a			;6f4d   ; guardado
+	ld hl,01d80h		;6f4e   ; los patrones 0xB0-0xB7...
+	ld de,0af3ch		;6f51   ; ...de 0xAF3C
+	ld bc,00040h		;6f54   ; 64 bytes
+	call copia_a_vram		;6f57   ; LDIRVM
+	ld hl,01e00h		;6f5a   ; los 0xC0-0xC7...
+	ld de,0af7ch		;6f5d   ; ...de 0xAF7C
+	ld bc,00040h		;6f60   ; 64 bytes
+	call copia_a_vram		;6f63   ; LDIRVM
+	pop hl			;6f66   ; HL
+	ret			;6f67   ; vuelta
 dibujos_de_la_izquierda_del_primero:		; Los 0x00-0x0F vuelven a ser los de 0xACBC y 0xAD3C
-	exx			;6f68
-	ld hl,01800h		;6f69
-	ld de,0acbch		;6f6c
-	ld bc,00040h		;6f6f
-	call copia_a_vram		;6f72
-	ld hl,01880h		;6f75
-	ld de,0ad3ch		;6f78
-	ld bc,00040h		;6f7b
-	call copia_a_vram		;6f7e
-	exx			;6f81
-	ret			;6f82
+	exx			;6f68   ; los registros a salvo
+	ld hl,01800h		;6f69   ; los patrones 0x00-0x07...
+	ld de,0acbch		;6f6c   ; ...de 0xACBC
+	ld bc,00040h		;6f6f   ; 64 bytes
+	call copia_a_vram		;6f72   ; LDIRVM
+	ld hl,01880h		;6f75   ; los 0x10-0x17...
+	ld de,0ad3ch		;6f78   ; ...de 0xAD3C
+	ld bc,00040h		;6f7b   ; 64 bytes
+	call copia_a_vram		;6f7e   ; LDIRVM
+	exx			;6f81   ; los registros
+	ret			;6f82   ; vuelta
 dibujos_de_la_izquierda_del_segundo:
-	exx			;6f83
-	ld hl,01d80h		;6f84
-	ld de,0acbch		;6f87
-	ld bc,00040h		;6f8a
-	call copia_a_vram		;6f8d
-	ld hl,01e00h		;6f90
-	ld de,0ad3ch		;6f93
-	ld bc,00040h		;6f96
-	call copia_a_vram		;6f99
-	exx			;6f9c
-	ret			;6f9d
+	exx			;6f83   ; los registros a salvo
+	ld hl,01d80h		;6f84   ; los patrones 0xB0-0xB7...
+	ld de,0acbch		;6f87   ; ...de 0xACBC
+	ld bc,00040h		;6f8a   ; 64 bytes
+	call copia_a_vram		;6f8d   ; LDIRVM
+	ld hl,01e00h		;6f90   ; los 0xC0-0xC7...
+	ld de,0ad3ch		;6f93   ; ...de 0xAD3C
+	ld bc,00040h		;6f96   ; 64 bytes
+	call copia_a_vram		;6f99   ; LDIRVM
+	exx			;6f9c   ; los registros
+	ret			;6f9d   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS arcos: Los cinco arcos, pasos de Y con signo y 0x80 de fin: 0x00 salto
@@ -4592,377 +4592,377 @@ DATA_arcos:
 ; ESTADOS 6 A 11: HUYE. Sube cuatro pixeles y se aparta dos de lado cada 8, 4 o 2 cuadros segun el estado, hasta salirse de la pantalla.
 ; ----------------------------------------------------------------------
 estado_huye:
-	pop hl			;7017
+	pop hl			;7017   ; HL = el estado
 	ld a,(hl)			;7018   ; los pares, hacia la derecha; los impares, hacia la izquierda
-	ld c,000h		;7019
-	rrca			;701b
-	jr c,L_701F		;701c
-	inc c			;701e
+	ld c,000h		;7019   ; C=0: a la derecha
+	rrca			;701b   ; par o impar
+	jr c,L_701F		;701c   ; impar: derecha
+	inc c			;701e   ; par: izquierda
 L_701F:
 	ld a,(hl)			;701f   ; 6 y 7: cada 8 cuadros; 8 y 9: cada 4; 10 y 11: cada 2
-	ld b,007h		;7020
-	cp 008h		;7022
+	ld b,007h		;7020   ; cada 8 cuadros...
+	cp 008h		;7022   ; ...en el 6 y el 7
 	jr c,L_702E		;7024
-	ld b,003h		;7026
-	cp 00ah		;7028
+	ld b,003h		;7026   ; cada 4...
+	cp 00ah		;7028   ; ...en el 8 y el 9
 	jr c,L_702E		;702a
-	ld b,001h		;702c
+	ld b,001h		;702c   ; cada 2 en el 10 y el 11
 L_702E:
-	inc hl			;702e
+	inc hl			;702e   ; al byte 4
 	inc hl			;702f
 	dec (hl)			;7030   ; Y - 4
 	dec (hl)			;7031
 	dec (hl)			;7032
-	dec (hl)			;7033
-	ld a,(hl)			;7034
-	inc hl			;7035
+	dec (hl)			;7033   ; cuatro menos
+	ld a,(hl)			;7034   ; la Y
+	inc hl			;7035   ; al byte 5
 	cp 005h		;7036   ; al salirse, fuera
-	jr c,retira_el_objeto		;7038
-	cp 0b0h		;703a
-	jr nc,retira_el_objeto		;703c
-	ld a,(hl)			;703e
-	cp 005h		;703f
-	jr c,retira_el_objeto		;7041
-	cp 0fah		;7043
-	jr nc,retira_el_objeto		;7045
+	jr c,retira_el_objeto		;7038   ; arriba del todo: fuera
+	cp 0b0h		;703a   ; abajo del todo...
+	jr nc,retira_el_objeto		;703c   ; ...fuera
+	ld a,(hl)			;703e   ; la X
+	cp 005h		;703f   ; a la izquierda...
+	jr c,retira_el_objeto		;7041   ; ...fuera
+	cp 0fah		;7043   ; a la derecha...
+	jr nc,retira_el_objeto		;7045   ; ...fuera
 	ld a,(0e003h)		;7047   ; a su ritmo
-	and b			;704a
-	ret nz			;704b
+	and b			;704a   ; a su ritmo
+	ret nz			;704b   ; no toca: nada
 	inc (hl)			;704c   ; X + 2...
-	inc (hl)			;704d
-	ld a,c			;704e
-	or a			;704f
-	ret z			;7050
+	inc (hl)			;704d   ; uno mas
+	ld a,c			;704e   ; hacia la derecha...
+	or a			;704f   ; ...?
+	ret z			;7050   ; si: ya esta (+2)
 	dec (hl)			;7051   ; ...o - 2
-	dec (hl)			;7052
+	dec (hl)			;7052   ; si no, cuatro menos (-2)
 	dec (hl)			;7053
 	dec (hl)			;7054
-	ret			;7055
+	ret			;7055   ; vuelta
 retira_el_objeto:
-	dec hl			;7056
-	ld (hl),0e0h		;7057
-	dec hl			;7059
+	dec hl			;7056   ; al byte 4
+	ld (hl),0e0h		;7057   ; fuera de la pantalla
+	dec hl			;7059   ; al byte 2
 	dec hl			;705a
-	ld (hl),000h		;705b
-	ret			;705d
+	ld (hl),000h		;705b   ; quieto
+	ret			;705d   ; vuelta
 guarda_el_mando_2:		; Lo mismo que 0x4714 con HL=0xE330
 	ld hl,0e330h		;705e   ; CODIGO HUERFANO: 0x4705 hace lo mismo llamando a 0x4714
-	ld c,(hl)			;7061
-	ld (hl),a			;7062
-	xor c			;7063
-	and (hl)			;7064
-	dec hl			;7065
-	ld (hl),a			;7066
-	ret			;7067
+	ld c,(hl)			;7061   ; C = lo de antes
+	ld (hl),a			;7062   ; lo de ahora
+	xor c			;7063   ; lo que ha cambiado...
+	and (hl)			;7064   ; ...y esta pulsado
+	dec hl			;7065   ; 0xE32F
+	ld (hl),a			;7066   ; lo recien pulsado
+	ret			;7067   ; vuelta
 teclas_del_segundo_sin_ctrl:		; Copia de 0x4755 sin la fila 6: E, S, F y C, sin el disparo
 	ld b,000h		;7068   ; CODIGO HUERFANO: nadie lo llama
-	ld a,003h		;706a
-	call 00141h		;706c   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
-	bit 0,a		;706f
+	ld a,003h		;706a   ; fila 3
+	call 00141h		;706c   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix | SNSMAT
+	bit 0,a		;706f   ; la C
 	jr nz,L_7075		;7071
-	set 1,b		;7073
+	set 1,b		;7073   ; abajo
 L_7075:
-	bit 2,a		;7075
+	bit 2,a		;7075   ; la E
 	jr nz,L_707B		;7077
-	set 0,b		;7079
+	set 0,b		;7079   ; arriba
 L_707B:
-	bit 3,a		;707b
+	bit 3,a		;707b   ; la F
 	jr nz,L_7081		;707d
-	set 3,b		;707f
+	set 3,b		;707f   ; derecha
 L_7081:
-	ld a,005h		;7081
-	call 00141h		;7083   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
-	bit 0,a		;7086
+	ld a,005h		;7081   ; fila 5
+	call 00141h		;7083   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix | SNSMAT
+	bit 0,a		;7086   ; la S
 	jr nz,L_708C		;7088
-	set 2,b		;708a
+	set 2,b		;708a   ; izquierda
 L_708C:
-	ld a,b			;708c
-	ret			;708d
+	ld a,b			;708c   ; en A
+	ret			;708d   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; EL CUBO GIRA. Al posarse Q*bert, el cubo de debajo rueda en la direccion del salto: cada cubo es uno de los 24 giros de un cubo con tres caras a la vista, y la tabla de 0x72C0 dice en cual se convierte. Mientras gira ocupa uno de los diez huecos de 0xE2C0 (los cinco primeros para las diagonales 1 y 2, los otros cinco para 4 y 8), con sus nueve tiles de animacion.
 ; ----------------------------------------------------------------------
 gira_el_cubo:
 	call casilla_de_la_posicion		;708e   ; la casilla, mas uno
-	inc a			;7091
-	ld d,a			;7092
-	ld e,b			;7093
+	inc a			;7091   ; la casilla mas uno (el 0 marca hueco libre)
+	ld d,a			;7092   ; en D
+	ld e,b			;7093   ; E = la direccion
 	ld hl,0e2c0h		;7094   ; si ya esta girando, nada
-	ld b,00ah		;7097
+	ld b,00ah		;7097   ; los diez huecos
 L_7099:
-	cp (hl)			;7099
-	ret z			;709a
-	inc hl			;709b
-	inc hl			;709c
-	inc hl			;709d
-	djnz L_7099		;709e
+	cp (hl)			;7099   ; ya esta?
+	ret z			;709a   ; si: nada
+	inc hl			;709b   ; el siguiente...
+	inc hl			;709c   ; ...tres bytes...
+	inc hl			;709d   ; ...mas alla
+	djnz L_7099		;709e   ; diez
 	ld b,005h		;70a0   ; arriba-izquierda o abajo-derecha: huecos 0 a 4...
-	ld hl,0e2c0h		;70a2
-	ld c,000h		;70a5
-	ld a,e			;70a7
-	and 003h		;70a8
-	jr nz,L_70B1		;70aa
+	ld hl,0e2c0h		;70a2   ; los huecos 0 a 4
+	ld c,000h		;70a5   ; desde el 0
+	ld a,e			;70a7   ; la direccion
+	and 003h		;70a8   ; 1 o 2?
+	jr nz,L_70B1		;70aa   ; si
 	ld hl,0e2cfh		;70ac   ; ...las otras dos: huecos 5 a 9
-	ld c,005h		;70af
+	ld c,005h		;70af   ; desde el 5
 L_70B1:
-	ld a,(hl)			;70b1
-	or a			;70b2
-	jr z,ocupa_el_hueco		;70b3
-	inc hl			;70b5
-	inc hl			;70b6
-	inc hl			;70b7
-	inc c			;70b8
-	djnz L_70B1		;70b9
-	ret			;70bb
+	ld a,(hl)			;70b1   ; el hueco
+	or a			;70b2   ; libre?
+	jr z,ocupa_el_hueco		;70b3   ; si: a el
+	inc hl			;70b5   ; el siguiente...
+	inc hl			;70b6   ; ...tres bytes...
+	inc hl			;70b7   ; ...mas alla
+	inc c			;70b8   ; su numero
+	djnz L_70B1		;70b9   ; cinco
+	ret			;70bb   ; todos ocupados: no gira
 ocupa_el_hueco:
 	ld (hl),d			;70bc   ; casilla, ocho cuadros y direccion
-	inc hl			;70bd
-	ld (hl),008h		;70be
-	inc hl			;70c0
-	ld (hl),e			;70c1
-	ld b,e			;70c2
-	ld a,d			;70c3
-	dec a			;70c4
-	push af			;70c5
-	push bc			;70c6
+	inc hl			;70bd   ; el segundo byte...
+	ld (hl),008h		;70be   ; ...ocho cuadros
+	inc hl			;70c0   ; el tercero...
+	ld (hl),e			;70c1   ; ...la direccion
+	ld b,e			;70c2   ; B = la direccion
+	ld a,d			;70c3   ; la casilla
+	dec a			;70c4   ; desde cero
+	push af			;70c5   ; a salvo
+	push bc			;70c6   ; B y C (el hueco)
 	ld hl,0ec00h		;70c7   ; la casilla, con el bit 7: esta girando
-	call suma_a_a_hl		;70ca
-	ld a,(hl)			;70cd
-	and 01fh		;70ce
-	ld d,a			;70d0
-	add a,080h		;70d1
-	ld (hl),a			;70d3
+	call suma_a_a_hl		;70ca   ; en el tablero
+	ld a,(hl)			;70cd   ; el cubo
+	and 01fh		;70ce   ; su giro
+	ld d,a			;70d0   ; en D
+	add a,080h		;70d1   ; con el bit 7
+	ld (hl),a			;70d3   ; guardado
 	ld c,b			;70d4   ; hacia arriba, la animacion ya usa las caras nuevas
-	ld a,b			;70d5
-	and 009h		;70d6
-	ld a,d			;70d8
-	jr z,L_70DF		;70d9
-	call giro_siguiente		;70db
-	ld d,a			;70de
+	ld a,b			;70d5   ; la direccion
+	and 009h		;70d6   ; 1 u 8: hacia arriba
+	ld a,d			;70d8   ; el giro de ahora
+	jr z,L_70DF		;70d9   ; hacia abajo: tal cual
+	call giro_siguiente		;70db   ; hacia arriba: el siguiente
+	ld d,a			;70de   ; en D
 L_70DF:
 	ld b,009h		;70df   ; las tres caras del cubo...
-	call multiplica		;70e1
-	ld hl,0eb01h		;70e4
-	call suma_a_a_hl		;70e7
+	call multiplica		;70e1   ; 9 * giro
+	ld hl,0eb01h		;70e4   ; la cara de arriba del primer cubo
+	call suma_a_a_hl		;70e7   ; la de este
 	ld de,0e2f1h		;70ea   ; ...a 0xE2F1-0xE2F3
-	ld a,(hl)			;70ed
-	ld (de),a			;70ee
-	inc hl			;70ef
+	ld a,(hl)			;70ed   ; la de arriba...
+	ld (de),a			;70ee   ; ...a 0xE2F1
+	inc hl			;70ef   ; dos casillas mas alla...
 	inc hl			;70f0
 	inc de			;70f1
-	ld a,(hl)			;70f2
-	ld (de),a			;70f3
-	inc hl			;70f4
+	ld a,(hl)			;70f2   ; la de la izquierda...
+	ld (de),a			;70f3   ; ...a 0xE2F2
+	inc hl			;70f4   ; dos mas alla...
 	inc hl			;70f5
 	inc de			;70f6
-	ld a,(hl)			;70f7
-	ld (de),a			;70f8
-	pop bc			;70f9
+	ld a,(hl)			;70f7   ; la de la derecha...
+	ld (de),a			;70f8   ; ...a 0xE2F3
+	pop bc			;70f9   ; B y C
 	ld hl,0727ah		;70fa   ; la plantilla de color de la animacion, segun el grupo de huecos
-	ld de,0e2f4h		;70fd
-	ld a,c			;7100
-	cp 005h		;7101
-	jr c,rellena_la_plantilla		;7103
-	ld hl,0729fh		;7105
+	ld de,0e2f4h		;70fd   ; a 0xE2F4
+	ld a,c			;7100   ; el hueco
+	cp 005h		;7101   ; del 0 al 4...
+	jr c,rellena_la_plantilla		;7103   ; ...la plantilla 1
+	ld hl,0729fh		;7105   ; del 5 al 9, la 2
 rellena_la_plantilla:
 	ld a,(hl)			;7108   ; pares (cuantos, colores); 0 acaba
-	ld (de),a			;7109
-	or a			;710a
-	jr z,pinta_la_animacion		;710b
-	inc hl			;710d
+	ld (de),a			;7109   ; cuantos
+	or a			;710a   ; 0...
+	jr z,pinta_la_animacion		;710b   ; ...fin
+	inc hl			;710d   ; el color
 	inc de			;710e
 	ld a,(hl)			;710f   ; cada nibble es 0 (negro) o una de las tres caras
-	and 0f0h		;7110
+	and 0f0h		;7110   ; el nibble alto...
 	rrca			;7112
 	rrca			;7113
 	rrca			;7114
 	rrca			;7115
-	call color_de_la_plantilla		;7116
-	rlca			;7119
+	call color_de_la_plantilla		;7116   ; ...su color
+	rlca			;7119   ; arriba...
 	rlca			;711a
 	rlca			;711b
 	rlca			;711c
-	ld b,a			;711d
-	ld a,(hl)			;711e
+	ld b,a			;711d   ; ...en B
+	ld a,(hl)			;711e   ; el nibble bajo...
 	and 00fh		;711f
-	call color_de_la_plantilla		;7121
-	add a,b			;7124
-	ld (de),a			;7125
-	inc hl			;7126
+	call color_de_la_plantilla		;7121   ; ...su color
+	add a,b			;7124   ; los dos juntos
+	ld (de),a			;7125   ; guardado
+	inc hl			;7126   ; el siguiente par
 	inc de			;7127
-	jr rellena_la_plantilla		;7128
+	jr rellena_la_plantilla		;7128   ; y otra vez
 pinta_la_animacion:
 	ld hl,00048h		;712a   ; el color de los nueve tiles del hueco, en los tres tercios
-	ld b,c			;712d
-	call multiplica_hl		;712e
-	ld de,00488h		;7131
+	ld b,c			;712d   ; el hueco
+	call multiplica_hl		;712e   ; 72 * hueco
+	ld de,00488h		;7131   ; + 0x0488: el color del tile 0x91
 	add hl,de			;7134
-	ld de,0e2f4h		;7135
-	push bc			;7138
-	call guion_rle_en_tres_bancos		;7139
-	pop bc			;713c
-	pop af			;713d
+	ld de,0e2f4h		;7135   ; el RLE hecho
+	push bc			;7138   ; a salvo
+	call guion_rle_en_tres_bancos		;7139   ; en los tres tercios
+	pop bc			;713c   ; BC
+	pop af			;713d   ; la casilla
 	call sitio_de_la_casilla		;713e   ; y los tiles 0x91 + 9*hueco en el sitio del cubo
-	ld b,c			;7141
-	ld a,009h		;7142
+	ld b,c			;7141   ; el hueco
+	ld a,009h		;7142   ; 9 * hueco...
 	call multiplica		;7144
-	add a,091h		;7147
-	ld c,003h		;7149
+	add a,091h		;7147   ; ...+ 0x91: su primer tile
+	ld c,003h		;7149   ; tres filas
 L_714B:
-	ld b,003h		;714b
+	ld b,003h		;714b   ; tres columnas
 L_714D:
-	ld (hl),a			;714d
-	inc hl			;714e
-	inc a			;714f
-	djnz L_714D		;7150
-	ld de,0001dh		;7152
+	ld (hl),a			;714d   ; el tile
+	inc hl			;714e   ; al lado
+	inc a			;714f   ; el siguiente
+	djnz L_714D		;7150   ; tres
+	ld de,0001dh		;7152   ; la fila siguiente
 	add hl,de			;7155
-	dec c			;7156
-	jr nz,L_714B		;7157
-	ret			;7159
+	dec c			;7156   ; una fila menos
+	jr nz,L_714B		;7157   ; tres
+	ret			;7159   ; vuelta
 cubos_que_giran:		; Cada cuadro, los diez huecos: al acabar los ocho cuadros, la casilla pasa al giro nuevo y se mira si ya es como el modelo
-	ld hl,0e2c0h		;715a
-	ld b,00ah		;715d
+	ld hl,0e2c0h		;715a   ; los huecos
+	ld b,00ah		;715d   ; diez
 L_715F:
-	push hl			;715f
-	push bc			;7160
-	ld a,(hl)			;7161
-	or a			;7162
-	jr z,L_71C4		;7163
+	push hl			;715f   ; HL...
+	push bc			;7160   ; ...y B a salvo
+	ld a,(hl)			;7161   ; la casilla
+	or a			;7162   ; libre?
+	jr z,L_71C4		;7163   ; si: el siguiente
 	ld c,a			;7165   ; hueco ocupado: cuenta
-	inc hl			;7166
-	dec (hl)			;7167
-	jr nz,L_71C4		;7168
+	inc hl			;7166   ; la cuenta
+	dec (hl)			;7167   ; un cuadro menos
+	jr nz,L_71C4		;7168   ; sin acabar
 	dec hl			;716a   ; acabado: se libera
-	ld (hl),000h		;716b
-	inc hl			;716d
-	ld a,c			;716e
-	dec a			;716f
-	push af			;7170
-	ld de,0ec00h		;7171
+	ld (hl),000h		;716b   ; libre
+	inc hl			;716d   ; la cuenta
+	ld a,c			;716e   ; la casilla
+	dec a			;716f   ; desde cero
+	push af			;7170   ; a salvo
+	ld de,0ec00h		;7171   ; en el tablero
 	call suma_a_a_de		;7174
 	ld a,(de)			;7177   ; el giro nuevo, sin el bit 7
-	sub 080h		;7178
-	inc hl			;717a
-	ld c,(hl)			;717b
-	call giro_siguiente		;717c
-	ld (de),a			;717f
-	ld b,a			;7180
-	pop af			;7181
-	call sitio_de_la_casilla		;7182
+	sub 080h		;7178   ; fuera el bit 7
+	inc hl			;717a   ; la direccion...
+	ld c,(hl)			;717b   ; ...en C
+	call giro_siguiente		;717c   ; el giro nuevo
+	ld (de),a			;717f   ; guardado
+	ld b,a			;7180   ; en B
+	pop af			;7181   ; la casilla
+	call sitio_de_la_casilla		;7182   ; HL: su sitio en pantalla
 	xor a			;7185   ; como el modelo del primero...
-	ld (0e339h),a		;7186
-	ld a,b			;7189
-	ld c,b			;718a
-	call coincide_con_el_modelo		;718b
-	jr nz,L_7198		;718e
+	ld (0e339h),a		;7186   ; (0xE339)=0: el primero
+	ld a,b			;7189   ; el giro
+	ld c,b			;718a   ; tambien en C
+	call coincide_con_el_modelo		;718b   ; igual?
+	jr nz,L_7198		;718e   ; no
 	ld b,018h		;7190   ; ...cubo acabado del primero (bit 6)
-	ld a,(de)			;7192
-	or 040h		;7193
-	ld (de),a			;7195
-	jr L_71A9		;7196
+	ld a,(de)			;7192   ; la casilla...
+	or 040h		;7193   ; ...del primero
+	ld (de),a			;7195   ; guardada
+	jr L_71A9		;7196   ; y sigue
 L_7198:
 	ld a,001h		;7198   ; como el del segundo...
-	ld (0e339h),a		;719a
-	ld a,c			;719d
-	call coincide_con_el_modelo		;719e
-	jr nz,L_71BC		;71a1
+	ld (0e339h),a		;719a   ; (0xE339)=1: el segundo
+	ld a,c			;719d   ; el giro
+	call coincide_con_el_modelo		;719e   ; igual?
+	jr nz,L_71BC		;71a1   ; no
 	ld b,019h		;71a3   ; ...acabado del segundo (bit 5)
-	ld a,(de)			;71a5
-	or 020h		;71a6
-	ld (de),a			;71a8
+	ld a,(de)			;71a5   ; la casilla...
+	or 020h		;71a6   ; ...del segundo
+	ld (de),a			;71a8   ; guardada
 L_71A9:
 	ld a,009h		;71a9   ; sonido 9 y 300 puntos
-	call toca_sonido_en_partida		;71ab
-	push bc			;71ae
-	push hl			;71af
-	ld de,00300h		;71b0
+	call toca_sonido_en_partida		;71ab   ; suena
+	push bc			;71ae   ; BC...
+	push hl			;71af   ; ...y HL a salvo
+	ld de,00300h		;71b0   ; 300 puntos
 	call suma_puntos		;71b3
-	pop hl			;71b6
-	pop bc			;71b7
+	pop hl			;71b6   ; HL...
+	pop bc			;71b7   ; ...y BC
 	ld a,001h		;71b8   ; A=1: cubo acabado, para la racha de la vida extra
-	jr L_71BD		;71ba
+	jr L_71BD		;71ba   ; y sigue
 L_71BC:
 	xor a			;71bc   ; A=0: girado sin acabar
 L_71BD:
-	call apunta_el_salto		;71bd
+	call apunta_el_salto		;71bd   ; la racha
 	ld a,b			;71c0   ; y se pinta como quede
-	call dibuja_un_cubo		;71c1
+	call dibuja_un_cubo		;71c1   ; y se pinta
 L_71C4:
-	pop bc			;71c4
-	pop hl			;71c5
-	inc hl			;71c6
+	pop bc			;71c4   ; B...
+	pop hl			;71c5   ; ...y HL
+	inc hl			;71c6   ; el hueco siguiente...
 	inc hl			;71c7
 	inc hl			;71c8
-	djnz L_715F		;71c9
-	ret			;71cb
+	djnz L_715F		;71c9   ; diez
+	ret			;71cb   ; vuelta
 color_de_la_plantilla:		; A = (0xE2F0 + A): el nibble convertido en color
-	exx			;71cc
-	ld hl,0e2f0h		;71cd
-	call suma_a_a_hl		;71d0
-	ld a,(hl)			;71d3
-	exx			;71d4
-	ret			;71d5
+	exx			;71cc   ; los de reserva
+	ld hl,0e2f0h		;71cd   ; 0xE2F0...
+	call suma_a_a_hl		;71d0   ; ...+ A
+	ld a,(hl)			;71d3   ; el color
+	exx			;71d4   ; los normales
+	ret			;71d5   ; vuelta
 giro_siguiente:		; A = el giro en que se convierte el cubo A al saltar en la direccion C (un bit)
 	push de			;71d6   ; cuatro direcciones por giro
-	push bc			;71d7
-	ld b,004h		;71d8
+	push bc			;71d7   ; BC a salvo
+	ld b,004h		;71d8   ; 4 * giro
 	call multiplica		;71da
-	pop bc			;71dd
-	ld de,072c0h		;71de
-	call suma_a_a_de		;71e1
-	ld a,c			;71e4
+	pop bc			;71dd   ; BC
+	ld de,072c0h		;71de   ; la tabla de giros...
+	call suma_a_a_de		;71e1   ; ...+ 4 * giro
+	ld a,c			;71e4   ; la direccion
 L_71E5:
 	rrca			;71e5   ; la direccion es el numero de su bit
-	jr c,L_71EB		;71e6
-	inc de			;71e8
-	jr L_71E5		;71e9
+	jr c,L_71EB		;71e6   ; este bit: su columna
+	inc de			;71e8   ; la siguiente
+	jr L_71E5		;71e9   ; y otra vez
 L_71EB:
-	ld a,(de)			;71eb
-	pop de			;71ec
-	ret			;71ed
+	ld a,(de)			;71eb   ; el giro nuevo
+	pop de			;71ec   ; DE
+	ret			;71ed   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LA CASILLA DE UNA POSICION: E es la Y y D la X de un sprite; la fila va de 16 en 16 desde 12 y la columna de 24 en 24 desde 24. A = 9 * fila + columna.
 ; ----------------------------------------------------------------------
 casilla_de_la_posicion:
-	push bc			;71ee
-	push de			;71ef
-	ld a,e			;71f0
-	sub 00ch		;71f1
-	srl a		;71f3
+	push bc			;71ee   ; BC...
+	push de			;71ef   ; ...y DE a salvo
+	ld a,e			;71f0   ; la Y
+	sub 00ch		;71f1   ; menos 12
+	srl a		;71f3   ; entre 16...
 	srl a		;71f5
 	srl a		;71f7
 	srl a		;71f9
-	ld b,009h		;71fb
+	ld b,009h		;71fb   ; ...la fila, por 9
 	call multiplica		;71fd
-	ld e,a			;7200
-	ld a,d			;7201
-	sub 018h		;7202
-	ld b,018h		;7204
-	call divide		;7206
-	add a,e			;7209
-	pop de			;720a
-	pop bc			;720b
-	ret			;720c
+	ld e,a			;7200   ; en E
+	ld a,d			;7201   ; la X
+	sub 018h		;7202   ; menos 24
+	ld b,018h		;7204   ; entre 24...
+	call divide		;7206   ; ...la columna
+	add a,e			;7209   ; 9 * fila + columna
+	pop de			;720a   ; DE...
+	pop bc			;720b   ; ...y BC
+	ret			;720c   ; vuelta
 sitio_de_la_casilla:		; HL = 0xED63 + 64 * fila + 3 * columna: la esquina del cubo en la copia de la tabla de nombres
-	push bc			;720d
-	push de			;720e
-	ld b,009h		;720f
-	call divide		;7211
-	ld c,b			;7214
-	ld b,a			;7215
-	ld hl,00040h		;7216
+	push bc			;720d   ; BC...
+	push de			;720e   ; ...y DE a salvo
+	ld b,009h		;720f   ; entre 9
+	call divide		;7211   ; A = fila, B = columna
+	ld c,b			;7214   ; C = columna
+	ld b,a			;7215   ; B = fila
+	ld hl,00040h		;7216   ; 64 * fila
 	call multiplica_hl		;7219
-	ld a,c			;721c
-	ld b,003h		;721d
+	ld a,c			;721c   ; la columna
+	ld b,003h		;721d   ; por 3
 	call multiplica		;721f
-	call suma_a_a_hl		;7222
-	ld de,0ed63h		;7225
+	call suma_a_a_hl		;7222   ; + 3 * columna
+	ld de,0ed63h		;7225   ; + 0xED63
 	add hl,de			;7228
-	pop de			;7229
-	pop bc			;722a
-	ret			;722b
+	pop de			;7229   ; DE...
+	pop bc			;722a   ; ...y BC
+	ret			;722b   ; vuelta
 casilla_y_modelo:
 	call casilla_debajo		;722c   ; CODIGO HUERFANO: el cubo bajo (E,D) y, de corrido, la comparacion con el modelo de 0x722F. Nadie lo llama
 
@@ -4970,57 +4970,57 @@ casilla_y_modelo:
 ; COINCIDE CON EL MODELO: las tres caras del cubo A contra las del modelo del primero (casilla 0) o del segundo (casilla 1), segun (0xE339). Z si son las mismas.
 ; ----------------------------------------------------------------------
 coincide_con_el_modelo:
-	exx			;722f
-	call caras_del_cubo		;7230
-	ld h,a			;7233
-	ld d,b			;7234
-	ld e,c			;7235
-	ld a,(0e339h)		;7236
+	exx			;722f   ; los de reserva
+	call caras_del_cubo		;7230   ; las caras del cubo A
+	ld h,a			;7233   ; en H...
+	ld d,b			;7234   ; ...D...
+	ld e,c			;7235   ; ...y E
+	ld a,(0e339h)		;7236   ; de quien es el modelo
 	or a			;7239
-	ld a,(0ec00h)		;723a
+	ld a,(0ec00h)		;723a   ; el del primero
 	jr z,L_7242		;723d
-	ld a,(0ec01h)		;723f
+	ld a,(0ec01h)		;723f   ; el del segundo
 L_7242:
-	call caras_del_cubo		;7242
-	cp h			;7245
-	jr nz,fin_de_la_comparacion		;7246
-	ld a,b			;7248
+	call caras_del_cubo		;7242   ; sus caras
+	cp h			;7245   ; la de arriba
+	jr nz,fin_de_la_comparacion		;7246   ; distinta: no
+	ld a,b			;7248   ; la de la izquierda
 	cp d			;7249
-	jr nz,fin_de_la_comparacion		;724a
-	ld a,c			;724c
+	jr nz,fin_de_la_comparacion		;724a   ; distinta: no
+	ld a,c			;724c   ; la de la derecha
 	cp e			;724d
 fin_de_la_comparacion:
-	exx			;724e
-	ret			;724f
+	exx			;724e   ; los normales
+	ret			;724f   ; vuelta, con Z o NZ
 caras_del_cubo:		; A, B y C: los colores de la cara de arriba y las dos de lado del cubo A (las casillas 1, 3 y 5 de sus nueve)
-	ld b,009h		;7250
+	ld b,009h		;7250   ; 9 * giro
 	call multiplica		;7252
-	push hl			;7255
-	ld hl,0eb01h		;7256
-	call suma_a_a_hl		;7259
-	ld a,(hl)			;725c
-	inc hl			;725d
+	push hl			;7255   ; HL a salvo
+	ld hl,0eb01h		;7256   ; la casilla 1 del primer cubo
+	call suma_a_a_hl		;7259   ; la de este
+	ld a,(hl)			;725c   ; la de arriba
+	inc hl			;725d   ; la 3...
 	inc hl			;725e
-	ld b,(hl)			;725f
-	inc hl			;7260
+	ld b,(hl)			;725f   ; ...la de la izquierda
+	inc hl			;7260   ; la 5...
 	inc hl			;7261
-	ld c,(hl)			;7262
-	pop hl			;7263
-	ret			;7264
+	ld c,(hl)			;7262   ; ...la de la derecha
+	pop hl			;7263   ; HL
+	ret			;7264   ; vuelta
 casilla_debajo:		; A = el cubo de la casilla bajo (E,D), o 0xFF si no hay o se sale por abajo
-	ld a,e			;7265
-	cp 09ch		;7266
+	ld a,e			;7265   ; la Y
+	cp 09ch		;7266   ; por debajo de la ultima fila...
 	jr c,L_726D		;7268
-	ld a,0ffh		;726a
-	ret			;726c
+	ld a,0ffh		;726a   ; ...no hay cubo
+	ret			;726c   ; vuelta
 L_726D:
-	call casilla_de_la_posicion		;726d
-	push hl			;7270
-	ld hl,0ec00h		;7271
+	call casilla_de_la_posicion		;726d   ; la casilla
+	push hl			;7270   ; HL a salvo
+	ld hl,0ec00h		;7271   ; en el tablero
 	call suma_a_a_hl		;7274
-	ld a,(hl)			;7277
-	pop hl			;7278
-	ret			;7279
+	ld a,(hl)			;7277   ; el cubo
+	pop hl			;7278   ; HL
+	ret			;7279   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; DATOS plantilla_de_giro_1: La animacion de los huecos 0-4 (diagonales 1 y
@@ -5115,8 +5115,8 @@ DATA_giros_de_los_cubos:
 ; ----------------------------------------------------------------------
 una_comprobacion_por_turno:
 	ld a,(0e003h)		;7320   ; cual de las cuatro, segun el cuadro
-	and 003h		;7323
-	call reparte_por_tabla		;7325
+	and 003h		;7323   ; 0 a 3
+	call reparte_por_tabla		;7325   ; la comprobacion de este cuadro
 
 ; ----------------------------------------------------------------------
 ; DATOS comprobaciones: Las cuatro: filas (0x7330), columnas (0x7353),
@@ -5132,521 +5132,521 @@ DATA_comprobaciones:
 
 cuenta_las_filas:
 	xor a			;7330   ; la cuenta de lineas, desde cero en cada vuelta de cuatro cuadros
-	ld (0e320h),a		;7331
+	ld (0e320h),a		;7331   ; cero lineas
 	ld hl,0e33ah		;7334   ; cada vuelta cuenta un jugador distinto
-	ld a,(hl)			;7337
-	xor 001h		;7338
-	ld (hl),a			;733a
+	ld a,(hl)			;7337   ; el jugador de turno...
+	xor 001h		;7338   ; ...el otro
+	ld (hl),a			;733a   ; guardado
 	ld a,040h		;733b   ; y la mascara de la rutina de 0xE4FD: bit 6 el primero, bit 5 el segundo
-	jr z,L_7341		;733d
-	ld a,020h		;733f
+	jr z,L_7341		;733d   ; el primero: 0x40
+	ld a,020h		;733f   ; el segundo: 0x20
 L_7341:
-	ld (0e4feh),a		;7341
-	ld hl,0ec00h		;7344
-	ld e,009h		;7347
+	ld (0e4feh),a		;7341   ; en el `and` de 0xE4FD
+	ld hl,0ec00h		;7344   ; la primera fila
+	ld e,009h		;7347   ; nueve filas
 L_7349:
 	ld bc,00901h		;7349   ; nueve casillas de una en una, nueve filas
-	call cuenta_una_linea		;734c
-	dec e			;734f
-	jr nz,L_7349		;7350
-	ret			;7352
+	call cuenta_una_linea		;734c   ; la fila
+	dec e			;734f   ; una menos
+	jr nz,L_7349		;7350   ; nueve
+	ret			;7352   ; vuelta
 cuenta_las_columnas:
-	ld hl,0ec00h		;7353
-	ld e,009h		;7356
+	ld hl,0ec00h		;7353   ; la primera columna
+	ld e,009h		;7356   ; nueve columnas
 L_7358:
 	ld bc,00909h		;7358   ; nueve casillas de nueve en nueve
-	call cuenta_una_linea		;735b
+	call cuenta_una_linea		;735b   ; la columna; HL acaba 81 mas alla
 	ld a,l			;735e   ; y a la columna siguiente: 81 - 80
-	sub 050h		;735f
+	sub 050h		;735f   ; 80 atras: la columna siguiente
 	ld l,a			;7361
 	jr nc,L_7365		;7362
 	dec h			;7364
 L_7365:
-	dec e			;7365
-	jr nz,L_7358		;7366
-	ret			;7368
+	dec e			;7365   ; una menos
+	jr nz,L_7358		;7366   ; nueve
+	ret			;7368   ; vuelta
 cuenta_las_diagonales_de_bajada:		; De diez en diez (abajo-derecha), desde la primera fila y desde la primera columna
-	ld e,00ah		;7369
-	ld hl,0ec00h		;736b
-	ld bc,00901h		;736e
-	call cinco_diagonales		;7371
-	ld hl,0ec01h		;7374
-	ld bc,00801h		;7377
-	jp cuatro_diagonales		;737a
+	ld e,00ah		;7369   ; de diez en diez
+	ld hl,0ec00h		;736b   ; desde la casilla 0...
+	ld bc,00901h		;736e   ; ...nueve, bajando de fila
+	call cinco_diagonales		;7371   ; las que empiezan en la columna 0
+	ld hl,0ec01h		;7374   ; desde la casilla 1...
+	ld bc,00801h		;7377   ; ...ocho, avanzando de columna
+	jp cuatro_diagonales		;737a   ; las que empiezan en la fila 0
 cuenta_las_diagonales_de_subida:		; De ocho en ocho (abajo-izquierda), y luego el recuento
-	ld e,008h		;737d
-	ld hl,0ec08h		;737f
-	ld bc,00901h		;7382
-	call cinco_diagonales		;7385
-	ld hl,0ec04h		;7388
-	ld bc,00500h		;738b
-	call cuatro_diagonales		;738e
+	ld e,008h		;737d   ; de ocho en ocho
+	ld hl,0ec08h		;737f   ; desde la casilla 8...
+	ld bc,00901h		;7382   ; ...nueve, bajando de fila
+	call cinco_diagonales		;7385   ; las que empiezan en la columna 8
+	ld hl,0ec04h		;7388   ; desde la casilla 4...
+	ld bc,00500h		;738b   ; ...cinco, retrocediendo
+	call cuatro_diagonales		;738e   ; las que empiezan en la fila 0
 	ld b,001h		;7391   ; una linea basta...
-	ld a,(0e002h)		;7393
-	bit 5,a		;7396
-	jr nz,L_73A7		;7398
+	ld a,(0e002h)		;7393   ; el modo
+	bit 5,a		;7396   ; el duelo?
+	jr nz,L_73A7		;7398   ; si: una linea
 	ld a,(0e111h)		;739a   ; ...hasta la fase 30; dos hasta la 40...
-	cp 031h		;739d
+	cp 031h		;739d   ; por debajo de la 31: una
 	jr c,L_73A7		;739f
-	inc b			;73a1
+	inc b			;73a1   ; dos...
 	cp 041h		;73a2   ; ...y tres de la 41 a la 50
-	jr c,L_73A7		;73a4
-	inc b			;73a6
+	jr c,L_73A7		;73a4   ; ...por debajo de la 41
+	inc b			;73a6   ; tres
 L_73A7:
 	ld a,(0e320h)		;73a7   ; no llega: sigue la fase
-	cp b			;73aa
-	ret c			;73ab
+	cp b			;73aa   ; las hechas contra las que hacen falta
+	ret c			;73ab   ; menos: sigue
 	ld a,(0e33ah)		;73ac   ; el que no ha hecho la linea...
-	or a			;73af
-	ld a,(0e202h)		;73b0
-	ld hl,0e212h		;73b3
+	or a			;73af   ; quien la hizo
+	ld a,(0e202h)		;73b0   ; el estado del primero...
+	ld hl,0e212h		;73b3   ; ...y el objeto del segundo
 	jr z,L_73BE		;73b6   ; (el otro en el duelo)
-	ld a,(0e212h)		;73b8
-	ld hl,0e202h		;73bb
+	ld a,(0e212h)		;73b8   ; el del segundo...
+	ld hl,0e202h		;73bb   ; ...y el objeto del primero
 L_73BE:
 	or a			;73be   ; ...si el ganador aun esta en el aire, se espera
-	ret nz			;73bf
+	ret nz			;73bf   ; en el aire: se espera
 	ld a,(hl)			;73c0   ; si el otro esta quieto, pone cara de derrota (8 patrones mas alla)
-	or a			;73c1
-	jr nz,L_73D9		;73c2
-	inc hl			;73c4
+	or a			;73c1   ; el otro esta quieto?
+	jr nz,L_73D9		;73c2   ; no: sin cara
+	inc hl			;73c4   ; al byte 6...
 	inc hl			;73c5
 	inc hl			;73c6
 	inc hl			;73c7
-	ld a,(hl)			;73c8
-	and 0f0h		;73c9
-	add a,008h		;73cb
-	ld (hl),a			;73cd
-	ld a,008h		;73ce
+	ld a,(hl)			;73c8   ; el patron
+	and 0f0h		;73c9   ; su grupo...
+	add a,008h		;73cb   ; ...el dibujo 8
+	ld (hl),a			;73cd   ; guardado
+	ld a,008h		;73ce   ; el segundo sprite...
 	call suma_a_a_hl		;73d0
-	ld a,(hl)			;73d3
-	and 0f0h		;73d4
-	add a,008h		;73d6
-	ld (hl),a			;73d8
+	ld a,(hl)			;73d3   ; el patron
+	and 0f0h		;73d4   ; su grupo...
+	add a,008h		;73d6   ; ...el dibujo 8
+	ld (hl),a			;73d8   ; guardado
 L_73D9:
 	ld a,(0e002h)		;73d9   ; con un jugador, al acabar una decena sube el nivel del rotulo
-	bit 5,a		;73dc
-	jr nz,L_73ED		;73de
-	ld a,(0e111h)		;73e0
-	and 00fh		;73e3
-	jr nz,L_73F4		;73e5
-	ld hl,0e103h		;73e7
-	inc (hl)			;73ea
-	jr L_73F4		;73eb
+	bit 5,a		;73dc   ; el duelo?
+	jr nz,L_73ED		;73de   ; si
+	ld a,(0e111h)		;73e0   ; la fase
+	and 00fh		;73e3   ; las unidades
+	jr nz,L_73F4		;73e5   ; no acaba en 0: nada
+	ld hl,0e103h		;73e7   ; el nivel del rotulo...
+	inc (hl)			;73ea   ; ...uno mas
+	jr L_73F4		;73eb   ; y sigue
 L_73ED:
 	call apunta_la_partida_ganada		;73ed   ; en el duelo, se apunta la partida
-	xor a			;73f0
-	ld (0e00dh),a		;73f1
+	xor a			;73f0   ; sin la marca...
+	ld (0e00dh),a		;73f1   ; ...de fase acabada
 L_73F4:
 	jp espera_a_y_sigue		;73f4   ; y al paso 1 de la partida: fase acabada
 cinco_diagonales:
-	ld d,005h		;73f7
+	ld d,005h		;73f7   ; cinco
 L_73F9:
-	call una_diagonal		;73f9
-	ld a,009h		;73fc
+	call una_diagonal		;73f9   ; una
+	ld a,009h		;73fc   ; la siguiente empieza una fila mas abajo
 	call suma_a_a_hl		;73fe
-	dec d			;7401
-	jr nz,L_73F9		;7402
-	ret			;7404
+	dec d			;7401   ; una menos
+	jr nz,L_73F9		;7402   ; cinco
+	ret			;7404   ; vuelta
 cuatro_diagonales:
-	ld d,004h		;7405
+	ld d,004h		;7405   ; cuatro
 L_7407:
-	call una_diagonal		;7407
-	inc hl			;740a
-	dec d			;740b
-	jr nz,L_7407		;740c
-	ret			;740e
+	call una_diagonal		;7407   ; una
+	inc hl			;740a   ; la siguiente, una columna mas alla
+	dec d			;740b   ; una menos
+	jr nz,L_7407		;740c   ; cuatro
+	ret			;740e   ; vuelta
 una_diagonal:
-	push bc			;740f
-	push de			;7410
-	push hl			;7411
-	ld c,e			;7412
-	call cuenta_una_linea		;7413
-	pop hl			;7416
-	pop de			;7417
-	pop bc			;7418
+	push bc			;740f   ; BC...
+	push de			;7410   ; ...DE...
+	push hl			;7411   ; ...y HL a salvo
+	ld c,e			;7412   ; C = el paso
+	call cuenta_una_linea		;7413   ; la cuenta
+	pop hl			;7416   ; HL...
+	pop de			;7417   ; ...DE...
+	pop bc			;7418   ; ...y BC
 	ld a,c			;7419   ; C=1 o 9: la linea empieza una casilla mas alla o mas abajo
-	or a			;741a
+	or a			;741a   ; C=1 o 9?
 	jr nz,L_741F		;741b
-	inc b			;741d
-	ret			;741e
+	inc b			;741d   ; con C=0, la siguiente mas larga
+	ret			;741e   ; vuelta
 L_741F:
-	dec b			;741f
-	ret			;7420
+	dec b			;741f   ; si no, una casilla mas corta
+	ret			;7420   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; CUENTA UNA LINEA: B casillas desde HL, de C en C. D cuenta los acabados seguidos del jugador de turno; un cubo que no es suyo lo pone a cero y un hueco (0xFF) no. Con cinco, una linea mas en (0xE320).
 ; ----------------------------------------------------------------------
 cuenta_una_linea:
-	ld d,000h		;7421
+	ld d,000h		;7421   ; seguidos: cero
 L_7423:
 	ld a,(hl)			;7423   ; 0xFF: hueco, no corta
-	inc a			;7424
-	jr z,casilla_siguiente		;7425
-	inc d			;7427
+	inc a			;7424   ; 0xFF + 1 = 0...
+	jr z,casilla_siguiente		;7425   ; ...hueco
+	inc d			;7427   ; uno mas
 	call 0e4fdh		;7428   ; la rutina de 0xE4FD: `and 0x40` o `and 0x20`
-	jr nz,L_742E		;742b
+	jr nz,L_742E		;742b   ; suyo: sigue
 	ld d,a			;742d   ; no es suyo: a cero
 L_742E:
-	ld a,d			;742e
+	ld a,d			;742e   ; la cuenta
 	cp 005h		;742f   ; cinco seguidos
-	jr nc,una_linea_mas		;7431
+	jr nc,una_linea_mas		;7431   ; cinco: linea
 casilla_siguiente:
-	ld a,c			;7433
-	add a,l			;7434
+	ld a,c			;7433   ; el paso...
+	add a,l			;7434   ; ...+ HL
 	ld l,a			;7435
 	jr nc,L_7439		;7436
 	inc h			;7438
 L_7439:
-	djnz L_7423		;7439
-	ret			;743b
+	djnz L_7423		;7439   ; B casillas
+	ret			;743b   ; vuelta
 una_linea_mas:
-	ld a,(0e320h)		;743c
-	inc a			;743f
-	ld (0e320h),a		;7440
-	ret			;7443
+	ld a,(0e320h)		;743c   ; las lineas...
+	inc a			;743f   ; ...mas una
+	ld (0e320h),a		;7440   ; guardadas
+	ret			;7443   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; SALEN LOS BICHOS. Cada 64 cuadros, a cada uno de los quince le baja la espera (el nibble bajo del byte 0); al llegar a cero y si no esta ya en pantalla, entra por arriba sobre uno de los dos cubos de la cima, al azar. Despues la espera vuelve a 15: sale una y otra vez.
 ; ----------------------------------------------------------------------
 salen_los_bichos:
 	ld a,(0e003h)		;7444   ; cada 64 cuadros
-	and 03fh		;7447
+	and 03fh		;7447   ; cada 64 cuadros
 	ret nz			;7449
 	ld hl,0e220h		;744a   ; los quince, desde el objeto 4
-	ld b,00fh		;744d
+	ld b,00fh		;744d   ; quince
 L_744F:
-	push hl			;744f
-	call sale_un_bicho		;7450
-	pop hl			;7453
-	ld a,008h		;7454
+	push hl			;744f   ; HL a salvo
+	call sale_un_bicho		;7450   ; el objeto
+	pop hl			;7453   ; HL
+	ld a,008h		;7454   ; el siguiente
 	call suma_a_a_hl		;7456
-	djnz L_744F		;7459
-	ret			;745b
+	djnz L_744F		;7459   ; quince
+	ret			;745b   ; vuelta
 sale_un_bicho:
 	ld a,(hl)			;745c   ; 0x00: este no sale en esta fase
-	or a			;745d
-	ret z			;745e
-	and 00fh		;745f
-	or a			;7461
-	jr z,L_7466		;7462
+	or a			;745d   ; 0x00...
+	ret z			;745e   ; ...no sale
+	and 00fh		;745f   ; la cuenta
+	or a			;7461   ; a cero?
+	jr z,L_7466		;7462   ; si: a salir
 	dec (hl)			;7464   ; la espera
-	ret nz			;7465
+	ret nz			;7465   ; sin acabar: nada
 L_7466:
-	inc hl			;7466
+	inc hl			;7466   ; al byte 4...
 	inc hl			;7467
 	inc hl			;7468
 	inc hl			;7469
 	ld a,(hl)			;746a   ; si esta en pantalla, espera a que se vaya
-	cp 0e0h		;746b
-	ret nz			;746d
+	cp 0e0h		;746b   ; en pantalla?
+	ret nz			;746d   ; si: espera
 	ld a,b			;746e   ; la bola gris no sale mientras este el que persigue
-	cp 00fh		;746f
-	jr nz,L_7479		;7471
-	ld a,(0e25ch)		;7473
-	cp 0e0h		;7476
-	ret nz			;7478
+	cp 00fh		;746f   ; el objeto 4, la bola gris?
+	jr nz,L_7479		;7471   ; no
+	ld a,(0e25ch)		;7473   ; la Y del objeto 11
+	cp 0e0h		;7476   ; en pantalla?
+	ret nz			;7478   ; si: espera
 L_7479:
 	ld (hl),0f0h		;7479   ; arriba del todo...
 	inc hl			;747b   ; ...a la X 0x64 o 0x94 segun R
-	ld (hl),064h		;747c
+	ld (hl),064h		;747c   ; la X: 0x64...
 	ld a,r		;747e
 	rrca			;7480
 	jr c,L_7485		;7481
-	ld (hl),094h		;7483
+	ld (hl),094h		;7483   ; ...o 0x94
 L_7485:
-	dec hl			;7485
+	dec hl			;7485   ; al byte 2
 	dec hl			;7486
 	dec hl			;7487
 	ld (hl),003h		;7488   ; estado 3: entra por arriba
-	dec hl			;748a
+	dec hl			;748a   ; al byte 0
 	dec hl			;748b
 	ld a,(hl)			;748c   ; 0xF0 -> 0xFF: la espera vuelve a 15 cuentas
-	rrc a		;748d
+	rrc a		;748d   ; los nibbles cambiados...
 	rrc a		;748f
 	rrc a		;7491
 	rrc a		;7493
-	add a,(hl)			;7495
-	ld (hl),a			;7496
-	ret			;7497
+	add a,(hl)			;7495   ; ...+ el byte
+	ld (hl),a			;7496   ; guardado
+	ret			;7497   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LOS BICHOS DECIDEN. Cada dos cuadros, los que estan quietos en pantalla gastan su pausa (el nibble alto del byte 1) y al acabarla saltan: el que persigue, hacia Q*bert; el resto, abajo a la izquierda o a la derecha al azar. Los seis de colores se quedan pegados a un cubo cuya cara de arriba es de su color, y el que gira cubos los gira al saltar.
 ; ----------------------------------------------------------------------
 deciden_los_bichos:
 	ld a,(0e003h)		;7498   ; cada dos cuadros
-	and 001h		;749b
+	and 001h		;749b   ; cada dos cuadros
 	ret nz			;749d
-	ld hl,0e222h		;749e
-	ld b,00fh		;74a1
+	ld hl,0e222h		;749e   ; el estado del objeto 4
+	ld b,00fh		;74a1   ; quince
 L_74A3:
-	push hl			;74a3
-	push bc			;74a4
-	call decide_un_bicho		;74a5
-	pop bc			;74a8
-	pop hl			;74a9
-	ld a,008h		;74aa
+	push hl			;74a3   ; HL...
+	push bc			;74a4   ; ...y B a salvo
+	call decide_un_bicho		;74a5   ; el objeto
+	pop bc			;74a8   ; B...
+	pop hl			;74a9   ; ...y HL
+	ld a,008h		;74aa   ; el siguiente
 	call suma_a_a_hl		;74ac
-	djnz L_74A3		;74af
-	ret			;74b1
+	djnz L_74A3		;74af   ; quince
+	ret			;74b1   ; vuelta
 decide_un_bicho:
 	ld a,(hl)			;74b2   ; solo los que estan quietos
-	or a			;74b3
-	ret nz			;74b4
-	inc hl			;74b5
+	or a			;74b3   ; quieto?
+	ret nz			;74b4   ; no: nada
+	inc hl			;74b5   ; al byte 4
 	inc hl			;74b6
 	ld a,(hl)			;74b7   ; y en pantalla
-	cp 0e0h		;74b8
-	ret z			;74ba
+	cp 0e0h		;74b8   ; en pantalla?
+	ret z			;74ba   ; no: nada
 	ld a,b			;74bb   ; los seis de colores (objetos 12 a 17)...
-	cp 008h		;74bc
+	cp 008h		;74bc   ; B por debajo de 8...
 	jr nc,L_74CB		;74be
-	cp 001h		;74c0
+	cp 001h		;74c0   ; ...y no 1: objetos 12 a 17
 	jr z,L_74CB		;74c2
-	push hl			;74c4
-	push bc			;74c5
+	push hl			;74c4   ; HL...
+	push bc			;74c5   ; ...y B a salvo
 	call mira_el_color_del_cubo		;74c6   ; ...miran el cubo en el que estan
-	pop bc			;74c9
-	pop hl			;74ca
+	pop bc			;74c9   ; B...
+	pop hl			;74ca   ; ...y HL
 L_74CB:
-	dec hl			;74cb
+	dec hl			;74cb   ; al byte 1
 	dec hl			;74cc
 	dec hl			;74cd
 	ld a,(hl)			;74ce   ; la pausa: 16 por cuadro de decision
-	sub 010h		;74cf
-	ld (hl),a			;74d1
-	and 0f0h		;74d2
-	ret nz			;74d4
+	sub 010h		;74cf   ; la pausa, menos una
+	ld (hl),a			;74d1   ; guardada
+	and 0f0h		;74d2   ; sin acabar...
+	ret nz			;74d4   ; ...nada
 	ld a,b			;74d5   ; la bola que bota se echa una pausa al azar
-	cp 009h		;74d6
-	jr nz,L_74E1		;74d8
-	ld a,(0e003h)		;74da
-	and 0f0h		;74dd
-	add a,(hl)			;74df
-	ld (hl),a			;74e0
+	cp 009h		;74d6   ; el objeto 10?
+	jr nz,L_74E1		;74d8   ; no
+	ld a,(0e003h)		;74da   ; la pausa siguiente...
+	and 0f0h		;74dd   ; ...del cuadro...
+	add a,(hl)			;74df   ; ...con la velocidad
+	ld (hl),a			;74e0   ; guardada
 L_74E1:
-	inc hl			;74e1
+	inc hl			;74e1   ; al byte 2
 	ld a,b			;74e2   ; el que persigue (objeto 11) va aparte
-	cp 008h		;74e3
-	jp z,persigue_a_qbert		;74e5
-	push bc			;74e8
-	ld c,b			;74e9
+	cp 008h		;74e3   ; el objeto 11?
+	jp z,persigue_a_qbert		;74e5   ; persigue
+	push bc			;74e8   ; B a salvo
+	ld c,b			;74e9   ; C = el objeto
 	ld a,c			;74ea
 	cp 009h		;74eb   ; la bola que bota cambia de dibujo al saltar
-	jr nz,L_74F2		;74ed
-	call pon_el_paso_b_del_bicho_80		;74ef
+	jr nz,L_74F2		;74ed   ; no es el 10
+	call pon_el_paso_b_del_bicho_80		;74ef   ; el paso B del moai
 L_74F2:
 	ld b,002h		;74f2   ; abajo-derecha o...
-	ld a,r		;74f4
+	ld a,r		;74f4   ; al azar...
 	rrca			;74f6
-	jr c,L_7503		;74f7
+	jr c,L_7503		;74f7   ; ...abajo-derecha
 	ld a,c			;74f9   ; ...abajo-izquierda
-	cp 009h		;74fa
-	jr nz,L_7501		;74fc
-	call pon_el_paso_a_del_bicho_80		;74fe
+	cp 009h		;74fa   ; el objeto 10?
+	jr nz,L_7501		;74fc   ; no
+	call pon_el_paso_a_del_bicho_80		;74fe   ; el paso A del moai
 L_7501:
-	ld b,004h		;7501
+	ld b,004h		;7501   ; abajo-izquierda
 L_7503:
 	call pon_el_salto		;7503   ; el salto
 	pop af			;7506   ; el objeto 9 gira el cubo del que sale
-	cp 00ah		;7507
-	ret nz			;7509
-	jp gira_el_cubo		;750a
+	cp 00ah		;7507   ; el objeto 9?
+	ret nz			;7509   ; no: ya esta
+	jp gira_el_cubo		;750a   ; gira el cubo de donde sale
 
 ; ----------------------------------------------------------------------
 ; LOS SEIS DE COLORES: si la cara de arriba del cubo en el que estan es de su mismo color, se quedan alli. El bicho se retira, la fila de cinco de 0xE29C corre un puesto y el objeto 23 lo recoge con su color, bajando (estado 5).
 ; ----------------------------------------------------------------------
 mira_el_color_del_cubo:
-	ld e,(hl)			;750d
+	ld e,(hl)			;750d   ; la Y...
 	inc hl			;750e
-	ld d,(hl)			;750f
+	ld d,(hl)			;750f   ; ...y la X
 	call casilla_debajo		;7510   ; el cubo de debajo; los acabados no cuentan
-	cp 018h		;7513
-	ret nc			;7515
-	push hl			;7516
+	cp 018h		;7513   ; hueco o acabado...
+	ret nc			;7515   ; ...nada
+	push hl			;7516   ; HL a salvo
 	call caras_del_cubo		;7517   ; su cara de arriba contra el color del bicho
-	pop hl			;751a
-	inc hl			;751b
+	pop hl			;751a   ; HL
+	inc hl			;751b   ; al byte 7...
 	inc hl			;751c
-	cp (hl)			;751d
-	ret nz			;751e
-	ld c,(hl)			;751f
-	dec hl			;7520
+	cp (hl)			;751d   ; el color del bicho
+	ret nz			;751e   ; distinto: nada
+	ld c,(hl)			;751f   ; C = el color
+	dec hl			;7520   ; al byte 4...
 	dec hl			;7521
 	dec hl			;7522
 	ld a,(hl)			;7523   ; el dibujo, 16 patrones mas alla
-	add a,010h		;7524
-	ld (hl),a			;7526
+	add a,010h		;7524   ; 16 mas...
+	ld (hl),a			;7526   ; ...guardado
 	ld de,0e29ch		;7527   ; la fila de cinco de 0xE29C, un puesto
-	ld b,005h		;752a
+	ld b,005h		;752a   ; cinco
 L_752C:
-	push hl			;752c
-	push bc			;752d
-	ld bc,00002h		;752e
-	ldir		;7531
-	pop bc			;7533
-	pop hl			;7534
-	ld a,006h		;7535
+	push hl			;752c   ; HL...
+	push bc			;752d   ; ...y B a salvo
+	ld bc,00002h		;752e   ; dos bytes...
+	ldir		;7531   ; ...copiados
+	pop bc			;7533   ; B...
+	pop hl			;7534   ; ...y HL
+	ld a,006h		;7535   ; el siguiente...
 	call suma_a_a_de		;7537
-	djnz L_752C		;753a
+	djnz L_752C		;753a   ; cinco
 	ld (hl),0e0h		;753c   ; el bicho se va
-	dec hl			;753e
+	dec hl			;753e   ; al byte 2
 	dec hl			;753f
-	ld (hl),000h		;7540
+	ld (hl),000h		;7540   ; quieto
 	ld de,0e2bah		;7542   ; el objeto 23, en el estado 5...
-	ld a,005h		;7545
+	ld a,005h		;7545   ; estado 5
 	ld (de),a			;7547
-	inc de			;7548
+	inc de			;7548   ; al byte 4
 	inc de			;7549   ; ...16 pixeles mas arriba...
-	ld a,(de)			;754a
-	sub 010h		;754b
-	ld (de),a			;754d
-	inc de			;754e
+	ld a,(de)			;754a   ; la Y...
+	sub 010h		;754b   ; ...16 menos
+	ld (de),a			;754d   ; guardada
+	inc de			;754e   ; al byte 7...
 	inc de			;754f
 	inc de			;7550
 	ld a,c			;7551   ; ...con el color del bicho
-	ld (de),a			;7552
+	ld (de),a			;7552   ; el color
 	ld a,002h		;7553   ; y los objetos 19 a 23 se vuelven a pintar dos veces
-	ld (0e328h),a		;7555
-	ret			;7558
+	ld (0e328h),a		;7555   ; (0xE328)=2
+	ret			;7558   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; EL QUE PERSIGUE (objeto 11): elige la diagonal que le acerca al primer Q*bert; si alli no hay cubo, cualquiera de las que tienen.
 ; ----------------------------------------------------------------------
 persigue_a_qbert:
-	inc hl			;7559
+	inc hl			;7559   ; al byte 4
 	inc hl			;755a
 	ld a,(0e204h)		;755b   ; Q*bert mas abajo: diagonales de bajada (2 y 4); si no, de subida (1 y 8)
-	ld e,(hl)			;755e
-	cp (hl)			;755f
-	ld b,006h		;7560
+	ld e,(hl)			;755e   ; E = su Y
+	cp (hl)			;755f   ; contra la de Q*bert
+	ld b,006h		;7560   ; hacia abajo
 	jr nc,L_7566		;7562
-	ld b,009h		;7564
+	ld b,009h		;7564   ; hacia arriba
 L_7566:
-	inc hl			;7566
+	inc hl			;7566   ; la X
 	ld a,(0e205h)		;7567   ; Q*bert mas a la derecha: 2 y 8; si no, 1 y 4
-	ld d,(hl)			;756a
-	cp (hl)			;756b
-	ld a,00ah		;756c
+	ld d,(hl)			;756a   ; D = su X
+	cp (hl)			;756b   ; contra la de Q*bert
+	ld a,00ah		;756c   ; hacia la derecha
 	jr nc,L_7572		;756e
-	ld a,005h		;7570
+	ld a,005h		;7570   ; hacia la izquierda
 L_7572:
 	and b			;7572   ; la que acerca en las dos cosas
-	ld c,a			;7573
+	ld c,a			;7573   ; C = la buena
 	call diagonales_con_cubo		;7574   ; las que tienen cubo
-	ld b,a			;7577
+	ld b,a			;7577   ; B = las posibles
 	and c			;7578   ; si la buena no tiene, cualquiera de las otras
-	jr z,L_757C		;7579
-	ld b,a			;757b
+	jr z,L_757C		;7579   ; la buena no se puede
+	ld b,a			;757b   ; la buena
 L_757C:
-	ld hl,0e25ah		;757c
-	call bit_mas_bajo		;757f
-	jp pon_el_salto		;7582
+	ld hl,0e25ah		;757c   ; el estado del objeto 11
+	call bit_mas_bajo		;757f   ; una sola
+	jp pon_el_salto		;7582   ; y salta
 diagonales_con_cubo:		; B: bit 0 arriba-izquierda (casilla - 10), bit 3 arriba-derecha (- 8), bit 2 abajo-izquierda (+ 8), bit 1 abajo-derecha (+ 10)
-	call casilla_de_la_posicion		;7585
-	sub 00ah		;7588
-	ld hl,0ec00h		;758a
+	call casilla_de_la_posicion		;7585   ; la casilla
+	sub 00ah		;7588   ; arriba-izquierda: 10 menos
+	ld hl,0ec00h		;758a   ; en el tablero
 	call suma_a_a_hl		;758d
-	ld b,000h		;7590
-	ld a,(hl)			;7592
-	inc a			;7593
+	ld b,000h		;7590   ; ninguna
+	ld a,(hl)			;7592   ; el cubo
+	inc a			;7593   ; hueco?
 	jr z,L_7597		;7594
-	inc b			;7596
+	inc b			;7596   ; bit 0
 L_7597:
-	inc hl			;7597
+	inc hl			;7597   ; arriba-derecha: dos mas
 	inc hl			;7598
-	ld a,(hl)			;7599
-	inc a			;759a
+	ld a,(hl)			;7599   ; el cubo
+	inc a			;759a   ; hueco?
 	jr z,L_75A1		;759b
-	ld a,b			;759d
+	ld a,b			;759d   ; bit 3
 	or 008h		;759e
 	ld b,a			;75a0
 L_75A1:
-	ld de,00010h		;75a1
+	ld de,00010h		;75a1   ; abajo-izquierda: 16 mas
 	add hl,de			;75a4
-	ld a,(hl)			;75a5
-	inc a			;75a6
+	ld a,(hl)			;75a5   ; el cubo
+	inc a			;75a6   ; hueco?
 	jr z,L_75AD		;75a7
-	ld a,b			;75a9
+	ld a,b			;75a9   ; bit 2
 	or 004h		;75aa
 	ld b,a			;75ac
 L_75AD:
-	inc hl			;75ad
+	inc hl			;75ad   ; abajo-derecha: dos mas
 	inc hl			;75ae
-	ld a,(hl)			;75af
-	inc a			;75b0
-	ld a,b			;75b1
-	ret z			;75b2
-	or 002h		;75b3
-	ret			;75b5
+	ld a,(hl)			;75af   ; el cubo
+	inc a			;75b0   ; hueco?
+	ld a,b			;75b1   ; las que hay
+	ret z			;75b2   ; hueco: ya esta
+	or 002h		;75b3   ; bit 1
+	ret			;75b5   ; vuelta
 
 ; ----------------------------------------------------------------------
 ; LOS CHOQUES DE Q*BERT con los quince objetos. Mientras los bichos huyen (0xE329), no se mira nada. Un Q*bert que entra, cae o esta fuera (estados 3, 4 y 14) no choca.
 ; ----------------------------------------------------------------------
 mira_los_choques:
 	ld a,(0e329h)		;75b6   ; huyendo: se espera a que no quede ninguno en los estados 6-11
-	or a			;75b9
+	or a			;75b9   ; no huyen
 	jr z,choques_de_los_dos		;75ba
-	ld hl,0e222h		;75bc
-	ld b,00fh		;75bf
+	ld hl,0e222h		;75bc   ; el estado del objeto 4
+	ld b,00fh		;75bf   ; quince
 L_75C1:
-	ld a,(hl)			;75c1
-	cp 006h		;75c2
+	ld a,(hl)			;75c1   ; el estado
+	cp 006h		;75c2   ; entre 6...
 	jr c,L_75C9		;75c4
-	cp 00ch		;75c6
-	ret c			;75c8
+	cp 00ch		;75c6   ; ...y 11
+	ret c			;75c8   ; alguno huye todavia: nada
 L_75C9:
-	ld a,008h		;75c9
+	ld a,008h		;75c9   ; el siguiente
 	call suma_a_a_hl		;75cb
-	djnz L_75C1		;75ce
-	xor a			;75d0
+	djnz L_75C1		;75ce   ; quince
+	xor a			;75d0   ; ya no huye ninguno
 	ld (0e329h),a		;75d1
-	ret			;75d4
+	ret			;75d4   ; vuelta
 choques_de_los_dos:
 	ld de,(0e204h)		;75d5   ; el primero
-	xor a			;75d9
-	ld (0e332h),a		;75da
-	ld a,(0e202h)		;75dd
-	cp 003h		;75e0
+	xor a			;75d9   ; el primero...
+	ld (0e332h),a		;75da   ; ...de turno
+	ld a,(0e202h)		;75dd   ; su estado
+	cp 003h		;75e0   ; entrando...
 	jr z,L_75EF		;75e2
-	cp 004h		;75e4
+	cp 004h		;75e4   ; ...cayendo...
 	jr z,L_75EF		;75e6
-	cp 00eh		;75e8
-	jr z,L_75EF		;75ea
-	call choca_con_los_objetos		;75ec
+	cp 00eh		;75e8   ; ...o fuera...
+	jr z,L_75EF		;75ea   ; ...no choca
+	call choca_con_los_objetos		;75ec   ; con los quince
 L_75EF:
-	ld a,(0e002h)		;75ef
-	bit 5,a		;75f2
-	ret z			;75f4
+	ld a,(0e002h)		;75ef   ; el modo
+	bit 5,a		;75f2   ; el duelo?
+	ret z			;75f4   ; no: ya esta
 	ld de,(0e214h)		;75f5   ; el segundo, en el duelo
-	ld a,001h		;75f9
-	ld (0e332h),a		;75fb
-	ld a,(0e212h)		;75fe
-	cp 003h		;7601
+	ld a,001h		;75f9   ; el segundo...
+	ld (0e332h),a		;75fb   ; ...de turno
+	ld a,(0e212h)		;75fe   ; su estado
+	cp 003h		;7601   ; entrando...
 	ret z			;7603
-	cp 004h		;7604
+	cp 004h		;7604   ; ...cayendo...
 	ret z			;7606
-	cp 00eh		;7607
-	ret z			;7609
+	cp 00eh		;7607   ; ...o fuera...
+	ret z			;7609   ; ...no choca
 choca_con_los_objetos:
-	ld hl,0e224h		;760a
-	ld b,00fh		;760d
+	ld hl,0e224h		;760a   ; la Y del objeto 4
+	ld b,00fh		;760d   ; quince
 L_760F:
-	push hl			;760f
-	push bc			;7610
-	call choca_con_un_objeto		;7611
-	pop bc			;7614
-	pop hl			;7615
-	ld a,008h		;7616
+	push hl			;760f   ; HL...
+	push bc			;7610   ; ...y B a salvo
+	call choca_con_un_objeto		;7611   ; este
+	pop bc			;7614   ; B...
+	pop hl			;7615   ; ...y HL
+	ld a,008h		;7616   ; el siguiente
 	call suma_a_a_hl		;7618
-	djnz L_760F		;761b
-	ret			;761d
+	djnz L_760F		;761b   ; quince
+	ret			;761d   ; vuelta
 choca_con_un_objeto:
 	call estan_cerca		;761e   ; a menos de 10 en Y y de 8 en X
-	ret nc			;7621
-	push hl			;7622
+	ret nc			;7621   ; lejos: nada
+	push hl			;7622   ; el objeto, para la rutina
 	ld a,b			;7623   ; y cada objeto hace lo suyo: la tabla va por su numero
-	dec a			;7624
+	dec a			;7624   ; B - 1: del 18 (0) al 4 (14)
 	call reparte_por_tabla		;7625
 
 ; ----------------------------------------------------------------------

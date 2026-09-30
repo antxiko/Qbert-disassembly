@@ -3821,3 +3821,867 @@ C 0x6D2B el objeto siguiente
 C 0x6D2E 24
 C 0x6D30 vuelta
 C 0x6D31 el estado, para la rutina
+
+C 0x6D54 vuelta
+C 0x6D55 HL = el estado
+C 0x6D56 al byte 4...
+C 0x6D57 ...la Y
+C 0x6D59 dos pixeles mas abajo
+C 0x6D5A al byte 6...
+C 0x6D5B ...el patron
+C 0x6D5F cada ocho cuadros
+C 0x6D61 si no, sin cambiar de dibujo
+C 0x6D63 el patron
+C 0x6D64 su nibble bajo
+C 0x6D66 0?
+C 0x6D67 pasa a 4...
+C 0x6D6B ...o a 0
+C 0x6D6D el grupo del patron...
+C 0x6D70 ...con el dibujo nuevo
+C 0x6D71 guardado
+C 0x6D73 la Y
+C 0x6D75 por encima de 0xC8...
+C 0x6D77 ...sigue cayendo
+C 0x6D7A el byte 6
+C 0x6D7C D = el patron
+C 0x6D7D al byte 2
+C 0x6D81 estado 0
+C 0x6D84 por debajo de 0x21: el primero
+C 0x6D86 su X de salida
+C 0x6D88 a salvo
+C 0x6D89 (0xE333)=0...
+C 0x6D8B ...el primero
+C 0x6D8E el patron
+C 0x6D8F el primero
+C 0x6D93 0xB0 o mas: el segundo
+C 0x6D95 (0xE333)=1...
+C 0x6D97 ...el segundo
+C 0x6D9E sin poderes
+C 0x6DA1 y sigue
+C 0x6DA6 sin poderes
+C 0x6DAC el duelo?
+C 0x6DAE no: fuera de juego
+C 0x6DB0 estado 3: entra por arriba
+C 0x6DB2 al byte 4
+C 0x6DB4 Y = 0xE1
+C 0x6DB6 el byte 5...
+C 0x6DB7 ...la X de salida
+C 0x6DB8 el patron
+C 0x6DBA el primero de su grupo
+C 0x6DBC guardado
+C 0x6DC0 el primero?
+C 0x6DC1 su bandera
+C 0x6DC6 la del segundo
+C 0x6DC9 a cero: ha caido
+C 0x6DCB vuelta
+C 0x6DCD A=0 aqui: Q*bert fuera de juego
+C 0x6DD0 vuelta
+C 0x6DD1 cero
+C 0x6DD2 sin salto largo
+C 0x6DD5 velocidad normal
+C 0x6DD8 en los dos sprites
+C 0x6DDB vuelta
+C 0x6DDC cero
+C 0x6DDD sin salto largo
+C 0x6DE0 velocidad normal
+C 0x6DE3 en los dos sprites
+C 0x6DE6 vuelta
+C 0x6DE7 HL = el estado
+C 0x6DE8 al byte 4...
+C 0x6DE9 ...la Y
+C 0x6DEB la Y
+C 0x6DEE las filas caen en Y = 16n + 12
+C 0x6DF0 entre fila y fila, sigue
+C 0x6DF1 E = la Y
+C 0x6DF2 la X...
+C 0x6DF3 ...en D
+C 0x6DF4 el patron...
+C 0x6DF5 ...en C
+C 0x6DF6 HL a la X
+C 0x6DFA 0xFF + 1: no hay cubo...
+C 0x6DFB ...sigue bajando
+C 0x6DFD al byte 2
+C 0x6DFF quieto
+C 0x6E02 el primero?
+C 0x6E04 su proteccion
+C 0x6E0A 0xB0 o mas: el segundo
+C 0x6E0C un bicho: nada mas
+C 0x6E0F si alguno de los dos...
+C 0x6E12 ...entra...
+C 0x6E15 ...o cae...
+C 0x6E20 ...no suena
+C 0x6E23 el 0x14
+C 0x6E26 HL = el estado
+C 0x6E27 al byte 4...
+C 0x6E28 ...la Y
+C 0x6E29 un pixel mas abajo
+C 0x6E2A la Y del objeto 19
+C 0x6E2D la alcanza?
+C 0x6E2E no: sigue
+C 0x6E2F fuera de la pantalla
+C 0x6E31 al byte 2
+C 0x6E33 quieto
+C 0x6E35 los objetos 19 a 23...
+C 0x6E37 ...se vuelven a pintar
+C 0x6E3A vuelta
+C 0x6E3B HL = el estado
+C 0x6E3D el byte 1
+C 0x6E3E la velocidad
+C 0x6E40 en B...
+C 0x6E41 ...mas uno
+C 0x6E42 HL al estado
+C 0x6E43 HL...
+C 0x6E44 ...y B a salvo
+C 0x6E45 un paso
+C 0x6E48 B...
+C 0x6E49 ...y HL
+C 0x6E4A B pasos
+C 0x6E4C vuelta
+C 0x6E4E 0: quieto
+C 0x6E4F nada
+C 0x6E50 4: cayendo
+C 0x6E52 nada
+C 0x6E53 C = el estado
+C 0x6E55 el paso...
+C 0x6E56 ...en B
+C 0x6E57 la tabla de arcos
+C 0x6E5A + el paso
+C 0x6E5D la Y de este paso
+C 0x6E60 no es el fin: se avanza
+C 0x6E62 al byte 4
+C 0x6E64 12...
+C 0x6E66 ...muerto
+C 0x6E69 13...
+C 0x6E6B ...muerto
+C 0x6E6F al byte 6
+C 0x6E70 el patron...
+C 0x6E71 ...de pie: cuatro menos
+C 0x6E73 guardado
+C 0x6E74 C = el patron
+C 0x6E75 la X...
+C 0x6E76 ...en D
+C 0x6E77 la Y...
+C 0x6E78 ...en E
+C 0x6E7A el primero: el sonido 4
+C 0x6E81 0xB0 o mas: el segundo, el 5
+C 0x6E85 un bicho: sin sonido
+C 0x6E87 suena
+C 0x6E8D invencible?
+C 0x6E8E no
+C 0x6E90 si: el 6 ademas
+C 0x6E92 suena
+C 0x6E98 B = el cubo
+C 0x6E9A el patron: entre 0x90...
+C 0x6E9E ...y 0x9F
+C 0x6EA2 el cubo
+C 0x6EA3 bit 7: girando
+C 0x6EA4 no
+C 0x6EA7 1.000 puntos
+C 0x6EAD HL
+C 0x6EAE y a caer
+C 0x6EB1 0xFF + 1 = 0: hueco
+C 0x6EB2 estado 0, sin tocar la bandera
+C 0x6EB4 hueco: cae
+C 0x6EB7 la casilla del primer modelo
+C 0x6EBA contra DE
+C 0x6EBD HL
+C 0x6EBE es ella: cae
+C 0x6EC0 HL a salvo
+C 0x6EC1 la del segundo modelo
+C 0x6EC4 contra DE
+C 0x6EC7 HL
+C 0x6EC8 no: se queda (estado 0)
+C 0x6ECA la caida, si es por un lado
+C 0x6ECD estado 4
+C 0x6ECF al byte 2
+C 0x6ED1 el estado
+C 0x6ED2 vuelta
+C 0x6ED3 el paso siguiente
+C 0x6ED4 al byte 4
+C 0x6ED8 por arriba: se sale
+C 0x6EDA la Y nueva
+C 0x6EDB al byte 5
+C 0x6EDD el paso: par o impar
+C 0x6EDE 1...
+C 0x6EE0 ...en los impares
+C 0x6EE2 2 en los pares
+C 0x6EE3 en D
+C 0x6EE5 el 13...
+C 0x6EE7 D
+C 0x6EE8 ...a la izquierda
+C 0x6EEA el 1...
+C 0x6EEB ...tambien
+C 0x6EED a la izquierda: negativo
+C 0x6EEF la X nueva
+C 0x6EF2 por la izquierda: se sale
+C 0x6EF4 por la derecha...
+C 0x6EF6 ...tambien
+C 0x6EF8 guardada
+C 0x6EF9 vuelta
+C 0x6EFA al byte 4
+C 0x6EFB al byte 6...
+C 0x6EFD C = el patron
+C 0x6EFE al byte 2
+C 0x6F04 al byte 4
+C 0x6F07 el primero?
+C 0x6F0B el segundo?
+C 0x6F0D un bicho: nada
+C 0x6F11 y el grito
+C 0x6F13 el dibujo de caer
+C 0x6F18 suena
+C 0x6F1B al byte 6
+C 0x6F1D C = el patron
+C 0x6F1E al byte 4
+C 0x6F20 y a caer
+C 0x6F22 HL a salvo
+C 0x6F23 al byte 6
+C 0x6F25 el patron
+C 0x6F26 su grupo...
+C 0x6F28 ...el dibujo 4
+C 0x6F2A guardado
+C 0x6F2B los patrones 0x00-0x07...
+C 0x6F2E ...de 0xAF3C
+C 0x6F31 64 bytes
+C 0x6F34 LDIRVM
+C 0x6F37 los 0x10-0x17...
+C 0x6F3A ...de 0xAF7C
+C 0x6F3D 64 bytes
+C 0x6F40 LDIRVM
+C 0x6F43 HL
+C 0x6F44 vuelta
+C 0x6F45 HL a salvo
+C 0x6F46 al byte 6
+C 0x6F48 el patron
+C 0x6F49 su grupo...
+C 0x6F4B ...el dibujo 4
+C 0x6F4D guardado
+C 0x6F4E los patrones 0xB0-0xB7...
+C 0x6F51 ...de 0xAF3C
+C 0x6F54 64 bytes
+C 0x6F57 LDIRVM
+C 0x6F5A los 0xC0-0xC7...
+C 0x6F5D ...de 0xAF7C
+C 0x6F60 64 bytes
+C 0x6F63 LDIRVM
+C 0x6F66 HL
+C 0x6F67 vuelta
+C 0x6F68 los registros a salvo
+C 0x6F69 los patrones 0x00-0x07...
+C 0x6F6C ...de 0xACBC
+C 0x6F6F 64 bytes
+C 0x6F72 LDIRVM
+C 0x6F75 los 0x10-0x17...
+C 0x6F78 ...de 0xAD3C
+C 0x6F7B 64 bytes
+C 0x6F7E LDIRVM
+C 0x6F81 los registros
+C 0x6F82 vuelta
+C 0x6F83 los registros a salvo
+C 0x6F84 los patrones 0xB0-0xB7...
+C 0x6F87 ...de 0xACBC
+C 0x6F8A 64 bytes
+C 0x6F8D LDIRVM
+C 0x6F90 los 0xC0-0xC7...
+C 0x6F93 ...de 0xAD3C
+C 0x6F96 64 bytes
+C 0x6F99 LDIRVM
+C 0x6F9C los registros
+C 0x6F9D vuelta
+C 0x7017 HL = el estado
+C 0x7019 C=0: a la derecha
+C 0x701B par o impar
+C 0x701C impar: derecha
+C 0x701E par: izquierda
+C 0x7020 cada 8 cuadros...
+C 0x7022 ...en el 6 y el 7
+C 0x7026 cada 4...
+C 0x7028 ...en el 8 y el 9
+C 0x702C cada 2 en el 10 y el 11
+C 0x702E al byte 4
+C 0x7033 cuatro menos
+C 0x7034 la Y
+C 0x7035 al byte 5
+C 0x7038 arriba del todo: fuera
+C 0x703A abajo del todo...
+C 0x703C ...fuera
+C 0x703E la X
+C 0x703F a la izquierda...
+C 0x7041 ...fuera
+C 0x7043 a la derecha...
+C 0x7045 ...fuera
+C 0x704A a su ritmo
+C 0x704B no toca: nada
+C 0x704D uno mas
+C 0x704E hacia la derecha...
+C 0x704F ...?
+C 0x7050 si: ya esta (+2)
+C 0x7052 si no, cuatro menos (-2)
+C 0x7055 vuelta
+C 0x7056 al byte 4
+C 0x7057 fuera de la pantalla
+C 0x7059 al byte 2
+C 0x705B quieto
+C 0x705D vuelta
+C 0x7061 C = lo de antes
+C 0x7062 lo de ahora
+C 0x7063 lo que ha cambiado...
+C 0x7064 ...y esta pulsado
+C 0x7065 0xE32F
+C 0x7066 lo recien pulsado
+C 0x7067 vuelta
+C 0x706A fila 3
+C 0x706C SNSMAT
+C 0x706F la C
+C 0x7073 abajo
+C 0x7075 la E
+C 0x7079 arriba
+C 0x707B la F
+C 0x707F derecha
+C 0x7081 fila 5
+C 0x7083 SNSMAT
+C 0x7086 la S
+C 0x708A izquierda
+C 0x708C en A
+C 0x708D vuelta
+C 0x7091 la casilla mas uno (el 0 marca hueco libre)
+C 0x7092 en D
+C 0x7093 E = la direccion
+C 0x7097 los diez huecos
+C 0x7099 ya esta?
+C 0x709A si: nada
+C 0x709B el siguiente...
+C 0x709C ...tres bytes...
+C 0x709D ...mas alla
+C 0x709E diez
+C 0x70A2 los huecos 0 a 4
+C 0x70A5 desde el 0
+C 0x70A7 la direccion
+C 0x70A8 1 o 2?
+C 0x70AA si
+C 0x70AF desde el 5
+C 0x70B1 el hueco
+C 0x70B2 libre?
+C 0x70B3 si: a el
+C 0x70B5 el siguiente...
+C 0x70B6 ...tres bytes...
+C 0x70B7 ...mas alla
+C 0x70B8 su numero
+C 0x70B9 cinco
+C 0x70BB todos ocupados: no gira
+C 0x70BD el segundo byte...
+C 0x70BE ...ocho cuadros
+C 0x70C0 el tercero...
+C 0x70C1 ...la direccion
+C 0x70C2 B = la direccion
+C 0x70C3 la casilla
+C 0x70C4 desde cero
+C 0x70C5 a salvo
+C 0x70C6 B y C (el hueco)
+C 0x70CA en el tablero
+C 0x70CD el cubo
+C 0x70CE su giro
+C 0x70D0 en D
+C 0x70D1 con el bit 7
+C 0x70D3 guardado
+C 0x70D5 la direccion
+C 0x70D6 1 u 8: hacia arriba
+C 0x70D8 el giro de ahora
+C 0x70D9 hacia abajo: tal cual
+C 0x70DB hacia arriba: el siguiente
+C 0x70DE en D
+C 0x70E1 9 * giro
+C 0x70E4 la cara de arriba del primer cubo
+C 0x70E7 la de este
+C 0x70ED la de arriba...
+C 0x70EE ...a 0xE2F1
+C 0x70EF dos casillas mas alla...
+C 0x70F2 la de la izquierda...
+C 0x70F3 ...a 0xE2F2
+C 0x70F4 dos mas alla...
+C 0x70F7 la de la derecha...
+C 0x70F8 ...a 0xE2F3
+C 0x70F9 B y C
+C 0x70FD a 0xE2F4
+C 0x7100 el hueco
+C 0x7101 del 0 al 4...
+C 0x7103 ...la plantilla 1
+C 0x7105 del 5 al 9, la 2
+C 0x7109 cuantos
+C 0x710A 0...
+C 0x710B ...fin
+C 0x710D el color
+C 0x7110 el nibble alto...
+C 0x7116 ...su color
+C 0x7119 arriba...
+C 0x711D ...en B
+C 0x711E el nibble bajo...
+C 0x7121 ...su color
+C 0x7124 los dos juntos
+C 0x7125 guardado
+C 0x7126 el siguiente par
+C 0x7128 y otra vez
+C 0x712D el hueco
+C 0x712E 72 * hueco
+C 0x7131 + 0x0488: el color del tile 0x91
+C 0x7135 el RLE hecho
+C 0x7138 a salvo
+C 0x7139 en los tres tercios
+C 0x713C BC
+C 0x713D la casilla
+C 0x7141 el hueco
+C 0x7142 9 * hueco...
+C 0x7147 ...+ 0x91: su primer tile
+C 0x7149 tres filas
+C 0x714B tres columnas
+C 0x714D el tile
+C 0x714E al lado
+C 0x714F el siguiente
+C 0x7150 tres
+C 0x7152 la fila siguiente
+C 0x7156 una fila menos
+C 0x7157 tres
+C 0x7159 vuelta
+C 0x715A los huecos
+C 0x715D diez
+C 0x715F HL...
+C 0x7160 ...y B a salvo
+C 0x7161 la casilla
+C 0x7162 libre?
+C 0x7163 si: el siguiente
+C 0x7166 la cuenta
+C 0x7167 un cuadro menos
+C 0x7168 sin acabar
+C 0x716B libre
+C 0x716D la cuenta
+C 0x716E la casilla
+C 0x716F desde cero
+C 0x7170 a salvo
+C 0x7171 en el tablero
+C 0x7178 fuera el bit 7
+C 0x717A la direccion...
+C 0x717B ...en C
+C 0x717C el giro nuevo
+C 0x717F guardado
+C 0x7180 en B
+C 0x7181 la casilla
+C 0x7182 HL: su sitio en pantalla
+C 0x7186 (0xE339)=0: el primero
+C 0x7189 el giro
+C 0x718A tambien en C
+C 0x718B igual?
+C 0x718E no
+C 0x7192 la casilla...
+C 0x7193 ...del primero
+C 0x7195 guardada
+C 0x7196 y sigue
+C 0x719A (0xE339)=1: el segundo
+C 0x719D el giro
+C 0x719E igual?
+C 0x71A1 no
+C 0x71A5 la casilla...
+C 0x71A6 ...del segundo
+C 0x71A8 guardada
+C 0x71AB suena
+C 0x71AE BC...
+C 0x71AF ...y HL a salvo
+C 0x71B0 300 puntos
+C 0x71B6 HL...
+C 0x71B7 ...y BC
+C 0x71BA y sigue
+C 0x71BD la racha
+C 0x71C1 y se pinta
+C 0x71C4 B...
+C 0x71C5 ...y HL
+C 0x71C6 el hueco siguiente...
+C 0x71C9 diez
+C 0x71CB vuelta
+C 0x71CC los de reserva
+C 0x71CD 0xE2F0...
+C 0x71D0 ...+ A
+C 0x71D3 el color
+C 0x71D4 los normales
+C 0x71D5 vuelta
+C 0x71D7 BC a salvo
+C 0x71D8 4 * giro
+C 0x71DD BC
+C 0x71DE la tabla de giros...
+C 0x71E1 ...+ 4 * giro
+C 0x71E4 la direccion
+C 0x71E6 este bit: su columna
+C 0x71E8 la siguiente
+C 0x71E9 y otra vez
+C 0x71EB el giro nuevo
+C 0x71EC DE
+C 0x71ED vuelta
+C 0x71EE BC...
+C 0x71EF ...y DE a salvo
+C 0x71F0 la Y
+C 0x71F1 menos 12
+C 0x71F3 entre 16...
+C 0x71FB ...la fila, por 9
+C 0x7200 en E
+C 0x7201 la X
+C 0x7202 menos 24
+C 0x7204 entre 24...
+C 0x7206 ...la columna
+C 0x7209 9 * fila + columna
+C 0x720A DE...
+C 0x720B ...y BC
+C 0x720C vuelta
+C 0x720D BC...
+C 0x720E ...y DE a salvo
+C 0x720F entre 9
+C 0x7211 A = fila, B = columna
+C 0x7214 C = columna
+C 0x7215 B = fila
+C 0x7216 64 * fila
+C 0x721C la columna
+C 0x721D por 3
+C 0x7222 + 3 * columna
+C 0x7225 + 0xED63
+C 0x7229 DE...
+C 0x722A ...y BC
+C 0x722B vuelta
+C 0x722F los de reserva
+C 0x7230 las caras del cubo A
+C 0x7233 en H...
+C 0x7234 ...D...
+C 0x7235 ...y E
+C 0x7236 de quien es el modelo
+C 0x723A el del primero
+C 0x723F el del segundo
+C 0x7242 sus caras
+C 0x7245 la de arriba
+C 0x7246 distinta: no
+C 0x7248 la de la izquierda
+C 0x724A distinta: no
+C 0x724C la de la derecha
+C 0x724E los normales
+C 0x724F vuelta, con Z o NZ
+C 0x7250 9 * giro
+C 0x7255 HL a salvo
+C 0x7256 la casilla 1 del primer cubo
+C 0x7259 la de este
+C 0x725C la de arriba
+C 0x725D la 3...
+C 0x725F ...la de la izquierda
+C 0x7260 la 5...
+C 0x7262 ...la de la derecha
+C 0x7263 HL
+C 0x7264 vuelta
+C 0x7265 la Y
+C 0x7266 por debajo de la ultima fila...
+C 0x726A ...no hay cubo
+C 0x726C vuelta
+C 0x726D la casilla
+C 0x7270 HL a salvo
+C 0x7271 en el tablero
+C 0x7277 el cubo
+C 0x7278 HL
+C 0x7279 vuelta
+C 0x7323 0 a 3
+C 0x7325 la comprobacion de este cuadro
+C 0x7331 cero lineas
+C 0x7337 el jugador de turno...
+C 0x7338 ...el otro
+C 0x733A guardado
+C 0x733D el primero: 0x40
+C 0x733F el segundo: 0x20
+C 0x7341 en el `and` de 0xE4FD
+C 0x7344 la primera fila
+C 0x7347 nueve filas
+C 0x734C la fila
+C 0x734F una menos
+C 0x7350 nueve
+C 0x7352 vuelta
+C 0x7353 la primera columna
+C 0x7356 nueve columnas
+C 0x735B la columna; HL acaba 81 mas alla
+C 0x735F 80 atras: la columna siguiente
+C 0x7365 una menos
+C 0x7366 nueve
+C 0x7368 vuelta
+C 0x7369 de diez en diez
+C 0x736B desde la casilla 0...
+C 0x736E ...nueve, bajando de fila
+C 0x7371 las que empiezan en la columna 0
+C 0x7374 desde la casilla 1...
+C 0x7377 ...ocho, avanzando de columna
+C 0x737A las que empiezan en la fila 0
+C 0x737D de ocho en ocho
+C 0x737F desde la casilla 8...
+C 0x7382 ...nueve, bajando de fila
+C 0x7385 las que empiezan en la columna 8
+C 0x7388 desde la casilla 4...
+C 0x738B ...cinco, retrocediendo
+C 0x738E las que empiezan en la fila 0
+C 0x7393 el modo
+C 0x7396 el duelo?
+C 0x7398 si: una linea
+C 0x739D por debajo de la 31: una
+C 0x73A1 dos...
+C 0x73A4 ...por debajo de la 41
+C 0x73A6 tres
+C 0x73AA las hechas contra las que hacen falta
+C 0x73AB menos: sigue
+C 0x73AF quien la hizo
+C 0x73B0 el estado del primero...
+C 0x73B3 ...y el objeto del segundo
+C 0x73B8 el del segundo...
+C 0x73BB ...y el objeto del primero
+C 0x73BF en el aire: se espera
+C 0x73C1 el otro esta quieto?
+C 0x73C2 no: sin cara
+C 0x73C4 al byte 6...
+C 0x73C8 el patron
+C 0x73C9 su grupo...
+C 0x73CB ...el dibujo 8
+C 0x73CD guardado
+C 0x73CE el segundo sprite...
+C 0x73D3 el patron
+C 0x73D4 su grupo...
+C 0x73D6 ...el dibujo 8
+C 0x73D8 guardado
+C 0x73DC el duelo?
+C 0x73DE si
+C 0x73E0 la fase
+C 0x73E3 las unidades
+C 0x73E5 no acaba en 0: nada
+C 0x73E7 el nivel del rotulo...
+C 0x73EA ...uno mas
+C 0x73EB y sigue
+C 0x73F0 sin la marca...
+C 0x73F1 ...de fase acabada
+C 0x73F7 cinco
+C 0x73F9 una
+C 0x73FC la siguiente empieza una fila mas abajo
+C 0x7401 una menos
+C 0x7402 cinco
+C 0x7404 vuelta
+C 0x7405 cuatro
+C 0x7407 una
+C 0x740A la siguiente, una columna mas alla
+C 0x740B una menos
+C 0x740C cuatro
+C 0x740E vuelta
+C 0x740F BC...
+C 0x7410 ...DE...
+C 0x7411 ...y HL a salvo
+C 0x7412 C = el paso
+C 0x7413 la cuenta
+C 0x7416 HL...
+C 0x7417 ...DE...
+C 0x7418 ...y BC
+C 0x741A C=1 o 9?
+C 0x741D con C=0, la siguiente mas larga
+C 0x741E vuelta
+C 0x741F si no, una casilla mas corta
+C 0x7420 vuelta
+C 0x7421 seguidos: cero
+C 0x7424 0xFF + 1 = 0...
+C 0x7425 ...hueco
+C 0x7427 uno mas
+C 0x742B suyo: sigue
+C 0x742E la cuenta
+C 0x7431 cinco: linea
+C 0x7433 el paso...
+C 0x7434 ...+ HL
+C 0x7439 B casillas
+C 0x743B vuelta
+C 0x743C las lineas...
+C 0x743F ...mas una
+C 0x7440 guardadas
+C 0x7443 vuelta
+C 0x7447 cada 64 cuadros
+C 0x744D quince
+C 0x744F HL a salvo
+C 0x7450 el objeto
+C 0x7453 HL
+C 0x7454 el siguiente
+C 0x7459 quince
+C 0x745B vuelta
+C 0x745D 0x00...
+C 0x745E ...no sale
+C 0x745F la cuenta
+C 0x7461 a cero?
+C 0x7462 si: a salir
+C 0x7465 sin acabar: nada
+C 0x7466 al byte 4...
+C 0x746B en pantalla?
+C 0x746D si: espera
+C 0x746F el objeto 4, la bola gris?
+C 0x7471 no
+C 0x7473 la Y del objeto 11
+C 0x7476 en pantalla?
+C 0x7478 si: espera
+C 0x747C la X: 0x64...
+C 0x7483 ...o 0x94
+C 0x7485 al byte 2
+C 0x748A al byte 0
+C 0x748D los nibbles cambiados...
+C 0x7495 ...+ el byte
+C 0x7496 guardado
+C 0x7497 vuelta
+C 0x749B cada dos cuadros
+C 0x749E el estado del objeto 4
+C 0x74A1 quince
+C 0x74A3 HL...
+C 0x74A4 ...y B a salvo
+C 0x74A5 el objeto
+C 0x74A8 B...
+C 0x74A9 ...y HL
+C 0x74AA el siguiente
+C 0x74AF quince
+C 0x74B1 vuelta
+C 0x74B3 quieto?
+C 0x74B4 no: nada
+C 0x74B5 al byte 4
+C 0x74B8 en pantalla?
+C 0x74BA no: nada
+C 0x74BC B por debajo de 8...
+C 0x74C0 ...y no 1: objetos 12 a 17
+C 0x74C4 HL...
+C 0x74C5 ...y B a salvo
+C 0x74C9 B...
+C 0x74CA ...y HL
+C 0x74CB al byte 1
+C 0x74CF la pausa, menos una
+C 0x74D1 guardada
+C 0x74D2 sin acabar...
+C 0x74D4 ...nada
+C 0x74D6 el objeto 10?
+C 0x74D8 no
+C 0x74DA la pausa siguiente...
+C 0x74DD ...del cuadro...
+C 0x74DF ...con la velocidad
+C 0x74E0 guardada
+C 0x74E1 al byte 2
+C 0x74E3 el objeto 11?
+C 0x74E5 persigue
+C 0x74E8 B a salvo
+C 0x74E9 C = el objeto
+C 0x74ED no es el 10
+C 0x74EF el paso B del moai
+C 0x74F4 al azar...
+C 0x74F7 ...abajo-derecha
+C 0x74FA el objeto 10?
+C 0x74FC no
+C 0x74FE el paso A del moai
+C 0x7501 abajo-izquierda
+C 0x7507 el objeto 9?
+C 0x7509 no: ya esta
+C 0x750A gira el cubo de donde sale
+C 0x750D la Y...
+C 0x750F ...y la X
+C 0x7513 hueco o acabado...
+C 0x7515 ...nada
+C 0x7516 HL a salvo
+C 0x751A HL
+C 0x751B al byte 7...
+C 0x751D el color del bicho
+C 0x751E distinto: nada
+C 0x751F C = el color
+C 0x7520 al byte 4...
+C 0x7524 16 mas...
+C 0x7526 ...guardado
+C 0x752A cinco
+C 0x752C HL...
+C 0x752D ...y B a salvo
+C 0x752E dos bytes...
+C 0x7531 ...copiados
+C 0x7533 B...
+C 0x7534 ...y HL
+C 0x7535 el siguiente...
+C 0x753A cinco
+C 0x753E al byte 2
+C 0x7540 quieto
+C 0x7545 estado 5
+C 0x7548 al byte 4
+C 0x754A la Y...
+C 0x754B ...16 menos
+C 0x754D guardada
+C 0x754E al byte 7...
+C 0x7552 el color
+C 0x7555 (0xE328)=2
+C 0x7558 vuelta
+C 0x7559 al byte 4
+C 0x755E E = su Y
+C 0x755F contra la de Q*bert
+C 0x7560 hacia abajo
+C 0x7564 hacia arriba
+C 0x7566 la X
+C 0x756A D = su X
+C 0x756B contra la de Q*bert
+C 0x756C hacia la derecha
+C 0x7570 hacia la izquierda
+C 0x7573 C = la buena
+C 0x7577 B = las posibles
+C 0x7579 la buena no se puede
+C 0x757B la buena
+C 0x757C el estado del objeto 11
+C 0x757F una sola
+C 0x7582 y salta
+C 0x7585 la casilla
+C 0x7588 arriba-izquierda: 10 menos
+C 0x758A en el tablero
+C 0x7590 ninguna
+C 0x7592 el cubo
+C 0x7593 hueco?
+C 0x7596 bit 0
+C 0x7597 arriba-derecha: dos mas
+C 0x7599 el cubo
+C 0x759A hueco?
+C 0x759D bit 3
+C 0x75A1 abajo-izquierda: 16 mas
+C 0x75A5 el cubo
+C 0x75A6 hueco?
+C 0x75A9 bit 2
+C 0x75AD abajo-derecha: dos mas
+C 0x75AF el cubo
+C 0x75B0 hueco?
+C 0x75B1 las que hay
+C 0x75B2 hueco: ya esta
+C 0x75B3 bit 1
+C 0x75B5 vuelta
+C 0x75B9 no huyen
+C 0x75BC el estado del objeto 4
+C 0x75BF quince
+C 0x75C1 el estado
+C 0x75C2 entre 6...
+C 0x75C6 ...y 11
+C 0x75C8 alguno huye todavia: nada
+C 0x75C9 el siguiente
+C 0x75CE quince
+C 0x75D0 ya no huye ninguno
+C 0x75D4 vuelta
+C 0x75D9 el primero...
+C 0x75DA ...de turno
+C 0x75DD su estado
+C 0x75E0 entrando...
+C 0x75E4 ...cayendo...
+C 0x75E8 ...o fuera...
+C 0x75EA ...no choca
+C 0x75EC con los quince
+C 0x75EF el modo
+C 0x75F2 el duelo?
+C 0x75F4 no: ya esta
+C 0x75F9 el segundo...
+C 0x75FB ...de turno
+C 0x75FE su estado
+C 0x7601 entrando...
+C 0x7604 ...cayendo...
+C 0x7607 ...o fuera...
+C 0x7609 ...no choca
+C 0x760A la Y del objeto 4
+C 0x760D quince
+C 0x760F HL...
+C 0x7610 ...y B a salvo
+C 0x7611 este
+C 0x7614 B...
+C 0x7615 ...y HL
+C 0x7616 el siguiente
+C 0x761B quince
+C 0x761D vuelta
+C 0x7621 lejos: nada
+C 0x7622 el objeto, para la rutina
+C 0x7624 B - 1: del 18 (0) al 4 (14)
