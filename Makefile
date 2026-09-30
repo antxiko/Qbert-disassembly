@@ -76,7 +76,24 @@ test:
 	@echo "=================================================================="
 	@python3 -m unittest discover -s tests -v
 
+# LAS IMAGENES, montadas desde la ROM con tools/pantallas.py: ni una captura.
+imagenes: $(ROM)
+	python3 tools/imagenes.py $(ROM) docs/imagenes
+
+# Y la prueba de que son las de verdad: cada pantalla contra un volcado de
+# VRAM de openMSX, byte a byte (los volcados, en work/: ver coteja_todo.py).
+coteja: $(ROM)
+	@python3 tools/coteja_todo.py $(ROM)
+
+# LA WEB. Bilingue: el ingles en docs/ y el castellano en docs/es/.
+web: $(ROM)
+	python3 tools/md2html.py docs en
+	python3 tools/md2html.py docs/es es
+	python3 tools/make_web.py docs/imagenes docs/index.html en
+	python3 tools/make_web.py docs/imagenes docs/es/index.html es
+	python3 tools/check_enlaces.py docs
+
 clean:
 	rm -rf $(WORK)/qbert.trace.json $(WORK)/qbert.blocks
 
-.PHONY: all comprueba trace listado verify sanity test densidad clean
+.PHONY: all comprueba trace listado verify sanity test densidad imagenes coteja web clean
