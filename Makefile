@@ -96,4 +96,11 @@ web: imagenes
 clean:
 	rm -rf $(WORK)/qbert.trace.json $(WORK)/qbert.blocks
 
-.PHONY: all comprueba trace listado verify sanity test densidad imagenes coteja web clean
+
+PYMUS ?= python3     # el que tenga numpy y lameenc
+# La musica: el motor del cartucho ejecutado (tools/musica.py) a MP3
+musica: $(ROM)
+	$(PYMUS) tools/musica.py todas docs/audio
+	$(PYMUS) tools/pagina_musica.py
+
+.PHONY: musica all comprueba trace listado verify sanity test densidad imagenes coteja web clean
