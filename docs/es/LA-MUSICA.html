@@ -90,7 +90,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <ul><li>la presentación (0x20) entera, 416 cuadros;</li><li>el menú (0x1D) entero, 757 cuadros, con su vuelta.</li></ul>
 <p>El timbre no está cotejado: es el de un AY-3-8910 de manual, no una grabación del emulador. Las sondas están en <code>tools/omsx_psg.tcl</code> y <code>tools/coteja_psg.py</code>.</p>
 <h2 id="como-se-pide-una-pieza">Cómo se pide una pieza</h2>
-<p><code>toca_sonido</code> recibe el número en A y guarda todos los registros; <code>toca_sonido_en_partida</code> solo suena en partida. Aquí los números no llevan el bit 7: los bajos son efectos y del 0x12 en adelante hay música, de más voces cuanto más alto. Cada voz ocupa treinta y dos bytes desde 0xE010 (son cuatro) y 0xE0F0 guarda la copia del mezclador del PSG, que el arranque deja en 0xB8. Las pistas «de la tabla» están en la tabla de pistas pero ninguna rutina las pide con un <code>ld a</code>; se omiten otras, de minutos de duración.</p>
+<p><code>toca_sonido</code> recibe el número en A y guarda todos los registros; <code>toca_sonido_en_partida</code> solo suena en partida. Aquí los números no llevan el bit 7: los bajos son efectos y del 0x12 en adelante hay música. Cada voz ocupa treinta y dos bytes desde 0xE010 (son cuatro) y 0xE0F0 guarda la copia del mezclador del PSG, que el arranque deja en 0xB8. Las pistas «de la tabla» están en la tabla de pistas pero ninguna rutina las pide con un <code>ld a</code>; se omiten otras, de minutos de duración.</p>
 <h2 id="las-musicas">Las músicas</h2>
 <p><b>La presentación</b> (0x20)</p>
 <p>Lo pide <code>empieza_la_presentacion</code>; dura 6,9 s.</p>

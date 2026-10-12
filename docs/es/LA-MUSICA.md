@@ -13,7 +13,7 @@ El timbre no está cotejado: es el de un AY-3-8910 de manual, no una grabación 
 
 ## Cómo se pide una pieza
 
-`toca_sonido` recibe el número en A y guarda todos los registros; `toca_sonido_en_partida` solo suena en partida. Aquí los números no llevan el bit 7: los bajos son efectos y del 0x12 en adelante hay música, de más voces cuanto más alto. Cada voz ocupa treinta y dos bytes desde 0xE010 (son cuatro) y 0xE0F0 guarda la copia del mezclador del PSG, que el arranque deja en 0xB8. Las pistas «de la tabla» están en la tabla de pistas pero ninguna rutina las pide con un `ld a`; se omiten otras, de minutos de duración.
+`toca_sonido` recibe el número en A y guarda todos los registros; `toca_sonido_en_partida` solo suena en partida. Aquí los números no llevan el bit 7: los bajos son efectos y del 0x12 en adelante hay música. Cada voz ocupa treinta y dos bytes desde 0xE010 (son cuatro) y 0xE0F0 guarda la copia del mezclador del PSG, que el arranque deja en 0xB8. Las pistas «de la tabla» están en la tabla de pistas pero ninguna rutina las pide con un `ld a`; se omiten otras, de minutos de duración.
 
 ## Las músicas
 

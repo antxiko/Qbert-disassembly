@@ -13,7 +13,7 @@ The timbre is not checked: it is a textbook AY-3-8910, not a recording of the em
 
 ## How a piece is asked for
 
-`toca_sonido` takes the number in A and saves all registers; `toca_sonido_en_partida` only sounds during a game. Here the numbers have no bit 7: low ones are effects and from 0x12 up there is music, with more voices the higher the number. Each voice takes thirty-two bytes from 0xE010 (there are four) and 0xE0F0 holds the copy of the PSG mixer, which start-up leaves at 0xB8. The tracks marked «in the table» are in the track table but no routine asks for them with an `ld a`; others, minutes long, are left out.
+`toca_sonido` takes the number in A and saves all registers; `toca_sonido_en_partida` only sounds during a game. Here the numbers have no bit 7: low ones are effects and from 0x12 up there is music. Each voice takes thirty-two bytes from 0xE010 (there are four) and 0xE0F0 holds the copy of the PSG mixer, which start-up leaves at 0xB8. The tracks marked «in the table» are in the track table but no routine asks for them with an `ld a`; others, minutes long, are left out.
 
 ## The tunes
 
